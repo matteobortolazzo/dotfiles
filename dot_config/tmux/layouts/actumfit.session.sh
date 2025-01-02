@@ -3,15 +3,20 @@ session_root "~/Repos/actumfit"
 if initialize_session "actumfit"; then
  
   window_root "~/Repos/actumfit/src/api/ActumFit/ActumFit.Api"
-  load_window "dotnet-window"
+  new_window "api"
+  split_v 25
+  select_pane 1
+  run_cmd "nvim ."
 
-  window_root "~/Repos/actumfit/src/ui/actumfit-chat"
-  load_window "react-window"
+  window_root "~/Repos/actumfit/src/ui/actumfit-business/"
+  new_window "business"
+  split_v 25
+  select_pane 1
+  run_cmd "nvim ."
   
-  window_root "~/Repos/actumfit/src/ui/actumfit-business"
-  load_window "react-window"
-  
-  new_window "utils"
+  new_window "git"
+  run_cmd "lazygit"
+
   select_window 1
 
 fi
