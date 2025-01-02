@@ -7,8 +7,6 @@ export ZSH="$HOME/.oh-my-zsh"
 export GPG_TTY=$(tty)
 export TMUXIFIER_LAYOUT_PATH="$HOME/.config/tmux/layouts"
 
-# alias actumfit='$HOME/.config/scripts/actumfit.sh'
-
 eval "$(tmuxifier init -)"
 eval "$(zoxide init zsh)"
 
@@ -22,3 +20,9 @@ source $ZSH/oh-my-zsh.sh
 
 PATH=~/.console-ninja/.bin:$PATH
 PATH=~/.dotnet/:$PATH
+
+alias v="nvim"
+alias lg="lazygit"
+
+alias actum="cd ~/Repos/actumfit/ && tmux"
+alias lb="cd ~/Repos/leaderboards/ && tmux"
