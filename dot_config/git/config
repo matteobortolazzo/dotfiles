@@ -1,0 +1,22 @@
+[user]
+	name = Matteo Bortolazzo
+	email = matteobortolazzo@pm.me
+	signingkey = E97625A2E3354E11
+
+[init]
+	defaultBranch = main
+
+[push]
+	autoSetupRemote = true 
+
+[pull]
+	ff = only
+
+[core]
+	autocrlf = input
+
+[commit]
+	gpgsign = true
+
+[tag]
+	gpgSign = true
