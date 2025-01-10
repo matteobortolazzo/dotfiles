@@ -24,6 +24,7 @@ PATH=~/.dotnet/:$PATH
 alias v="nvim"
 alias lg="lazygit"
 alias yz="yazi"
+alias cd="z"
 
 alias af="tmuxifier load-session actumfit"
 alias lb="tmuxifier load-session leaderboards"
