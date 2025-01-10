@@ -33,6 +33,9 @@ map gD <Action>(GotoDeclaration)
 map gI <Action>(GotoResharperImplementation)
 map gr <Action>(FindUsages)
 
+map ]d <Action>(GotoNextError)
+map [d <Action>(GotoPreviousError)
+
 " Window mode
 map <c-w>w <Action>(NextSplitter)
 map <c-w>v <Action>(SplitVertically)
