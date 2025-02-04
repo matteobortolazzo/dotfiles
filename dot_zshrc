@@ -10,7 +10,7 @@ export TMUXIFIER_LAYOUT_PATH="$HOME/.config/tmux/layouts"
 eval "$(tmuxifier init -)"
 eval "$(zoxide init zsh)"
 
-# eval `keychain --eval --quiet --agents ssh id_ed25519`
+eval `keychain --eval --quiet --agents ssh id_ed25519`
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
@@ -19,7 +19,8 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-vi-mode)
 source $ZSH/oh-my-zsh.sh
 
 PATH=~/.console-ninja/.bin:$PATH
-PATH=~/.dotnet/:$PATH
+PATH=/usr/share/dotnet:$PATH
+PATH=/usr/share/tools:$PATH
 
 alias v="nvim"
 alias lg="lazygit"
@@ -28,3 +29,7 @@ alias cd="z"
 
 alias af="tmuxifier load-session actumfit"
 alias lb="tmuxifier load-session leaderboards"
+
+if [ -f ~/.config/environment ]; then
+    source ~/.config/environment
+fi
