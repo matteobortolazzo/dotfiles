@@ -18,6 +18,8 @@ set number
 set relativenumber
 set incsearch
 set clipboard+=unnamedplus
+set ignorecase
+set smartcase
 
 "" Custom mapping
 nnoremap <SPACE> <Nop>
@@ -28,8 +30,8 @@ Plug 'preservim/nerdtree'
 map \ :NERDTreeToggle<CR>
 
 " LSP Goto
-map gd <Action>(GotoDefinition)
-map gD <Action>(GotoDeclaration)
+map gD <Action>(GotoDefinition)
+map gd <Action>(GotoDeclaration)
 map gI <Action>(GotoResharperImplementation)
 map gr <Action>(FindUsages)
 
