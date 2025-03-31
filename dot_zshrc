@@ -21,6 +21,7 @@ source $ZSH/oh-my-zsh.sh
 PATH=~/.console-ninja/.bin:$PATH
 PATH=/usr/share/dotnet:$PATH
 PATH=/usr/share/tools:$PATH
+PATH=$JAVA_HOME/bin:$PATH
 
 alias v="nvim"
 alias lg="lazygit"
