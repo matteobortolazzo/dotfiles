@@ -30,24 +30,23 @@ Plug 'preservim/nerdtree'
 map \ :NERDTreeToggle<CR>
 
 " LSP Goto
-map gD <Action>(GotoDefinition)
-map gd <Action>(GotoDeclaration)
-map gI <Action>(GotoResharperImplementation)
-map gr <Action>(FindUsages)
+map grD <Action>(GotoDefinition)
+map grd <Action>(GotoDeclaration)
+map gri <Action>(GotoResharperImplementation)
+map grr <Action>(FindUsages)
 
 map ]d <Action>(GotoNextError)
 map [d <Action>(GotoPreviousError)
 
 " Window mode
-map <c-w>w <Action>(NextSplitter)
 map <c-w>v <Action>(SplitVertically)
 map <c-w>s <Action>(SplitHorizontally)
 map <c-w>q <Action>(CloseContent)
 map <c-w>o <Action>(CloseAllEditorsButActive)
-map <c-w>h <Action>(MoveToLeft)
-map <c-w>l <Action>(MoveToRight)
-map <c-w>k <Action>(MoveToTop)
-map <c-w>j <Action>(MoveToBottom)
+map <c-w>h <Action>(NextSplitter)
+map <c-w>l <Action>(NextSplitter)
+map <c-w>k <Action>(PrevSplitter)
+map <c-w>j <Action>(PrevSplitter)
 
 map <leader>/ <Action>(Find)
 map <leader>z <Action>(ToggleDistractionFreeMode)
@@ -61,4 +60,4 @@ map <leader>sg <Action>(FindInPath)
 map <leader>rn <Action>(RenameElement)
 
 " Code
-map <leader>ca <Action>(ShowIntentionActions)
+map gra <Action>(ShowIntentionActions)
