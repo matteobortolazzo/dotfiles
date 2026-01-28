@@ -42,12 +42,15 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 #
-font-family = JetBrainsMono Nerd Font 
+font-family = JetBrainsMono Nerd Font
 font-size = 14
-theme = catppuccin-macchiato
+theme = Catppuccin Macchiato
 window-decoration = none
 confirm-close-surface = false
-shell-integration = zsh
 mouse-hide-while-typing = true
 scrollback-limit = 1000000
 window-save-state = always
+gtk-titlebar = false
+background-opacity = 0.8
+window-padding-x = 16
+window-padding-y = 8
