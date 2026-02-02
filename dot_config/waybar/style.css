@@ -1,0 +1,88 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "SF Pro Display", "JetBrainsMono Nerd Font Propo", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(255, 255, 255, 0.65);
+    color: rgba(0, 0, 0, 0.85);
+}
+
+tooltip {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+tooltip label {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+#workspaces button {
+    color: rgba(0, 0, 0, 0.6);
+    padding: 4px 8px;
+    margin: 0 2px;
+    background: transparent;
+    border-radius: 6px;
+    min-width: 24px;
+    transition: all 150ms ease;
+}
+
+#workspaces button.active {
+    background: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.9);
+}
+
+#workspaces button:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.modules-left {
+    padding-left: 8px;
+}
+
+.modules-right {
+    padding-right: 8px;
+}
+
+.module {
+    padding: 4px 6px;
+}
+
+#custom-launcher {
+    padding: 4px 12px;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.85);
+}
+
+#battery,
+#network,
+#pulseaudio,
+#custom-notification {
+    padding: 4px 8px;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+#battery:hover,
+#network:hover,
+#pulseaudio:hover,
+#custom-notification:hover {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+#battery.warning {
+    color: #e67e22;
+}
+
+#battery.critical {
+    color: #e74c3c;
+}
+
+#clock {
+    padding: 4px 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.85);
+}

@@ -97,6 +97,17 @@ awww img <path>                   # Set wallpaper
 - When creating new config files, `chezmoi add` them — don't hand-create entries in the source directory.
 - If a config must differ per-OS, convert to a `.tmpl` file with `chezmoi chattr +template <file>`.
 
+## Documentation resources
+
+For up-to-date documentation, use Context7 MCP:
+
+| Tool | Context7 library ID |
+|---|---|
+| Hyprland | `/websites/wiki_hypr_land` |
+| Waybar | `/alexays/waybar` |
+
+Query with `mcp__context7__resolve-library-id` (to find library IDs) and `mcp__context7__query-docs` (to fetch docs).
+
 ## What NOT to do
 
 - Don't install packages — suggest the command, let me run it.
