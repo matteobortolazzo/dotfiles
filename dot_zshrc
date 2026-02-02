@@ -5,6 +5,7 @@ export PATH=/$HOME/.config/scripts:$PATH
 export PATH=/opt/webp:$PATH
 export PATH=/$HOME/.dotnet:/$HOME/.dotnet/tools:$PATH
 export PATH="$HOME/.aspire/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Environment Variables
 export DOTNET_ROOT=$HOME/.dotnet
@@ -12,6 +13,7 @@ export KUBECONFIG=~/.kube/config
 export ZSH="$HOME/.oh-my-zsh"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+eval "$(fnm env)"
 
 # Custom environment variables
 if [ -f ~/.config/environment ]; then
