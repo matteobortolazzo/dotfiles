@@ -1,0 +1,128 @@
+{
+  "layer": "top",
+  "modules-left": [
+    "custom/launcher",
+    "clock",
+    "hyprland/workspaces"
+  ],
+  "modules-center": [
+    "custom/notification"
+  ],
+  "modules-right": [
+    "backlight",
+    "pulseaudio",
+    "bluetooth",
+    "network",
+    "power-profiles-daemon",
+    "battery"
+  ],
+  // Left
+  "custom/launcher": {
+    "format": "󰣇",
+    "on-click": "wofi --show drun"
+  },
+  "clock": {
+    "format": "{:%a %d/%m %H:%M}"
+  },
+  "hyprland/workspaces": {
+    "format": "{name}",
+    "on-click": "activate",
+    "sort-by-number": true,
+    "persistent-workspaces": {
+      "*": 5
+    }
+  },
+  // Center
+  "custom/notification": {
+    "tooltip": true,
+    "format": "<span size='16pt'>{icon}</span>",
+    "format-icons": {
+      "notification": "󱅫",
+      "none": "󰂜",
+      "dnd-notification": "󰂠",
+      "dnd-none": "󰪓",
+      "inhibited-notification": "󰂛",
+      "inhibited-none": "󰪑",
+      "dnd-inhibited-notification": "󰂛",
+      "dnd-inhibited-none": "󰪑"
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+  },
+  // Right
+  "backlight": {
+    "device": "intel_backlight",
+    "format": "{percent}% {icon}",
+    "format-icons": [
+      "",
+      ""
+    ]
+  },
+  "pulseaudio": {
+    "format": "{volume}% {icon}",
+    "format-bluetooth": "{volume}% {icon}",
+    "format-muted": "",
+    "format-icons": {
+      "default": [
+        "",
+        ""
+      ]
+    },
+    "scroll-step": 1,
+    "on-click": "pavucontrol",
+    "ignored-sinks": [
+      "Easy Effects Sink"
+    ]
+  },
+  "bluetooth": {
+    "format": " {status}",
+    "format-disabled": "",
+    "format-connected": " {num_connections} connected",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}"
+  },
+  "network": {
+    "interface": "wlo1",
+    "format": "{ifname}",
+    "format-wifi": "",
+    "format-ethernet": "{ipaddr}/{cidr} 󰊗",
+    "format-disconnected": "",
+    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
+    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-disconnected": "Disconnected",
+    "max-length": 50
+  },
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+    "tooltip": true,
+    "format-icons": {
+      "default": "",
+      "performance": "",
+      "balanced": "",
+      "power-saver": ""
+    }
+  },
+  "battery": {
+    "interval": 60,
+    "states": {
+      "warning": 30,
+      "critical": 15
+    },
+    "format": "{capacity}% {icon}",
+    "format-icons": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "max-length": 25
+  }
+}
