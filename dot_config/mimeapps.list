@@ -1,0 +1,55 @@
+[Default Applications]
+# Web
+x-scheme-handler/http=zen.desktop
+x-scheme-handler/https=zen.desktop
+x-scheme-handler/about=zen.desktop
+text/html=zen.desktop
+
+# File Manager
+inode/directory=thunar.desktop
+
+# Images
+image/png=org.xfce.ristretto.desktop
+image/jpeg=org.xfce.ristretto.desktop
+image/gif=org.xfce.ristretto.desktop
+image/webp=org.xfce.ristretto.desktop
+image/svg+xml=org.xfce.ristretto.desktop
+image/bmp=org.xfce.ristretto.desktop
+image/tiff=org.xfce.ristretto.desktop
+
+# Text/Code (nvim)
+text/plain=nvim.desktop
+text/x-csrc=nvim.desktop
+text/x-chdr=nvim.desktop
+text/x-python=nvim.desktop
+text/x-shellscript=nvim.desktop
+text/x-script.python=nvim.desktop
+application/x-shellscript=nvim.desktop
+application/json=nvim.desktop
+application/xml=nvim.desktop
+application/x-yaml=nvim.desktop
+
+# Terminal
+x-scheme-handler/terminal=com.mitchellh.ghostty.desktop
+
+# PDF
+application/pdf=org.pwmt.zathura.desktop
+
+# Video
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+video/webm=mpv.desktop
+video/x-msvideo=mpv.desktop
+video/quicktime=mpv.desktop
+video/x-flv=mpv.desktop
+
+# Audio
+audio/mpeg=mpv.desktop
+audio/x-wav=mpv.desktop
+audio/ogg=mpv.desktop
+audio/flac=mpv.desktop
+audio/x-m4a=mpv.desktop
+audio/mp4=mpv.desktop
+
+[Added Associations]
+image/png=org.xfce.ristretto.desktop;
