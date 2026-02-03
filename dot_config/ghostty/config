@@ -44,7 +44,32 @@
 #
 font-family = JetBrainsMono Nerd Font
 font-size = 14
-theme = Catppuccin Macchiato
+# Braun Dark theme (complements Braun SK 1 Light desktop)
+background = #1E1B18
+foreground = #E8E4DD
+cursor-color = #C4853A
+selection-background = #3D3835
+selection-foreground = #E8E4DD
+
+# ANSI normal
+palette = 0=#1E1B18
+palette = 1=#C75D5D
+palette = 2=#7D9B73
+palette = 3=#C4853A
+palette = 4=#6B8FAD
+palette = 5=#A67B9D
+palette = 6=#6B9A9A
+palette = 7=#A39E96
+
+# ANSI bright
+palette = 8=#4A453F
+palette = 9=#E07070
+palette = 10=#9AB88D
+palette = 11=#D9A05A
+palette = 12=#87AAC4
+palette = 13=#C498BA
+palette = 14=#8ABABA
+palette = 15=#E8E4DD
 window-decoration = none
 confirm-close-surface = false
 mouse-hide-while-typing = true
