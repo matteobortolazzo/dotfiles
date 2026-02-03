@@ -1,3 +1,4 @@
+/* Catppuccin Macchiato + Frosted Glass Theme - Refined Teal Accent */
 * {
     border: none;
     border-radius: 0;
@@ -7,22 +8,23 @@
 }
 
 window#waybar {
-    background: rgba(255, 255, 255, 0.65);
-    color: rgba(0, 0, 0, 0.85);
+    background: rgba(36, 39, 58, 0.75);
+    color: #cad3f5;
+    border-bottom: 1px solid rgba(110, 115, 141, 0.3);
 }
 
 tooltip {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(36, 39, 58, 0.95);
+    border: 1px solid rgba(139, 213, 202, 0.4);
     border-radius: 8px;
 }
 
 tooltip label {
-    color: rgba(0, 0, 0, 0.85);
+    color: #cad3f5;
 }
 
 #workspaces button {
-    color: rgba(0, 0, 0, 0.6);
+    color: #a5adcb;
     padding: 4px 8px;
     margin: 0 2px;
     background: transparent;
@@ -32,12 +34,13 @@ tooltip label {
 }
 
 #workspaces button.active {
-    background: rgba(0, 0, 0, 0.12);
-    color: rgba(0, 0, 0, 0.9);
+    background: rgba(139, 213, 202, 0.2);
+    color: #8bd5ca;
 }
 
 #workspaces button:hover {
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(139, 213, 202, 0.1);
+    color: #cad3f5;
 }
 
 .modules-left {
@@ -55,7 +58,11 @@ tooltip label {
 #custom-launcher {
     padding: 4px 12px;
     font-size: 16px;
-    color: rgba(0, 0, 0, 0.85);
+    color: #8bd5ca;
+}
+
+#custom-launcher:hover {
+    color: #a6da95;
 }
 
 #battery,
@@ -63,26 +70,26 @@ tooltip label {
 #pulseaudio,
 #custom-notification {
     padding: 4px 8px;
-    color: rgba(0, 0, 0, 0.7);
+    color: #a5adcb;
 }
 
 #battery:hover,
 #network:hover,
 #pulseaudio:hover,
 #custom-notification:hover {
-    color: rgba(0, 0, 0, 0.9);
+    color: #cad3f5;
 }
 
 #battery.warning {
-    color: #e67e22;
+    color: #f5a97f;
 }
 
 #battery.critical {
-    color: #e74c3c;
+    color: #ed8796;
 }
 
 #clock {
     padding: 4px 12px;
     font-weight: 500;
-    color: rgba(0, 0, 0, 0.85);
+    color: #cad3f5;
 }

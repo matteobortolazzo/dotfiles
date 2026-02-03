@@ -1,0 +1,12 @@
+/**
+ * Catppuccin Macchiato - Teal accent
+ */
+
+* {
+    background:     #24273aCC;
+    background-alt: #363a4fCC;
+    foreground:     #cad3f5FF;
+    selected:       #8bd5caFF;
+    active:         #a6da95FF;
+    urgent:         #ed8796FF;
+}
