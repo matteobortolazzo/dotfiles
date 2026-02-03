@@ -14,7 +14,7 @@ find_position = { fg = "#A67B9D", bg = "reset", italic = true }
 # Marker
 marker_copied   = { fg = "#7D9B73", bg = "#7D9B73" }
 marker_cut      = { fg = "#C75D5D", bg = "#C75D5D" }
-marker_selected = { fg = "#6B8FAD", bg = "#6B8FAD" }
+marker_selected = { fg = "#C4853A", bg = "#C4853A" }
 
 # Tab
 tab_active   = { fg = "#1E1B18", bg = "#E8E4DD" }
@@ -24,7 +24,7 @@ tab_width    = 1
 # Count
 count_copied   = { fg = "#1E1B18", bg = "#7D9B73" }
 count_cut      = { fg = "#1E1B18", bg = "#C75D5D" }
-count_selected = { fg = "#1E1B18", bg = "#6B8FAD" }
+count_selected = { fg = "#1E1B18", bg = "#C4853A" }
 
 # Border
 border_symbol = "│"
@@ -49,7 +49,7 @@ progress_normal = { fg = "#C4853A", bg = "#2C2825" }
 progress_error  = { fg = "#C75D5D", bg = "#2C2825" }
 
 # Permissions
-permissions_t = { fg = "#6B8FAD" }
+permissions_t = { fg = "#A67B9D" }
 permissions_r = { fg = "#D9A05A" }
 permissions_w = { fg = "#C75D5D" }
 permissions_x = { fg = "#7D9B73" }

@@ -51,20 +51,42 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 ## System theme
 
-Braun SK 1 light theme - warm ivory cream with glossy plastic aesthetic:
+Two complementary Braun-inspired themes:
+
+### Braun SK 1 Light (desktop GUI)
+
+Warm ivory cream with glossy plastic aesthetic, inspired by the 1955 Braun SK 1 radio.
 
 | Element | Value |
 |---|---|
-| Base theme | Braun SK 1 Light |
 | Background | Ivory cream (`#F5F2ED`) |
 | Surface | Warm cream (`#EBE7E0`, `#E2DDD5`) |
 | Text | Warm charcoal (`#2C2825`) |
 | Accent | Honey amber (`#C4853A`) |
 | Style | Glossy plastic (subtle highlight gradients, embossed shadows) |
 
-Applied to: Hyprland borders, Waybar, swaync, rofi, hyprlock.
+Applied to: Hyprland borders, Waybar, rofi, hyprlock.
 
-Design intent: Inspired by the 1955 Braun SK 1 radio. Light mode with warm cream backgrounds, glossy plastic surface treatment (top-highlight gradients), and honey amber accents. Perforated grille pattern used sparingly as texture accent.
+### Braun Dark (terminal TUI)
+
+Dark complement to Braun SK 1 Light for terminal applications.
+
+| Element | Value |
+|---|---|
+| Background | Dark charcoal (`#1E1B18`) |
+| Surface | Warm dark (`#2C2825`, `#3D3835`) |
+| Foreground | Warm cream (`#E8E4DD`) |
+| Muted | `#A39E96`, `#6B6560` |
+| Accent | Honey amber (`#C4853A`) |
+| Accent bright | `#D9A05A` |
+| Teal | `#6B9A9A` (directories, links) |
+| Mauve | `#A67B9D` (keywords, special) |
+| Green | `#7D9B73` (success, strings) |
+| Red | `#C75D5D` (error, deletion) |
+
+Applied to: Ghostty, yazi, bat, lazygit.
+
+**Design principle:** No pure blue. Use teal (`#6B9A9A`) for traditional blue roles (directories, links).
 
 ## Chezmoi structure
 
@@ -82,7 +104,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
   {{ end }}
   ```
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
-- After any change: `chezmoi diff` → review → `chezmoi apply -v`.
+- After any change: `chezmoi diff` → review → `chezmoi apply`.
 
 ## Platform rules
 
@@ -99,7 +121,7 @@ When editing a **shared** config, always test or reason about both platforms. Us
 ```bash
 # Chezmoi
 chezmoi diff                      # Preview pending changes
-chezmoi apply -v                  # Apply to home directory
+chezmoi apply                  # Apply to home directory
 chezmoi add ~/.config/foo/bar     # Track a new file
 chezmoi add --template ~/.config/foo/baz  # Track as template
 chezmoi edit ~/.config/foo/bar    # Edit source state copy (not needed when already in source dir)
@@ -128,7 +150,7 @@ hyprlock                          # Lock screen manually
 
 ## Editing guidelines
 
-When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply -v` to sync changes to the home directory.
+When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
 1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
 2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is macOS-like — preserve that intent unless told otherwise.
@@ -153,7 +175,7 @@ Since we're working directly in the chezmoi source directory:
 
 - **Edit source files directly** — no need for `chezmoi edit` or `chezmoi cd`
 - **Git operations happen here** — commit, push, pull as normal
-- **Apply after editing** — run `chezmoi diff` → `chezmoi apply -v` to sync to `~/`
+- **Apply after editing** — run `chezmoi diff` → `chezmoi apply` to sync to `~/`
 - **One concern per commit** — prefix with tool name: `waybar: add battery module`, `nvim: configure LSP`
 - **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
 - **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
