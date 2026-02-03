@@ -2,6 +2,28 @@
 
 Cross-platform dotfiles managed with chezmoi. Primary target is an Arch Linux laptop running Hyprland (Wayland). Terminal-only configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS.
 
+## Operating context
+
+Claude Code runs directly from the chezmoi source directory (`~/.local/share/chezmoi/`). This means:
+
+- The `.claude/` folder and this `CLAUDE.md` are tracked with the dotfiles
+- File paths use chezmoi's naming conventions, not target paths
+- Git operations happen here directly (no need for `chezmoi cd`)
+- Edits to source files require `chezmoi apply` to take effect in `~/`
+
+### Path mapping reference
+
+| Source path | Target path |
+|---|---|
+| `dot_config/` | `~/.config/` |
+| `dot_zshrc` | `~/.zshrc` |
+| `dot_zprofile` | `~/.zprofile` |
+| `dot_ideavimrc` | `~/.ideavimrc` |
+| `private_` prefix | File with restricted permissions |
+| `executable_` prefix | File with +x permission |
+| `exact_` prefix | Directory managed exactly (extra files removed) |
+| `.tmpl` suffix | Template processed by chezmoi |
+
 ## Stack
 
 | Layer | Tool | Config path | Notes |
@@ -29,14 +51,17 @@ Cross-platform dotfiles managed with chezmoi. Primary target is an Arch Linux la
 
 ## System theme
 
-Consistent color palette across all UI tools:
+Consistent dark-glass Catppuccin aesthetic across all UI components:
 
 | Element | Value |
 |---|---|
-| Theme | Catppuccin Macchiato |
+| Base theme | Catppuccin Macchiato |
+| Style | Dark glass (semi-transparent backgrounds, subtle blur) |
 | Accent | Teal (`#8bd5ca`) |
 
-Applied to: Hyprland borders, Waybar, swaync, rofi, hyprlock.
+Applied to: Hyprland borders, Waybar, swaync, rofi, hyprlock, wlogout.
+
+Design intent: Cohesive dark appearance with translucent panels and glass-like effects. Preserve this aesthetic when making UI changes.
 
 ## Chezmoi structure
 
@@ -55,7 +80,6 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
   ```
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply -v`.
-- Commit and push from the source directory (`chezmoi cd`).
 
 ## Platform rules
 
@@ -75,8 +99,7 @@ chezmoi diff                      # Preview pending changes
 chezmoi apply -v                  # Apply to home directory
 chezmoi add ~/.config/foo/bar     # Track a new file
 chezmoi add --template ~/.config/foo/baz  # Track as template
-chezmoi edit ~/.config/foo/bar    # Edit source state copy
-chezmoi cd                        # cd into source directory (for git ops)
+chezmoi edit ~/.config/foo/bar    # Edit source state copy (not needed when already in source dir)
 chezmoi update                    # Pull remote + apply
 
 # Hyprland (changes auto-reload on save)
@@ -102,7 +125,9 @@ hyprlock                          # Lock screen manually
 
 ## Editing guidelines
 
-1. **Hyprland** (`hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
+When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply -v` to sync changes to the home directory.
+
+1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
 2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is macOS-like — preserve that intent unless told otherwise.
 3. **swaync** — `config.json` (JSON) + `style.css` (imports theme). Theme directory: `themes/nova-dark/`. Icons directory: `icons/`. Reload with `swaync-client --reload-config` and `swaync-client --reload-css`.
 4. **hyprlock** — Hyprland DSL config at `hyprlock.conf`. Defines lock screen appearance/behavior.
@@ -121,10 +146,14 @@ hyprlock                          # Lock screen manually
 
 ## Workflow
 
-- One concern per commit. Prefix commits with the tool name: `waybar: add battery module`, `nvim: configure LSP`.
-- Always `chezmoi diff` before `chezmoi apply`.
-- When creating new config files, `chezmoi add` them — don't hand-create entries in the source directory.
-- If a config must differ per-OS, convert to a `.tmpl` file with `chezmoi chattr +template <file>`.
+Since we're working directly in the chezmoi source directory:
+
+- **Edit source files directly** — no need for `chezmoi edit` or `chezmoi cd`
+- **Git operations happen here** — commit, push, pull as normal
+- **Apply after editing** — run `chezmoi diff` → `chezmoi apply -v` to sync to `~/`
+- **One concern per commit** — prefix with tool name: `waybar: add battery module`, `nvim: configure LSP`
+- **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
+- **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
 
 ## Documentation resources
 
