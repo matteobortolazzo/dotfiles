@@ -1,27 +1,26 @@
-/* Catppuccin Macchiato - Refined Teal Accent */
-@define-color background      #24273a;
-@define-color text            #cad3f5;
-@define-color subtext         #a5adcb;
-@define-color surface0        #363a4f;
-@define-color surface1        #494d64;
-@define-color overlay0        #6e738d;
-@define-color teal            #8bd5ca;
-@define-color lavender        #b7bdf8;
-@define-color red             #ed8796;
-@define-color peach           #f5a97f;
-@define-color green           #a6da95;
+/* Rams Theme - Notifications
+ * Warm neutrals, amber accent, Braun-inspired */
+
+@define-color background      #1a1918;
+@define-color text            #e8e4df;
+@define-color subtext         #a39e97;
+@define-color surface0        #242322;
+@define-color surface1        #2e2d2b;
+@define-color overlay0        #4a4744;
+@define-color accent          #d4935a;
+@define-color accent-dim      #a87244;
+@define-color urgent          #c97a6a;
+@define-color success         #8a9a7b;
 
 @define-color background-alt  @surface0;
-@define-color selected        @teal;
+@define-color selected        @accent;
 @define-color hover           @surface1;
-@define-color urgent          @red;
 
 * {
   color: @text;
-
   all: unset;
   font-size: 14px;
-  font-family: "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
+  font-family: "Jost*", "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
   transition: 200ms;
 }
 
@@ -32,21 +31,21 @@
 }
 
 .floating-notifications.background .notification-row .notification-background {
-  background: alpha(@background, .85);
-  box-shadow: 0 0 8px 0 rgba(0,0,0,.6);
-  border: 1px solid alpha(@teal, .3);
-  border-radius: 24px;
+  background: alpha(@background, .88);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,.4);
+  border: 1px solid rgba(232, 228, 223, 0.08);
+  border-radius: 8px;
   margin: 16px;
   padding: 0;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification {
   padding: 6px;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification.critical {
-  border: 2px solid @urgent;
+  border: 1px solid @urgent;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification .notification-content {
@@ -58,7 +57,7 @@
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action {
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: @background-alt;
   margin: 6px;
   border: 1px solid transparent;
@@ -66,7 +65,7 @@
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
   background-color: @hover;
-  border: 1px solid alpha(@teal, .3);
+  border: 1px solid rgba(212, 147, 90, 0.3);
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
@@ -79,25 +78,25 @@
 }
 
 .summary {
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1rem;
 }
 
 .body {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: @subtext;
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button {
   margin: 6px;
   padding: 2px;
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: transparent;
   border: 1px solid transparent;
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button:hover {
-  background-color: alpha(@teal, .3);
+  background-color: alpha(@accent, .2);
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button:active {
@@ -106,10 +105,10 @@
 }
 
 .notification.critical progress {
-  background-color: @red;
+  background-color: @urgent;
 }
 
 .notification.low progress,
 .notification.normal progress {
-  background-color: @teal;
+  background-color: @accent;
 }

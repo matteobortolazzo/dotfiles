@@ -1,27 +1,26 @@
-/* Catppuccin Macchiato - Refined Teal Accent */
-@define-color background      #24273a;
-@define-color text            #cad3f5;
-@define-color subtext         #a5adcb;
-@define-color surface0        #363a4f;
-@define-color surface1        #494d64;
-@define-color overlay0        #6e738d;
-@define-color teal            #8bd5ca;
-@define-color lavender        #b7bdf8;
-@define-color red             #ed8796;
-@define-color peach           #f5a97f;
-@define-color green           #a6da95;
+/* Rams Theme - Control Center
+ * Warm neutrals, amber accent, Braun-inspired */
 
-@define-color background-alt  alpha(@surface0, .6);
-@define-color selected        @teal;
-@define-color hover           alpha(@teal, .2);
-@define-color urgent          @red;
+@define-color background      #1a1918;
+@define-color text            #e8e4df;
+@define-color subtext         #a39e97;
+@define-color surface0        #242322;
+@define-color surface1        #2e2d2b;
+@define-color overlay0        #4a4744;
+@define-color accent          #d4935a;
+@define-color accent-dim      #a87244;
+@define-color urgent          #c97a6a;
+@define-color success         #8a9a7b;
+
+@define-color background-alt  alpha(@surface0, .7);
+@define-color selected        @accent;
+@define-color hover           alpha(@accent, .15);
 
 * {
   color: @text;
-
   all: unset;
   font-size: 14px;
-  font-family: "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
+  font-family: "Jost*", "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
   transition: 200ms;
 }
 
@@ -33,10 +32,10 @@
 /* CONTROL CENTER */
 
 .control-center {
-  background: alpha(@background, .85);
-  border-radius: 24px;
-  border: 1px solid alpha(@teal, .3);
-  box-shadow: 0 0 10px 0 rgba(0,0,0,.6);
+  background: alpha(@background, .88);
+  border-radius: 8px;
+  border: 1px solid rgba(232, 228, 223, 0.08);
+  box-shadow: 0 4px 16px 0 rgba(0,0,0,.4);
   margin: 18px;
   padding: 12px;
 }
@@ -45,7 +44,7 @@
 .control-center .notification-row .notification-background,
 .control-center .notification-row .notification-background .notification.critical {
   background-color: @background-alt;
-  border-radius: 16px;
+  border-radius: 6px;
   margin: 4px 0px;
   padding: 4px;
 }
@@ -64,14 +63,14 @@
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action {
-  background: alpha(@teal, .2);
+  background: alpha(@accent, .15);
   color: @text;
-  border-radius: 12px;
+  border-radius: 4px;
   margin: 6px;
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
-  background: alpha(@teal, .4);
+  background: alpha(@accent, .3);
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
@@ -82,14 +81,14 @@
 
 .control-center .notification-row .notification-background .close-button {
   background: transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   color: @text;
   margin: 0px;
   padding: 4px;
 }
 
 .control-center .notification-row .notification-background .close-button:hover {
-  background-color: alpha(@teal, .3);
+  background-color: alpha(@accent, .2);
 }
 
 .control-center .notification-row .notification-background .close-button:active {
@@ -99,7 +98,7 @@
 progressbar,
 progress,
 trough {
-  border-radius: 12px;
+  border-radius: 4px;
 }
 
 progressbar {
@@ -107,7 +106,7 @@ progressbar {
 }
 
 progress {
-  background-color: @teal;
+  background-color: @accent;
 }
 
 /* Notifications expanded-group */
@@ -117,10 +116,10 @@ progress {
 }
 
 .notification-group-headers {
-  font-weight: bold;
+  font-weight: 600;
   font-size: 1.25rem;
   color: @text;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .notification-group-icon {
@@ -132,7 +131,7 @@ progress {
   background: transparent;
   color: @text;
   margin: 4px;
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 4px;
 }
 
@@ -151,7 +150,7 @@ progress {
 
 .widget-title button {
   background: @background-alt;
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 4px 16px;
 }
 
@@ -172,7 +171,7 @@ progress {
 .widget-dnd > switch {
   background: @background-alt;
   font-size: initial;
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: none;
   padding: 2px;
 }
@@ -182,16 +181,16 @@ progress {
 }
 
 .widget-dnd > switch:checked {
-  background: @teal;
+  background: @accent;
 }
 
 .widget-dnd > switch:checked:hover {
-  background: alpha(@teal, .8);
+  background: alpha(@accent, .8);
 }
 
 .widget-dnd > switch slider {
   background: @text;
-  border-radius: 6px;
+  border-radius: 3px;
 }
 
 /* Buttons menu */
@@ -199,7 +198,7 @@ progress {
   font-size: x-large;
   padding: 6px 2px;
   margin: 6px;
-  border-radius: 12px;
+  border-radius: 6px;
   background: @background-alt;
 }
 
@@ -207,7 +206,7 @@ progress {
   margin: 4px 10px;
   padding: 6px 12px;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
@@ -217,15 +216,15 @@ progress {
 /* Music player */
 .widget-mpris {
   background: @background-alt;
-  border-radius: 16px;
+  border-radius: 6px;
   color: @text;
   margin: 20px 6px;
 }
 
 /* NOTE: Background need *opacity 1* otherwise will turn into the album art blurred */
 .widget-mpris-player {
-  background-color: alpha(@surface0, .8);
-  border-radius: 22px;
+  background-color: alpha(@surface0, .9);
+  border-radius: 8px;
   padding: 6px 14px;
   margin: 6px;
 }
@@ -244,17 +243,17 @@ progress {
 }
 
 .widget-mpris-album-art {
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .widget-mpris-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1rem;
 }
 
 .widget-mpris-subtitle {
   font-weight: 500;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: @subtext;
 }
 
@@ -268,7 +267,7 @@ picture.mpris-background {
   color: @text;
   padding: 8px 12px;
   margin: 6px;
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 /* Backlight */
@@ -277,7 +276,7 @@ picture.mpris-background {
   color: @text;
   padding: 8px 12px;
   margin: 6px;
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 /* Icon spacing for volume and backlight */
@@ -295,14 +294,14 @@ picture.mpris-background {
 .widget-volume scale trough,
 .widget-backlight scale trough {
   background: alpha(@surface1, .6);
-  border-radius: 8px;
+  border-radius: 4px;
   min-height: 8px;
 }
 
 .widget-volume scale highlight,
 .widget-backlight scale highlight {
-  background: @teal;
-  border-radius: 8px;
+  background: @accent;
+  border-radius: 4px;
 }
 
 .widget-volume scale slider,
@@ -316,24 +315,24 @@ picture.mpris-background {
 
 .widget-volume scale slider:hover,
 .widget-backlight scale slider:hover {
-  background: @teal;
+  background: @accent;
 }
 
 /* Toggle button states - active class is added when toggle is "on" */
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active {
-  background: alpha(@teal, .3);
-  color: @teal;
+  background: alpha(@accent, .25);
+  color: @accent;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active) {
-  background: alpha(@overlay0, .3);
+  background: alpha(@overlay0, .25);
   color: @subtext;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active:hover {
-  background: alpha(@teal, .5);
+  background: alpha(@accent, .4);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active):hover {
-  background: alpha(@overlay0, .5);
+  background: alpha(@overlay0, .4);
 }

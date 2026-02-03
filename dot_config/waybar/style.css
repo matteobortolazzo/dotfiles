@@ -1,95 +1,142 @@
-/* Catppuccin Macchiato + Frosted Glass Theme - Refined Teal Accent */
+/* Rams Theme - Dieter Rams / Braun SK Series inspired
+ * Warm neutrals, amber accent, geometric precision */
+
 * {
     border: none;
     border-radius: 0;
-    font-family: "SF Pro Display", "JetBrainsMono Nerd Font Propo", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Jost*", "SF Pro Display", "JetBrainsMono Nerd Font Propo", sans-serif;
     font-size: 13px;
+    font-weight: 500;
     min-height: 0;
 }
 
 window#waybar {
-    background: rgba(36, 39, 58, 0.75);
-    color: #cad3f5;
-    border-bottom: 1px solid rgba(110, 115, 141, 0.3);
+    background: rgba(26, 25, 24, 0.85);
+    color: #e8e4df;
+    border-bottom: 1px solid rgba(232, 228, 223, 0.08);
 }
 
 tooltip {
-    background: rgba(36, 39, 58, 0.95);
-    border: 1px solid rgba(139, 213, 202, 0.4);
-    border-radius: 8px;
+    background: rgba(26, 25, 24, 0.95);
+    border: 1px solid rgba(212, 147, 90, 0.3);
+    border-radius: 4px;
 }
 
 tooltip label {
-    color: #cad3f5;
+    color: #e8e4df;
 }
 
+/* Workspaces - Braun dial indicator style */
 #workspaces button {
-    color: #a5adcb;
+    color: #6b6763;
     padding: 4px 8px;
-    margin: 0 2px;
+    margin: 4px 2px;
     background: transparent;
-    border-radius: 6px;
-    min-width: 24px;
+    border-radius: 4px;
+    min-width: 28px;
     transition: all 150ms ease;
 }
 
 #workspaces button.active {
-    background: rgba(139, 213, 202, 0.2);
-    color: #8bd5ca;
+    background: rgba(212, 147, 90, 0.15);
+    color: #d4935a;
+    border-bottom: 2px solid #d4935a;
+    border-radius: 4px 4px 0 0;
 }
 
 #workspaces button:hover {
-    background: rgba(139, 213, 202, 0.1);
-    color: #cad3f5;
+    background: rgba(232, 228, 223, 0.05);
+    color: #a39e97;
+}
+
+#workspaces button.urgent {
+    color: #c97a6a;
 }
 
 .modules-left {
-    padding-left: 8px;
+    padding-left: 12px;
 }
 
 .modules-right {
-    padding-right: 8px;
+    padding-right: 12px;
 }
 
 .module {
-    padding: 4px 6px;
+    padding: 4px 8px;
 }
 
+/* Launcher - subtle, functional */
 #custom-launcher {
-    padding: 4px 12px;
+    padding: 4px 14px;
     font-size: 16px;
-    color: #8bd5ca;
+    color: #a39e97;
 }
 
 #custom-launcher:hover {
-    color: #a6da95;
+    color: #d4935a;
 }
 
+/* Status icons - muted until interaction */
 #battery,
 #network,
 #pulseaudio,
+#bluetooth,
 #custom-notification {
-    padding: 4px 8px;
-    color: #a5adcb;
+    padding: 4px 10px;
+    color: #6b6763;
+    transition: color 150ms ease;
 }
 
 #battery:hover,
 #network:hover,
 #pulseaudio:hover,
+#bluetooth:hover,
 #custom-notification:hover {
-    color: #cad3f5;
+    color: #e8e4df;
 }
 
+/* Battery states */
 #battery.warning {
-    color: #f5a97f;
+    color: #d4935a;
 }
 
 #battery.critical {
-    color: #ed8796;
+    color: #c97a6a;
 }
 
+#battery.charging {
+    color: #a39e97;
+}
+
+/* Clock - prominent, Braun display style */
 #clock {
-    padding: 4px 12px;
+    padding: 4px 16px;
     font-weight: 500;
-    color: #cad3f5;
+    font-size: 13px;
+    color: #e8e4df;
+    letter-spacing: 0.5px;
+}
+
+/* Power button */
+#custom-power {
+    padding: 4px 12px;
+    color: #6b6763;
+    margin-right: 4px;
+}
+
+#custom-power:hover {
+    color: #c97a6a;
+}
+
+/* Active/connected states use amber */
+#network.wifi {
+    color: #a39e97;
+}
+
+#bluetooth.connected {
+    color: #d4935a;
+}
+
+#pulseaudio.muted {
+    color: #4a4744;
 }

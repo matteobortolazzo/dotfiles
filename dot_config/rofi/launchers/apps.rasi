@@ -1,5 +1,5 @@
 /**
- * App Launcher - Catppuccin Macchiato
+ * App Launcher - Rams Theme (Dieter Rams / Braun inspired)
  */
 
 /*****----- Configuration -----*****/
@@ -15,10 +15,10 @@ configuration {
 }
 
 /*****----- Global Properties -----*****/
-@import "../themes/catppuccin.rasi"
+@import "../themes/rams.rasi"
 
 * {
-    font:                        "JetBrains Mono Nerd Font 10";
+    font:                        "Jost* Medium 11";
     border-colour:               var(selected);
     handle-colour:               var(foreground);
     background-colour:           var(background);
@@ -190,8 +190,8 @@ element normal.active {
     text-color:                  var(active-foreground);
 }
 element selected.normal {
-    background-color:            var(normal-foreground);
-    text-color:                  var(normal-background);
+    background-color:            var(selected);
+    text-color:                  #1a1918;
 }
 element selected.urgent {
     background-color:            var(selected-urgent-background);

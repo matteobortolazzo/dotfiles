@@ -1,0 +1,22 @@
+/**
+ * Rams Theme - Inspired by Dieter Rams / Braun SK Series
+ * Warm neutrals with amber accent
+ */
+
+* {
+    /* Warm neutral backgrounds */
+    background:     #1a1918E6;       /* 90% opacity - frosted glass base */
+    background-alt: #242322E6;       /* Elevated surface */
+
+    /* Warm text colors */
+    foreground:     #e8e4dfFF;       /* Primary text - warm off-white */
+    foreground-alt: #a39e97FF;       /* Secondary text */
+
+    /* Amber accent - Braun dial indicator */
+    selected:       #d4935aFF;       /* Interactive elements */
+    active:         #d4935aFF;       /* Active states */
+    urgent:         #c97a6aFF;       /* Soft coral for errors */
+
+    /* Borders */
+    border:         #e8e4df14;       /* Hairline separator */
+}

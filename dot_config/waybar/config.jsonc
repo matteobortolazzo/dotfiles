@@ -36,7 +36,7 @@
   // Right
   "clock": {
     "interval": 60,
-    "format": "{:%a %d %b %H:%M}",
+    "format": "{:%a %d %b  %H:%M}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "calendar": {
       "mode": "month",
@@ -44,11 +44,11 @@
       "weeks-pos": "right",
       "on-scroll": 1,
       "format": {
-        "months": "<span color='#c6a0f6'><b>{}</b></span>",
-        "days": "<span color='#cad3f5'><b>{}</b></span>",
-        "weeks": "<span color='#8bd5ca'><b>W{}</b></span>",
-        "weekdays": "<span color='#a5adcb'><b>{}</b></span>",
-        "today": "<span color='#8bd5ca'><b><u>{}</u></b></span>"
+        "months": "<span color='#e8e4df'><b>{}</b></span>",
+        "days": "<span color='#a39e97'><b>{}</b></span>",
+        "weeks": "<span color='#6b6763'><b>W{}</b></span>",
+        "weekdays": "<span color='#6b6763'><b>{}</b></span>",
+        "today": "<span color='#d4935a'><b><u>{}</u></b></span>"
       }
     },
     "actions": {
