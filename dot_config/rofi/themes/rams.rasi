@@ -1,22 +1,22 @@
 /**
- * Rams Theme - Inspired by Dieter Rams / Braun SK Series
- * Warm neutrals with amber accent
+ * Braun SK 1 Light Theme
+ * Warm ivory cream, honey amber accent, glossy plastic aesthetic
  */
 
 * {
-    /* Warm neutral backgrounds */
-    background:     #1a1918E6;       /* 90% opacity - frosted glass base */
-    background-alt: #242322E6;       /* Elevated surface */
+    /* Warm cream backgrounds - glossy plastic */
+    background:     #F5F2EDF0;       /* Ivory cream with slight transparency */
+    background-alt: #EBE7E0F0;       /* Elevated surface */
 
-    /* Warm text colors */
-    foreground:     #e8e4dfFF;       /* Primary text - warm off-white */
-    foreground-alt: #a39e97FF;       /* Secondary text */
+    /* Warm dark text */
+    foreground:     #2C2825FF;       /* Primary text - warm charcoal */
+    foreground-alt: #6B6560FF;       /* Secondary text */
 
-    /* Amber accent - Braun dial indicator */
-    selected:       #d4935aFF;       /* Interactive elements */
-    active:         #d4935aFF;       /* Active states */
-    urgent:         #c97a6aFF;       /* Soft coral for errors */
+    /* Honey amber accent - Braun dial */
+    selected:       #C4853AFF;       /* Interactive elements */
+    active:         #C4853AFF;       /* Active states */
+    urgent:         #B85A4AFF;       /* Terracotta for errors */
 
     /* Borders */
-    border:         #e8e4df14;       /* Hairline separator */
+    border:         #2C282514;       /* Hairline separator */
 }

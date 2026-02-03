@@ -32,7 +32,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Bar | Waybar | `~/.config/waybar/` | macOS-style layout, JSONC + CSS, Linux-only |
 | Screen locker | hyprlock | `~/.config/hypr/hyprlock.conf` | Linux-only, Hyprland native |
 | Idle daemon | hypridle | `~/.config/hypr/hypridle.conf` | Linux-only, Hyprland native |
-| App launcher | rofi | `~/.config/rofi/` | Custom Catppuccin theme, Linux-only |
+| App launcher | rofi | `~/.config/rofi/` | Braun SK 1 light theme, Linux-only |
 | Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
 | Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
 | Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
@@ -51,17 +51,20 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 ## System theme
 
-Consistent dark-glass Catppuccin aesthetic across all UI components:
+Braun SK 1 light theme - warm ivory cream with glossy plastic aesthetic:
 
 | Element | Value |
 |---|---|
-| Base theme | Catppuccin Macchiato |
-| Style | Dark glass (semi-transparent backgrounds, subtle blur) |
-| Accent | Teal (`#8bd5ca`) |
+| Base theme | Braun SK 1 Light |
+| Background | Ivory cream (`#F5F2ED`) |
+| Surface | Warm cream (`#EBE7E0`, `#E2DDD5`) |
+| Text | Warm charcoal (`#2C2825`) |
+| Accent | Honey amber (`#C4853A`) |
+| Style | Glossy plastic (subtle highlight gradients, embossed shadows) |
 
-Applied to: Hyprland borders, Waybar, swaync, rofi, hyprlock, wlogout.
+Applied to: Hyprland borders, Waybar, swaync, rofi, hyprlock.
 
-Design intent: Cohesive dark appearance with translucent panels and glass-like effects. Preserve this aesthetic when making UI changes.
+Design intent: Inspired by the 1955 Braun SK 1 radio. Light mode with warm cream backgrounds, glossy plastic surface treatment (top-highlight gradients), and honey amber accents. Perforated grille pattern used sparingly as texture accent.
 
 ## Chezmoi structure
 

@@ -191,7 +191,7 @@ element normal.active {
 }
 element selected.normal {
     background-color:            var(selected);
-    text-color:                  #1a1918;
+    text-color:                  #FFFCF8;
 }
 element selected.urgent {
     background-color:            var(selected-urgent-background);

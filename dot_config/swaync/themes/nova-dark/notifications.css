@@ -1,24 +1,24 @@
-/* Rams Theme - Notifications
- * Warm neutrals, amber accent, Braun-inspired */
+/* Braun SK 1 Light Theme - Notifications
+ * Warm ivory cream, honey amber accent, glossy plastic */
 
-@define-color background      #1a1918;
-@define-color text            #e8e4df;
-@define-color subtext         #a39e97;
-@define-color surface0        #242322;
-@define-color surface1        #2e2d2b;
-@define-color overlay0        #4a4744;
-@define-color accent          #d4935a;
-@define-color accent-dim      #a87244;
-@define-color urgent          #c97a6a;
-@define-color success         #8a9a7b;
+@define-color background      #F5F2ED;
+@define-color text            #2C2825;
+@define-color subtext         #6B6560;
+@define-color surface0        #EBE7E0;
+@define-color surface1        #E2DDD5;
+@define-color overlay0        #D5D0C8;
+@define-color accent          #C4853A;
+@define-color accent-dim      #A06E2E;
+@define-color urgent          #B85A4A;
+@define-color success         #6B8F6B;
 
 @define-color background-alt  @surface0;
 @define-color selected        @accent;
 @define-color hover           @surface1;
 
 * {
-  color: @text;
   all: unset;
+  color: @text;
   font-size: 14px;
   font-family: "Jost*", "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
   transition: 200ms;
@@ -31,9 +31,18 @@
 }
 
 .floating-notifications.background .notification-row .notification-background {
-  background: alpha(@background, .88);
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.4);
-  border: 1px solid rgba(232, 228, 223, 0.08);
+  /* Glossy plastic card with highlight gradient */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 248, 0.98) 0%,
+    rgba(245, 242, 237, 0.96) 15%,
+    rgba(235, 231, 224, 0.94) 100%
+  );
+  box-shadow:
+    0 2px 8px 0 rgba(44, 40, 37, 0.10),
+    0 4px 16px 0 rgba(44, 40, 37, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(44, 40, 37, 0.08);
   border-radius: 8px;
   margin: 16px;
   padding: 0;
@@ -65,7 +74,7 @@
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
   background-color: @hover;
-  border: 1px solid rgba(212, 147, 90, 0.3);
+  border: 1px solid rgba(196, 133, 58, 0.4);
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
