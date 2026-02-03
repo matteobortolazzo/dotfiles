@@ -280,6 +280,12 @@ picture.mpris-background {
   border-radius: 12px;
 }
 
+/* Icon spacing for volume and backlight */
+.widget-volume label,
+.widget-backlight label {
+  margin-right: 16px;
+}
+
 /* Slider styling for volume and backlight */
 .widget-volume scale,
 .widget-backlight scale {

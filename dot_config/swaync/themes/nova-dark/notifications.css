@@ -28,7 +28,7 @@
 .notification-row {
   outline: none;
   margin: 0;
-  padding: 0px;
+  padding: 0px 0px 8px 0px;
 }
 
 .floating-notifications.background .notification-row .notification-background {

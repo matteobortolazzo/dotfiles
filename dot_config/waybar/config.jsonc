@@ -4,18 +4,26 @@
     "custom/launcher",
     "hyprland/workspaces"
   ],
+  "modules-center": [
+    "clock"
+  ],
   "modules-right": [
     "battery",
     "pulseaudio",
     "network",
     "bluetooth",
     "custom/notification",
-    "clock"
+    "custom/power"
   ],
   // Left
   "custom/launcher": {
     "format": "󰣇",
     "on-click": "\/home\/mborto\/.config\/rofi\/launchers\/type-1\/launcher.sh"
+  },
+  "custom/power": {
+    "format": "󰐥",
+    "tooltip": "Power menu",
+    "on-click": "wlogout"
   },
   "hyprland/workspaces": {
     "format": "{name}",
@@ -80,7 +88,8 @@
       ]
     },
     "scroll-step": 1,
-    "on-click": "pavucontrol",
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "pavucontrol",
     "ignored-sinks": [
       "Easy Effects Sink"
     ]
