@@ -8,6 +8,7 @@
     "battery",
     "pulseaudio",
     "network",
+    "bluetooth",
     "custom/notification",
     "clock"
   ],
@@ -94,7 +95,19 @@
     "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
     "tooltip-format-ethernet": "{ifname} ",
     "tooltip-format-disconnected": "Disconnected",
-    "max-length": 50
+    "max-length": 50,
+    "on-click": "~/.config/rofi/scripts/wifi.sh",
+    "on-click-right": "nm-connection-editor"
+  },
+  "bluetooth": {
+    "format": "󰂯",
+    "format-connected": "󰂱 {num_connections}",
+    "format-disabled": "󰂲",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "on-click": "~/.config/rofi/scripts/bluetooth.sh",
+    "on-click-right": "blueman-manager"
   },
   "battery": {
     "interval": 60,

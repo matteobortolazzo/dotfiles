@@ -266,7 +266,68 @@ picture.mpris-background {
 .widget-volume {
   background: @background-alt;
   color: @text;
-  padding: 4px;
+  padding: 8px 12px;
   margin: 6px;
-  border-radius: 6px;
+  border-radius: 12px;
+}
+
+/* Backlight */
+.widget-backlight {
+  background: @background-alt;
+  color: @text;
+  padding: 8px 12px;
+  margin: 6px;
+  border-radius: 12px;
+}
+
+/* Slider styling for volume and backlight */
+.widget-volume scale,
+.widget-backlight scale {
+  min-height: 8px;
+}
+
+.widget-volume scale trough,
+.widget-backlight scale trough {
+  background: alpha(@surface1, .6);
+  border-radius: 8px;
+  min-height: 8px;
+}
+
+.widget-volume scale highlight,
+.widget-backlight scale highlight {
+  background: @teal;
+  border-radius: 8px;
+}
+
+.widget-volume scale slider,
+.widget-backlight scale slider {
+  background: @text;
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+  margin: -4px;
+}
+
+.widget-volume scale slider:hover,
+.widget-backlight scale slider:hover {
+  background: @teal;
+}
+
+/* Toggle button states - active class is added when toggle is "on" */
+.widget-buttons-grid>flowbox>flowboxchild>button.toggle.active {
+  background: alpha(@teal, .3);
+  color: @teal;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active) {
+  background: alpha(@overlay0, .3);
+  color: @subtext;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button.toggle.active:hover {
+  background: alpha(@teal, .5);
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active):hover {
+  background: alpha(@overlay0, .5);
 }
