@@ -1,59 +1,59 @@
-# Braun Dark theme for yazi
+# Braun SK 1 Light theme for yazi
 
 [manager]
-cwd = { fg = "#6B9A9A" }
+cwd = { fg = "#4A7A7A" }
 
 # Hovered
-hovered         = { fg = "#1E1B18", bg = "#C4853A" }
+hovered         = { fg = "#F5F2ED", bg = "#C4853A" }
 preview_hovered = { underline = true }
 
 # Find
-find_keyword  = { fg = "#D9A05A", italic = true }
-find_position = { fg = "#A67B9D", bg = "reset", italic = true }
+find_keyword  = { fg = "#A86D2A", italic = true }
+find_position = { fg = "#8A5F82", bg = "reset", italic = true }
 
 # Marker
-marker_copied   = { fg = "#7D9B73", bg = "#7D9B73" }
-marker_cut      = { fg = "#C75D5D", bg = "#C75D5D" }
+marker_copied   = { fg = "#5A8050", bg = "#5A8050" }
+marker_cut      = { fg = "#B54A4A", bg = "#B54A4A" }
 marker_selected = { fg = "#C4853A", bg = "#C4853A" }
 
 # Tab
-tab_active   = { fg = "#1E1B18", bg = "#E8E4DD" }
-tab_inactive = { fg = "#A39E96", bg = "#2C2825" }
+tab_active   = { fg = "#F5F2ED", bg = "#2C2825" }
+tab_inactive = { fg = "#6B6560", bg = "#E2DDD5" }
 tab_width    = 1
 
 # Count
-count_copied   = { fg = "#1E1B18", bg = "#7D9B73" }
-count_cut      = { fg = "#1E1B18", bg = "#C75D5D" }
-count_selected = { fg = "#1E1B18", bg = "#C4853A" }
+count_copied   = { fg = "#F5F2ED", bg = "#5A8050" }
+count_cut      = { fg = "#F5F2ED", bg = "#B54A4A" }
+count_selected = { fg = "#F5F2ED", bg = "#C4853A" }
 
 # Border
 border_symbol = "│"
-border_style  = { fg = "#4A453F" }
+border_style  = { fg = "#C5C0B8" }
 
 # Highlighting
-syntect_theme = "~/.config/bat/themes/Braun-dark.tmTheme"
+syntect_theme = "~/.config/bat/themes/Braun-light.tmTheme"
 
 [status]
 separator_open  = "█"
 separator_close = "█"
-separator_style = { fg = "#2C2825", bg = "#2C2825" }
+separator_style = { fg = "#EBE7E0", bg = "#EBE7E0" }
 
 # Mode
-mode_normal = { fg = "#1E1B18", bg = "#C4853A", bold = true }
-mode_select = { fg = "#1E1B18", bg = "#7D9B73", bold = true }
-mode_unset  = { fg = "#1E1B18", bg = "#C75D5D", bold = true }
+mode_normal = { fg = "#F5F2ED", bg = "#C4853A", bold = true }
+mode_select = { fg = "#F5F2ED", bg = "#5A8050", bold = true }
+mode_unset  = { fg = "#F5F2ED", bg = "#B54A4A", bold = true }
 
 # Progress
-progress_label  = { fg = "#E8E4DD", bold = true }
-progress_normal = { fg = "#C4853A", bg = "#2C2825" }
-progress_error  = { fg = "#C75D5D", bg = "#2C2825" }
+progress_label  = { fg = "#2C2825", bold = true }
+progress_normal = { fg = "#C4853A", bg = "#E2DDD5" }
+progress_error  = { fg = "#B54A4A", bg = "#E2DDD5" }
 
 # Permissions
-permissions_t = { fg = "#A67B9D" }
-permissions_r = { fg = "#D9A05A" }
-permissions_w = { fg = "#C75D5D" }
-permissions_x = { fg = "#7D9B73" }
-permissions_s = { fg = "#4A453F" }
+permissions_t = { fg = "#8A5F82" }
+permissions_r = { fg = "#A86D2A" }
+permissions_w = { fg = "#B54A4A" }
+permissions_x = { fg = "#5A8050" }
+permissions_s = { fg = "#8A847C" }
 
 [input]
 border   = { fg = "#C4853A" }
@@ -63,7 +63,7 @@ selected = { reversed = true }
 
 [select]
 border   = { fg = "#C4853A" }
-active   = { fg = "#A67B9D" }
+active   = { fg = "#8A5F82" }
 inactive = {}
 
 [tasks]
@@ -72,31 +72,31 @@ title   = {}
 hovered = { underline = true }
 
 [which]
-mask            = { bg = "#2C2825" }
-cand            = { fg = "#6B9A9A" }
-rest            = { fg = "#6B6560" }
-desc            = { fg = "#A67B9D" }
+mask            = { bg = "#EBE7E0" }
+cand            = { fg = "#4A7A7A" }
+rest            = { fg = "#8A847C" }
+desc            = { fg = "#8A5F82" }
 separator       = "  "
-separator_style = { fg = "#3D3835" }
+separator_style = { fg = "#C5C0B8" }
 
 [help]
-on      = { fg = "#A67B9D" }
-exec    = { fg = "#6B9A9A" }
-desc    = { fg = "#6B6560" }
-hovered = { bg = "#3D3835", bold = true }
-footer  = { fg = "#2C2825", bg = "#A39E96" }
+on      = { fg = "#8A5F82" }
+exec    = { fg = "#4A7A7A" }
+desc    = { fg = "#8A847C" }
+hovered = { bg = "#E2DDD5", bold = true }
+footer  = { fg = "#F5F2ED", bg = "#6B6560" }
 
 [filetype]
 rules = [
 	# Media
-	{ mime = "image/*", fg = "#6B9A9A" },
-	{ mime = "{audio,video}/*", fg = "#D9A05A" },
+	{ mime = "image/*", fg = "#4A7A7A" },
+	{ mime = "{audio,video}/*", fg = "#A86D2A" },
 
 	# Archives
-	{ mime = "application/{,g}zip", fg = "#A67B9D" },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "#A67B9D" },
+	{ mime = "application/{,g}zip", fg = "#8A5F82" },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "#8A5F82" },
 
 	# Fallback
-	{ name = "*", fg = "#E8E4DD" },
+	{ name = "*", fg = "#2C2825" },
 	{ name = "*/", fg = "#C4853A" }
 ]

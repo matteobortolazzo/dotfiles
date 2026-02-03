@@ -1,22 +1,22 @@
 gui:
   theme:
-    lightTheme: false
+    lightTheme: true
     activeBorderColor:
       - "#C4853A" # Amber accent
       - bold
     inactiveBorderColor:
-      - "#4A453F" # Surface bright
+      - "#C5C0B8" # Border muted
     optionsTextColor:
-      - "#6B8FAD" # Blue
+      - "#4A6A8A" # Blue
     selectedLineBgColor:
-      - "#2C2825" # Surface
+      - "#E2DDD5" # Surface
     selectedRangeBgColor:
-      - "#2C2825" # Surface
+      - "#E2DDD5" # Surface
     cherryPickedCommitBgColor:
-      - "#6B9A9A" # Cyan
+      - "#4A7A7A" # Teal
     cherryPickedCommitFgColor:
-      - "#1E1B18" # Background
+      - "#F5F2ED" # Background
     unstagedChangesColor:
-      - "#C75D5D" # Red
+      - "#B54A4A" # Red
     defaultFgColor:
-      - "#E8E4DD" # Foreground
+      - "#2C2825" # Foreground

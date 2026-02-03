@@ -51,42 +51,31 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 ## System theme
 
-Two complementary Braun-inspired themes:
+Unified Braun SK 1 Light theme across the entire desktop, inspired by the 1955 Braun SK 1 radio. Warm ivory cream with solid backgrounds (no glass/transparency effects).
 
-### Braun SK 1 Light (desktop GUI)
-
-Warm ivory cream with glossy plastic aesthetic, inspired by the 1955 Braun SK 1 radio.
+### Braun SK 1 Light palette
 
 | Element | Value |
 |---|---|
 | Background | Ivory cream (`#F5F2ED`) |
 | Surface | Warm cream (`#EBE7E0`, `#E2DDD5`) |
+| Border muted | `#C5C0B8` |
 | Text | Warm charcoal (`#2C2825`) |
+| Text muted | `#6B6560`, `#8A847C` |
 | Accent | Honey amber (`#C4853A`) |
-| Style | Glossy plastic (subtle highlight gradients, embossed shadows) |
+| Teal | `#4A7A7A` (directories, links, operators) |
+| Mauve | `#8A5F82` (keywords, special) |
+| Green | `#5A8050` (success, strings) |
+| Red | `#B54A4A` (error, deletion) |
+| Blue | `#4A6A8A` (functions, links) |
+| Orange | `#A86D2A` (numbers, constants) |
 
-Applied to: Hyprland borders, Waybar, rofi, hyprlock.
+Applied to: Hyprland borders, Waybar, rofi, hyprlock, Ghostty, yazi, bat, lazygit.
 
-### Braun Dark (terminal TUI)
-
-Dark complement to Braun SK 1 Light for terminal applications.
-
-| Element | Value |
-|---|---|
-| Background | Dark charcoal (`#1E1B18`) |
-| Surface | Warm dark (`#2C2825`, `#3D3835`) |
-| Foreground | Warm cream (`#E8E4DD`) |
-| Muted | `#A39E96`, `#6B6560` |
-| Accent | Honey amber (`#C4853A`) |
-| Accent bright | `#D9A05A` |
-| Teal | `#6B9A9A` (directories, links) |
-| Mauve | `#A67B9D` (keywords, special) |
-| Green | `#7D9B73` (success, strings) |
-| Red | `#C75D5D` (error, deletion) |
-
-Applied to: Ghostty, yazi, bat, lazygit.
-
-**Design principle:** No pure blue. Use teal (`#6B9A9A`) for traditional blue roles (directories, links).
+**Design principles:**
+- Solid backgrounds, no transparency/glass effects
+- No pure blue - use teal for traditional blue roles
+- Use gammastep/wlsunset for comfortable night use
 
 ## Chezmoi structure
 

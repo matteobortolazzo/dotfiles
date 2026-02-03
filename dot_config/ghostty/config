@@ -44,39 +44,39 @@
 #
 font-family = JetBrainsMono Nerd Font
 font-size = 14
-# Braun Dark theme (complements Braun SK 1 Light desktop)
-background = #1E1B18
-foreground = #E8E4DD
+# Braun SK 1 Light theme (unified with desktop)
+background = #F5F2ED
+foreground = #2C2825
 cursor-color = #C4853A
-selection-background = #3D3835
-selection-foreground = #E8E4DD
+selection-background = #E2DDD5
+selection-foreground = #2C2825
 
-# ANSI normal
-palette = 0=#1E1B18
-palette = 1=#C75D5D
-palette = 2=#7D9B73
-palette = 3=#C4853A
-palette = 4=#6B9A9A
-palette = 5=#A67B9D
-palette = 6=#6B9A9A
-palette = 7=#A39E96
+# ANSI normal (darker for light bg)
+palette = 0=#2C2825
+palette = 1=#B54A4A
+palette = 2=#5A8050
+palette = 3=#A86D2A
+palette = 4=#4A7A7A
+palette = 5=#8A5F82
+palette = 6=#4A7A7A
+palette = 7=#8A847C
 
 # ANSI bright
-palette = 8=#4A453F
-palette = 9=#E07070
-palette = 10=#9AB88D
-palette = 11=#D9A05A
-palette = 12=#8ABABA
-palette = 13=#C498BA
-palette = 14=#8ABABA
-palette = 15=#E8E4DD
+palette = 8=#6B6560
+palette = 9=#C75D5D
+palette = 10=#7D9B73
+palette = 11=#C4853A
+palette = 12=#6B9A9A
+palette = 13=#A67B9D
+palette = 14=#6B9A9A
+palette = 15=#F5F2ED
 window-decoration = none
 confirm-close-surface = false
 mouse-hide-while-typing = true
 scrollback-limit = 1000000
 window-save-state = always
 gtk-titlebar = false
-background-opacity = 0.9
+background-opacity = 1
 window-padding-x = 16
 window-padding-y = 8
 term = xterm-256color
