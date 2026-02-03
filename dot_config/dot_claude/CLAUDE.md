@@ -8,6 +8,9 @@ Cross-platform dotfiles managed with chezmoi. Primary target is an Arch Linux la
 |---|---|---|---|
 | WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
 | Bar | Waybar | `~/.config/waybar/` | macOS-style layout, JSONC + CSS, Linux-only |
+| Screen locker | hyprlock | `~/.config/hypr/hyprlock.conf` | Linux-only, Hyprland native |
+| Idle daemon | hypridle | `~/.config/hypr/hypridle.conf` | Installed, not yet configured; Linux-only |
+| App launcher | rofi | `~/.config/rofi/` | [adi1090x themes](https://github.com/adi1090x/rofi), Linux-only |
 | Notifications | swaync | `~/.config/swaync/` | Planned, not yet configured; Linux-only |
 | Wallpaper | awww (formerly swww) | — | Runtime daemon, no persistent config file |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
@@ -33,6 +36,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
   {{ if ne .chezmoi.os "linux" }}
   .config/hypr/**
   .config/waybar/**
+  .config/rofi/**
   .config/swaync/**
   {{ end }}
   ```
@@ -44,7 +48,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 | Scope | Linux | macOS | Shared |
 |---|---|---|---|
-| Hyprland, Waybar, swaync (planned), awww | ✓ | — | — |
+| Hyprland, Waybar, hyprlock, hypridle, rofi, swaync (planned), awww | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 
@@ -73,6 +77,14 @@ swaync-client --reload-css        # Reload styles
 # awww
 awww-daemon                       # Start daemon (exec-once in hyprland.conf)
 awww img <path>                   # Set wallpaper
+
+# hyprlock
+hyprlock                          # Lock screen manually
+
+# hypridle (not yet configured; will run as service via exec-once)
+
+# rofi (example launcher)
+~/.config/rofi/launchers/type-2/launcher.sh  # Run launcher
 ```
 
 ## Editing guidelines
@@ -80,15 +92,18 @@ awww img <path>                   # Set wallpaper
 1. **Hyprland** (`hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
 2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is macOS-like — preserve that intent unless told otherwise.
 3. **swaync** — Not yet configured. When set up: `config.json` (JSON) + `style.css`. Reload with `swaync-client --reload-config`.
-4. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
-5. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
-6. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
-7. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
-8. **Ghostty** — Plain config file. Cross-platform terminal emulator.
-9. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
-10. **bat** — Config file + theme. Cross-platform syntax highlighter.
-11. **git** — Standard git config format. Cross-platform.
-12. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
+4. **hyprlock** — Hyprland DSL config at `hyprlock.conf`. Defines lock screen appearance/behavior.
+5. **hypridle** — Not yet configured. When set up: Hyprland DSL config at `hypridle.conf`. Defines idle timeouts and actions (lock, suspend).
+6. **rofi** — rasi config format. Uses adi1090x themes; edit `colors/*.rasi` to change colorscheme, launcher scripts in `launchers/` and `applets/bin/`.
+7. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
+8. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
+9. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
+10. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
+11. **Ghostty** — Plain config file. Cross-platform terminal emulator.
+12. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
+13. **bat** — Config file + theme. Cross-platform syntax highlighter.
+14. **git** — Standard git config format. Cross-platform.
+15. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
 
 ## Workflow
 
