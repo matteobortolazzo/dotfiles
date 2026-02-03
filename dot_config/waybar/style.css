@@ -1,7 +1,24 @@
-/* Braun SK 1 Light Theme
- * Warm ivory cream, honey amber accent, glossy plastic aesthetic
- * Inspired by the iconic 1955 phonograph */
+/* Braun Calculator Desktop Theme
+ * Neumorphic circular buttons on plastic-textured wallpaper
+ * Z-depth hierarchy: workspaces (tall), status (short), clock (recessed)
+ * Inspired by Braun ET calculator series */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOR PALETTE - Braun Calculator
+   ═══════════════════════════════════════════════════════════════════════════ */
+@define-color bg_base #F5F2ED;          /* Ivory cream - wallpaper color */
+@define-color bg_raised #FAF8F5;        /* Cream button surface */
+@define-color bg_pressed #EBE7E0;       /* Recessed surface */
+@define-color btn_gray #8A8480;         /* Warm medium gray workspace buttons */
+@define-color text_primary #2C2825;     /* Warm charcoal */
+@define-color text_muted #6B6560;       /* Muted gray-brown */
+@define-color text_light #F5F2ED;       /* Light text on dark buttons */
+@define-color accent #C4853A;           /* Honey amber */
+@define-color accent_glow rgba(196, 133, 58, 0.4); /* Amber indicator glow */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 * {
     border: none;
     border-radius: 0;
@@ -12,98 +29,165 @@
 }
 
 window#waybar {
-    /* Glossy plastic: subtle top highlight gradient */
-    background: linear-gradient(
-        180deg,
-        rgba(255, 252, 248, 0.95) 0%,
-        rgba(245, 242, 237, 0.92) 15%,
-        rgba(235, 231, 224, 0.90) 100%
-    );
-    color: #2C2825;
-    border-bottom: 1px solid rgba(44, 40, 37, 0.08);
-    box-shadow: 0 1px 3px rgba(44, 40, 37, 0.06);
+    /* Fully transparent - buttons float on wallpaper */
+    background: transparent;
+    color: @text_primary;
+    box-shadow: none;
 }
 
 tooltip {
-    background: linear-gradient(
-        180deg,
-        #FFFCF8 0%,
-        #F5F2ED 100%
-    );
+    background: @bg_raised;
     border: 1px solid rgba(196, 133, 58, 0.35);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(44, 40, 37, 0.12);
+    border-radius: 12px;
+    box-shadow:
+        2px 2px 6px rgba(0,0,0,0.2),
+        -1px -1px 3px rgba(255,255,255,0.8);
 }
 
 tooltip label {
-    color: #2C2825;
-}
-
-/* Workspaces - Braun dial indicator style */
-#workspaces button {
-    color: #6B6560;
+    color: @text_primary;
     padding: 4px 8px;
-    margin: 4px 2px;
-    background: transparent;
-    border-radius: 4px;
-    min-width: 28px;
-    transition: all 150ms ease;
 }
 
-#workspaces button.active {
-    /* Embossed active state with amber */
-    background: linear-gradient(
-        180deg,
-        rgba(196, 133, 58, 0.12) 0%,
-        rgba(196, 133, 58, 0.20) 100%
-    );
-    color: #A06E2E;
-    border-bottom: 2px solid #C4853A;
-    border-radius: 4px 4px 0 0;
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
-}
-
-#workspaces button:hover {
-    background: rgba(44, 40, 37, 0.05);
-    color: #2C2825;
-}
-
-#workspaces button.urgent {
-    color: #B85A4A;
-}
-
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT - Module groups with spacing
+   ═══════════════════════════════════════════════════════════════════════════ */
 .modules-left {
-    padding-left: 12px;
+    padding-left: 8px;
 }
 
 .modules-right {
-    padding-right: 12px;
+    padding-right: 8px;
 }
 
-.module {
-    padding: 4px 8px;
+.modules-center {
+    padding: 0 4px;
 }
 
-/* Launcher - subtle, functional */
+/* ═══════════════════════════════════════════════════════════════════════════
+   WORKSPACES - Gray circular buttons, modest elevation
+   Primary controls - warm medium gray
+   ═══════════════════════════════════════════════════════════════════════════ */
+#workspaces {
+    /* No container background - buttons float directly */
+    background: transparent;
+    margin: 6px 4px;
+    padding: 0;
+}
+
+#workspaces button {
+    /* Gray circular button - warm medium gray */
+    background: @btn_gray;
+    color: @text_light;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 4px 3px;
+    border-radius: 16px;
+    /* Simple bottom-right shadow only - no clipping */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    /* Smooth press animation */
+    transition:
+        box-shadow 100ms ease-out,
+        background 100ms ease-out,
+        color 100ms ease-out;
+}
+
+#workspaces button:hover {
+    /* Same color - neumorphism uses shadow for depth, not color changes */
+    background: @btn_gray;
+    color: @text_light;
+    /* Slightly larger shadow on hover - button "lifts" */
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.25);
+}
+
+#workspaces button.active {
+    /* PRESSED: same color, inset shadow creates "pushed into surface" effect */
+    /* Neumorphism uses shadow for depth, not color changes */
+    background: @btn_gray;
+    color: @text_light;
+    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.25);
+}
+
+#workspaces button.urgent {
+    color: #B54A4A;
+    /* Urgent glow effect */
+    box-shadow:
+        2px 2px 4px rgba(0,0,0,0.2),
+        0 0 6px rgba(181, 74, 74, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAUNCHER - Cream circular button
+   ═══════════════════════════════════════════════════════════════════════════ */
 #custom-launcher {
-    padding: 4px 14px;
+    background: @bg_raised;
+    color: @text_muted;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 4px 4px 4px 2px;
+    border-radius: 16px;
     font-size: 16px;
-    color: #6B6560;
+    /* Simple bottom-right shadow */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+    transition:
+        box-shadow 100ms ease-out,
+        background 100ms ease-out,
+        color 100ms ease-out;
 }
 
 #custom-launcher:hover {
-    color: #C4853A;
+    color: @accent;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.18);
 }
 
-/* Status icons - muted until interaction */
+#custom-launcher:active {
+    background: @bg_pressed;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLOCK - Recessed LCD display (pill shape)
+   ═══════════════════════════════════════════════════════════════════════════ */
+#clock {
+    background: rgba(235, 231, 224, 0.9);
+    color: @text_primary;
+    padding: 0 16px;        /* No vertical padding - match button height */
+    margin: 4px 4px;        /* Match button margins */
+    min-height: 32px;       /* Match button height */
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    /* RECESSED: inset shadow - below surface */
+    box-shadow:
+        inset 1px 1px 3px rgba(0,0,0,0.1),
+        inset -1px -1px 2px rgba(255,255,255,0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATUS ICONS - Cream circular buttons, subtle elevation
+   Secondary indicators - consistent sizing with workspaces
+   ═══════════════════════════════════════════════════════════════════════════ */
 #battery,
 #network,
 #pulseaudio,
 #bluetooth,
 #custom-notification {
-    padding: 4px 10px;
-    color: #6B6560;
-    transition: color 150ms ease;
+    background: @bg_raised;
+    color: @text_muted;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 4px 2px;
+    border-radius: 16px;
+    /* Subtle bottom-right shadow */
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    transition:
+        box-shadow 100ms ease-out,
+        background 100ms ease-out,
+        color 100ms ease-out;
 }
 
 #battery:hover,
@@ -111,51 +195,95 @@ tooltip label {
 #pulseaudio:hover,
 #bluetooth:hover,
 #custom-notification:hover {
-    color: #2C2825;
+    color: @text_primary;
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.12);
+}
+
+#battery:active,
+#network:active,
+#pulseaudio:active,
+#bluetooth:active,
+#custom-notification:active {
+    background: @bg_pressed;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.08);
 }
 
 /* Battery states */
 #battery.warning {
-    color: #C4853A;
+    color: @accent;
 }
 
 #battery.critical {
-    color: #B85A4A;
+    color: #B54A4A;
+    /* Critical glow effect */
+    box-shadow:
+        1px 1px 2px rgba(0,0,0,0.1),
+        0 0 6px rgba(181, 74, 74, 0.3);
 }
 
 #battery.charging {
-    color: #6B8F6B;
+    color: #5A8050;
 }
 
-/* Clock - prominent, Braun display style */
-#clock {
-    padding: 4px 16px;
-    font-weight: 600;
-    font-size: 13px;
-    color: #2C2825;
-    letter-spacing: 0.5px;
+/* Network connected state */
+#network.wifi {
+    color: @text_primary;
 }
 
-/* Power button */
+/* Bluetooth connected - amber indicator */
+#bluetooth.connected {
+    color: @accent;
+    box-shadow:
+        1px 1px 2px rgba(0,0,0,0.1),
+        0 0 4px @accent_glow;
+}
+
+/* Muted state - slightly recessed */
+#pulseaudio.muted {
+    color: #A8A299;
+    background: @bg_pressed;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.08);
+}
+
+/* Reset inner label constraints for circular buttons */
+#battery label,
+#network label,
+#pulseaudio label,
+#bluetooth label,
+#custom-notification label,
+#custom-launcher label,
+#custom-power label {
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POWER BUTTON - Amber (special function key like Braun calculators)
+   ═══════════════════════════════════════════════════════════════════════════ */
 #custom-power {
-    padding: 4px 12px;
-    color: #6B6560;
-    margin-right: 4px;
+    background: @accent;
+    color: @bg_raised;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 4px 4px 4px 2px;
+    border-radius: 16px;
+    /* Modest shadow for amber button */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    transition:
+        box-shadow 100ms ease-out,
+        background 100ms ease-out,
+        color 100ms ease-out;
 }
 
 #custom-power:hover {
-    color: #B85A4A;
+    background: #D4954A;
+    color: @bg_raised;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.25);
 }
 
-/* Active/connected states use amber */
-#network.wifi {
-    color: #2C2825;
-}
-
-#bluetooth.connected {
-    color: #C4853A;
-}
-
-#pulseaudio.muted {
-    color: #A8A299;
+#custom-power:active {
+    background: #B4752A;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
 }

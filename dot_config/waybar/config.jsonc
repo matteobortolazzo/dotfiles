@@ -110,7 +110,7 @@
   },
   "bluetooth": {
     "format": "󰂯",
-    "format-connected": "󰂱 {num_connections}",
+    "format-connected": "󰂱",
     "format-disabled": "󰂲",
     "tooltip-format": "{controller_alias}\t{controller_address}",
     "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
