@@ -18,7 +18,7 @@
   // Left
   "custom/launcher": {
     "format": "󰣇",
-    "on-click": "\/home\/mborto\/.config\/rofi\/launchers\/type-1\/launcher.sh"
+    "on-click": "~/.config/rofi/launchers/apps.sh"
   },
   "custom/power": {
     "format": "󰐥",
