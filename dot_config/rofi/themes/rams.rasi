@@ -1,22 +1,23 @@
 /**
- * Braun SK 1 Light Theme
- * Warm ivory cream, honey amber accent, glossy plastic aesthetic
+ * Braun RT20/SK4/ET66 Theme
+ * Cream plastic, amber accents, physical state metaphors
+ * "Less, but better." - Dieter Rams
  */
 
 * {
-    /* Warm cream backgrounds - glossy plastic */
-    background:     #F5F2EDF0;       /* Ivory cream with slight transparency */
-    background-alt: #EBE7E0F0;       /* Elevated surface */
+    /* Cream plastic surfaces */
+    background:     #E8E4DCF0;       /* Cream base with slight transparency */
+    background-alt: #D9D2C6F0;       /* Pressed/selected surface */
 
-    /* Warm dark text */
-    foreground:     #2C2825FF;       /* Primary text - warm charcoal */
-    foreground-alt: #6B6560FF;       /* Secondary text */
+    /* Dark text */
+    foreground:     #2A2520FF;       /* Primary text */
+    foreground-alt: #5F503EFF;       /* Secondary text */
 
-    /* Honey amber accent - Braun dial */
-    selected:       #C4853AFF;       /* Interactive elements */
-    active:         #C4853AFF;       /* Active states */
-    urgent:         #B85A4AFF;       /* Terracotta for errors */
+    /* Amber accent - indicator/selection */
+    selected:       #D4A04AFF;       /* Active elements */
+    active:         #D4A04AFF;       /* Active states */
+    urgent:         #AD1D1DFF;       /* Critical/error */
 
     /* Borders */
-    border:         #2C282514;       /* Hairline separator */
+    border:         #D9D2C6FF;       /* Cream shadow */
 }

@@ -1,16 +1,16 @@
-/* Braun SK 1 Light Theme - Control Center
- * Warm ivory cream, honey amber accent, glossy plastic */
+/* Braun RT20/SK4/ET66 Theme - Control Center
+ * Cream plastic, amber accents, physical state metaphors */
 
-@define-color background      #F5F2ED;
-@define-color text            #2C2825;
-@define-color subtext         #6B6560;
-@define-color surface0        #EBE7E0;
-@define-color surface1        #E2DDD5;
-@define-color overlay0        #D5D0C8;
-@define-color accent          #C4853A;
-@define-color accent-dim      #A06E2E;
-@define-color urgent          #B85A4A;
-@define-color success         #6B8F6B;
+@define-color background      #E8E4DC;
+@define-color text            #2A2520;
+@define-color subtext         #5F503E;
+@define-color surface0        #D9D2C6;
+@define-color surface1        #F2EFE8;
+@define-color overlay0        #B8B0A4;
+@define-color accent          #D4A04A;
+@define-color accent-dim      #8B7034;
+@define-color urgent          #AD1D1D;
+@define-color success         #5A6B4A;
 
 @define-color background-alt  alpha(@surface0, .85);
 @define-color selected        @accent;
@@ -20,7 +20,7 @@
   all: unset;
   color: @text;
   font-size: 14px;
-  font-family: "Jost*", "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
+  font-family: "Space Mono", "JetBrains Mono Nerd Font", monospace;
   transition: 200ms;
 }
 
@@ -32,18 +32,18 @@
 /* CONTROL CENTER */
 
 .control-center {
-  /* Glossy plastic panel with subtle highlight gradient */
+  /* Cream plastic panel */
   background: linear-gradient(
     180deg,
-    rgba(255, 252, 248, 0.98) 0%,
-    rgba(245, 242, 237, 0.96) 10%,
-    rgba(235, 231, 224, 0.94) 100%
+    rgba(242, 239, 232, 0.98) 0%,
+    rgba(232, 228, 220, 0.96) 10%,
+    rgba(217, 210, 198, 0.94) 100%
   );
   border-radius: 8px;
-  border: 1px solid rgba(44, 40, 37, 0.08);
+  border: 1px solid rgba(42, 37, 32, 0.08);
   box-shadow:
-    0 4px 16px 0 rgba(44, 40, 37, 0.12),
-    0 8px 32px 0 rgba(44, 40, 37, 0.08),
+    0 4px 16px 0 rgba(42, 37, 32, 0.12),
+    0 8px 32px 0 rgba(42, 37, 32, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   margin: 18px;
   padding: 12px;
@@ -202,18 +202,18 @@ progress {
   border-radius: 3px;
 }
 
-/* Buttons menu - with subtle perforated grille pattern */
+/* Buttons menu - with subtle perforated grille pattern (fabric texture) */
 .widget-buttons-grid {
   font-size: x-large;
   padding: 6px 2px;
   margin: 6px;
   border-radius: 6px;
-  /* Layered: solid base + dot pattern overlay */
+  /* Fabric texture - like speaker grille */
   background:
-    radial-gradient(circle at center, rgba(44, 40, 37, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(235, 231, 224, 0.9) 0%, rgba(226, 221, 213, 0.9) 100%);
+    radial-gradient(circle at center, rgba(42, 37, 32, 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(196, 189, 176, 0.9) 0%, rgba(168, 159, 143, 0.9) 100%);
   background-size: 8px 8px, 100% 100%;
-  box-shadow: inset 0 1px 3px rgba(44, 40, 37, 0.06);
+  box-shadow: inset 0 1px 3px rgba(42, 37, 32, 0.06);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button {
@@ -240,13 +240,13 @@ progress {
   /* Embossed recessed area - like the speaker grille section */
   background: linear-gradient(
     180deg,
-    rgba(226, 221, 213, 0.95) 0%,
-    rgba(235, 231, 224, 0.95) 100%
+    rgba(217, 210, 198, 0.95) 0%,
+    rgba(232, 228, 220, 0.95) 100%
   );
   border-radius: 8px;
   padding: 6px 14px;
   margin: 6px;
-  box-shadow: inset 0 1px 3px rgba(44, 40, 37, 0.08);
+  box-shadow: inset 0 1px 3px rgba(42, 37, 32, 0.08);
 }
 
 .widget-mpris > box > button {
@@ -315,12 +315,12 @@ picture.mpris-background {
 .widget-backlight scale trough {
   background: linear-gradient(
     180deg,
-    rgba(213, 208, 200, 0.8) 0%,
-    rgba(226, 221, 213, 0.8) 100%
+    rgba(184, 176, 164, 0.8) 0%,
+    rgba(217, 210, 198, 0.8) 100%
   );
   border-radius: 4px;
   min-height: 8px;
-  box-shadow: inset 0 1px 2px rgba(44, 40, 37, 0.1);
+  box-shadow: inset 0 1px 2px rgba(42, 37, 32, 0.1);
 }
 
 .widget-volume scale highlight,
@@ -345,39 +345,41 @@ picture.mpris-background {
 
 /* Toggle button states - active class is added when toggle is "on" */
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active {
-  /* Active toggle: amber glow like the SK 1 dial */
+  /* Active toggle: amber glow indicator */
   background: linear-gradient(
     180deg,
-    rgba(196, 133, 58, 0.25) 0%,
-    rgba(196, 133, 58, 0.35) 100%
+    rgba(212, 160, 74, 0.25) 0%,
+    rgba(212, 160, 74, 0.35) 100%
   );
   color: @accent-dim;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 8px rgba(212, 160, 74, 0.4);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active) {
   /* Inactive: recessed plastic look */
   background: linear-gradient(
     180deg,
-    rgba(213, 208, 200, 0.4) 0%,
-    rgba(213, 208, 200, 0.6) 100%
+    rgba(184, 176, 164, 0.4) 0%,
+    rgba(184, 176, 164, 0.6) 100%
   );
   color: @subtext;
-  box-shadow: inset 0 1px 2px rgba(44, 40, 37, 0.06);
+  box-shadow: inset 0 1px 2px rgba(42, 37, 32, 0.06);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active:hover {
   background: linear-gradient(
     180deg,
-    rgba(196, 133, 58, 0.35) 0%,
-    rgba(196, 133, 58, 0.45) 100%
+    rgba(212, 160, 74, 0.35) 0%,
+    rgba(212, 160, 74, 0.45) 100%
   );
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active):hover {
   background: linear-gradient(
     180deg,
-    rgba(213, 208, 200, 0.5) 0%,
-    rgba(213, 208, 200, 0.7) 100%
+    rgba(184, 176, 164, 0.5) 0%,
+    rgba(184, 176, 164, 0.7) 100%
   );
 }

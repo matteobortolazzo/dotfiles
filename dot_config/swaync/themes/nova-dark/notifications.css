@@ -1,16 +1,16 @@
-/* Braun SK 1 Light Theme - Notifications
- * Warm ivory cream, honey amber accent, glossy plastic */
+/* Braun RT20/SK4/ET66 Theme - Notifications
+ * Cream plastic, amber accents, physical state metaphors */
 
-@define-color background      #F5F2ED;
-@define-color text            #2C2825;
-@define-color subtext         #6B6560;
-@define-color surface0        #EBE7E0;
-@define-color surface1        #E2DDD5;
-@define-color overlay0        #D5D0C8;
-@define-color accent          #C4853A;
-@define-color accent-dim      #A06E2E;
-@define-color urgent          #B85A4A;
-@define-color success         #6B8F6B;
+@define-color background      #E8E4DC;
+@define-color text            #2A2520;
+@define-color subtext         #5F503E;
+@define-color surface0        #D9D2C6;
+@define-color surface1        #F2EFE8;
+@define-color overlay0        #B8B0A4;
+@define-color accent          #D4A04A;
+@define-color accent-dim      #8B7034;
+@define-color urgent          #AD1D1D;
+@define-color success         #5A6B4A;
 
 @define-color background-alt  @surface0;
 @define-color selected        @accent;
@@ -20,7 +20,7 @@
   all: unset;
   color: @text;
   font-size: 14px;
-  font-family: "Jost*", "SF Pro Display", "JetBrains Mono Nerd Font", sans-serif;
+  font-family: "Space Mono", "JetBrains Mono Nerd Font", monospace;
   transition: 200ms;
 }
 
@@ -31,18 +31,20 @@
 }
 
 .floating-notifications.background .notification-row .notification-background {
-  /* Glossy plastic card with highlight gradient */
+  /* Cream plastic card */
   background: linear-gradient(
     180deg,
-    rgba(255, 252, 248, 0.98) 0%,
-    rgba(245, 242, 237, 0.96) 15%,
-    rgba(235, 231, 224, 0.94) 100%
+    rgba(242, 239, 232, 0.98) 0%,
+    rgba(232, 228, 220, 0.96) 15%,
+    rgba(217, 210, 198, 0.94) 100%
   );
   box-shadow:
-    0 2px 8px 0 rgba(44, 40, 37, 0.10),
-    0 4px 16px 0 rgba(44, 40, 37, 0.08),
+    0 2px 8px 0 rgba(42, 37, 32, 0.10),
+    0 4px 16px 0 rgba(42, 37, 32, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(44, 40, 37, 0.08);
+  border: 1px solid rgba(42, 37, 32, 0.08);
+  /* Amber left stripe indicator */
+  border-left: 4px solid @accent;
   border-radius: 8px;
   margin: 16px;
   padding: 0;
@@ -54,7 +56,7 @@
 }
 
 .floating-notifications.background .notification-row .notification-background .notification.critical {
-  border: 1px solid @urgent;
+  border-left: 4px solid @urgent;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification .notification-content {
@@ -74,7 +76,7 @@
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
   background-color: @hover;
-  border: 1px solid rgba(196, 133, 58, 0.4);
+  border: 1px solid rgba(212, 160, 74, 0.4);
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:active {

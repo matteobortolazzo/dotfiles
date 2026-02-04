@@ -29,14 +29,14 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
 | WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
-| Bar | Waybar | `~/.config/waybar/` | macOS-style layout, JSONC + CSS, Linux-only |
+| Bar | Waybar | `~/.config/waybar/` | Neumorphic circular buttons, transparent bar, Linux-only |
 | Screen locker | hyprlock | `~/.config/hypr/hyprlock.conf` | Linux-only, Hyprland native |
 | Idle daemon | hypridle | `~/.config/hypr/hypridle.conf` | Linux-only, Hyprland native |
 | App launcher | rofi | `~/.config/rofi/` | Braun SK 1 light theme, Linux-only |
 | Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
 | Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
 | Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
-| Wallpaper | awww (formerly swww) | — | Runtime daemon, no persistent config file |
+| Wallpaper | awww (formerly swww) | — | Runtime daemon; Braun plastic-grain texture at `~/Pictures/wallpapers/braun-plastic.png` |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
@@ -51,30 +51,68 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 ## System theme
 
-Unified Braun SK 1 Light theme across the entire desktop, inspired by the 1955 Braun SK 1 radio. Warm ivory cream with solid backgrounds (no glass/transparency effects).
+Braun RT20/SK4/ET66 aesthetic - the desktop as a physical device surface. Inspired by Dieter Rams' work at Braun: RT20 radio (cream + wood), SK4 phonosuper, ET66 calculator. Core principle: **state via physical metaphors** (depression, indicator lights, mechanical pointers) rather than color changes.
 
-### Braun SK 1 Light palette
+### Braun RT20/SK4/ET66 palette
 
 | Element | Value |
 |---|---|
-| Background | Ivory cream (`#F5F2ED`) |
-| Surface | Warm cream (`#EBE7E0`, `#E2DDD5`) |
-| Border muted | `#C5C0B8` |
-| Text | Warm charcoal (`#2C2825`) |
-| Text muted | `#6B6560`, `#8A847C` |
-| Accent | Honey amber (`#C4853A`) |
-| Teal | `#4A7A7A` (directories, links, operators) |
-| Mauve | `#8A5F82` (keywords, special) |
-| Green | `#5A8050` (success, strings) |
-| Red | `#B54A4A` (error, deletion) |
-| Blue | `#4A6A8A` (functions, links) |
-| Orange | `#A86D2A` (numbers, constants) |
+| Cream base | `#E8E4DC` (primary background) |
+| Cream light | `#F2EFE8` (hover/highlight) |
+| Cream shadow | `#D9D2C6` (pressed, borders) |
+| Warm grey | `#B8B0A4` (disabled) |
+| Fabric light | `#C4BDB0` (speaker grille) |
+| Fabric mid | `#A89F8F` |
+| Fabric dark | `#7A7265` |
+| Amber primary | `#D4A04A` (indicator ON) |
+| Amber bright | `#E8B04A` |
+| Amber dim | `#8B7034` (indicator OFF) |
+| Wood light | `#C09C6F` |
+| Wood mid | `#A68B5B` (clock bg) |
+| Text primary | `#2A2520` |
+| Text secondary | `#5F503E` |
+| Text muted | `#8A8278` |
+| Green | `#5A6B4A` (success) |
+| Red | `#AD1D1D` (critical) |
+| Terminal bg | `#2A2520` (dark theme) |
 
-Applied to: Hyprland borders, Waybar, rofi, hyprlock, Ghostty, yazi, bat, lazygit.
+Applied to: Hyprland borders, Waybar, rofi, hyprlock, swaync, Ghostty (dark).
+
+### Physical state metaphors
+
+- **Depression**: Buttons look pressed via inset shadows + `translateY(1px)`. Color stays same.
+- **Indicator lights**: Small amber glow (via `box-shadow` + `border-left`) shows ON state. OFF = dim amber, ON = bright amber glow.
+- **Mechanical pointer**: Active workspace marked by amber `border-bottom`, not color change.
+
+### Wallpaper
+
+Plastic-grain texture: cream `#E8E4DC` base + subtle monochrome noise (8% opacity).
+Generated with ImageMagick, stored at `~/Pictures/wallpapers/braun-plastic.png`.
+
+### Waybar module types
+
+| Type | Use | Visual |
+|---|---|---|
+| Standard | Battery % | Transparent bg, text only |
+| Fabric | Workspaces container | Horizontal stripe texture |
+| Toggle | Network, BT, audio, notif | Cream button + amber indicator glow |
+| Wood | Clock only | Wood gradient (RT20 beech veneer) |
+| Launcher | App launcher | Cream + amber border ("equals key") |
+| Power | Shutdown | Amber background |
+
+### Window decorations
+
+- `rounding = 8`, `gaps_in = 8`, `gaps_out = 16`
+- Active border: amber `#D4A04A`
+- Inactive border: cream shadow `#D9D2C6`
+- Shadow range: 20
 
 **Design principles:**
-- Solid backgrounds, no transparency/glass effects
-- No pure blue - use teal for traditional blue roles
+- Transparent Waybar with physical button metaphors
+- No color change on interaction - use shadow/depression instead
+- Amber is sacred: only for indicators, active pointers, launcher border
+- Wood = time (clock only)
+- Fabric texture = system status containers
 - Use gammastep/wlsunset for comfortable night use
 
 ## Chezmoi structure
@@ -142,7 +180,7 @@ hyprlock                          # Lock screen manually
 When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
 1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
-2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is macOS-like — preserve that intent unless told otherwise.
+2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is Braun Calculator with neumorphic circular buttons floating on transparent bar.
 3. **swaync** — `config.json` (JSON) + `style.css` (imports theme). Theme directory: `themes/nova-dark/`. Icons directory: `icons/`. Reload with `swaync-client --reload-config` and `swaync-client --reload-css`.
 4. **hyprlock** — Hyprland DSL config at `hyprlock.conf`. Defines lock screen appearance/behavior.
 5. **hypridle** — Hyprland DSL config at `hypridle.conf`. Defines idle timeouts: dim (2.5min), lock (5min), DPMS (5.5min), suspend (30min). Also controls keyboard backlight. Started via exec-once in hyprland.conf.

@@ -1,251 +1,334 @@
-/* Braun Calculator Desktop Theme
- * Neumorphic circular buttons on plastic-textured wallpaper
- * Z-depth hierarchy: workspaces (tall), status (short), clock (recessed)
- * Inspired by Braun ET calculator series */
+/* Braun RT20/SK4/ET66 Theme
+ * Physical state metaphors: depression, indicator lights, mechanical pointers
+ * "Less, but better." - Dieter Rams */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLOR PALETTE - Braun Calculator
+   COLOR PALETTE - Braun RT20/SK4/ET66
    ═══════════════════════════════════════════════════════════════════════════ */
-@define-color bg_base #F5F2ED;          /* Ivory cream - wallpaper color */
-@define-color bg_raised #FAF8F5;        /* Cream button surface */
-@define-color bg_pressed #EBE7E0;       /* Recessed surface */
-@define-color btn_gray #8A8480;         /* Warm medium gray workspace buttons */
-@define-color text_primary #2C2825;     /* Warm charcoal */
-@define-color text_muted #6B6560;       /* Muted gray-brown */
-@define-color text_light #F5F2ED;       /* Light text on dark buttons */
-@define-color accent #C4853A;           /* Honey amber */
-@define-color accent_glow rgba(196, 133, 58, 0.4); /* Amber indicator glow */
+@define-color cream_base #E8E4DC;
+/* Primary background */
+@define-color cream_light #F2EFE8;
+/* Hover/highlight surface */
+@define-color cream_shadow #D9D2C6;
+/* Pressed surface, borders */
+@define-color warm_grey #B8B0A4;
+/* Disabled/muted elements */
+
+@define-color fabric_light #C4BDB0;
+/* Light weave */
+@define-color fabric_mid #A89F8F;
+/* Medium weave */
+@define-color fabric_dark #7A7265;
+/* Dark weave, shadows */
+
+@define-color amber_primary #D4A04A;
+/* Indicator ON (normal) */
+@define-color amber_bright #E8B04A;
+/* Indicator ON (bright) */
+@define-color amber_dim #8B7034;
+/* Indicator OFF */
+@define-color amber_glow rgba(212, 160, 74, 0.4);
+/* Amber indicator glow */
+
+@define-color wood_light #C09C6F;
+/* Decorative accent */
+@define-color wood_mid #A68B5B;
+/* Time/date module bg */
+
+@define-color text_primary #2A2520;
+/* Primary text */
+@define-color text_secondary #5F503E;
+/* Secondary text */
+@define-color text_muted #8A8278;
+/* Disabled text */
+
+@define-color green_on #5A6B4A;
+/* Connected, success */
+@define-color red_off #AD1D1D;
+/* Critical, error */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BASE STYLES
    ═══════════════════════════════════════════════════════════════════════════ */
 * {
-    border: none;
-    border-radius: 0;
-    font-family: "Jost*", "SF Pro Display", "JetBrainsMono Nerd Font Propo", sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    min-height: 0;
+  border: none;
+  border-radius: 0;
+  font-family: "Space Mono", "JetBrainsMono Nerd Font Propo", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  min-height: 0;
 }
 
 window#waybar {
-    /* Fully transparent - buttons float on wallpaper */
-    background: transparent;
-    color: @text_primary;
-    box-shadow: none;
+  background: transparent;
+  color: @text_primary;
+  box-shadow: none;
 }
 
 tooltip {
-    background: @bg_raised;
-    border: 1px solid rgba(196, 133, 58, 0.35);
-    border-radius: 12px;
-    box-shadow:
-        2px 2px 6px rgba(0,0,0,0.2),
-        -1px -1px 3px rgba(255,255,255,0.8);
+  background: @cream_base;
+  border: 1px solid @cream_shadow;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 tooltip label {
-    color: @text_primary;
-    padding: 4px 8px;
+  color: @text_primary;
+  padding: 4px 8px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYOUT - Module groups with spacing
    ═══════════════════════════════════════════════════════════════════════════ */
 .modules-left {
-    padding-left: 8px;
+  padding-left: 12px;
 }
 
 .modules-right {
-    padding-right: 8px;
+  padding-right: 12px;
 }
 
 .modules-center {
-    padding: 0 4px;
+  padding: 0 4px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   WORKSPACES - Gray circular buttons, modest elevation
-   Primary controls - warm medium gray
+   WORKSPACES - Cream circular buttons floating on transparent bar
+   Amber pointer indicates active workspace
    ═══════════════════════════════════════════════════════════════════════════ */
 #workspaces {
-    /* No container background - buttons float directly */
-    background: transparent;
-    margin: 6px 4px;
-    padding: 0;
+  background: transparent;
+  border: none;
+  margin: 5px 4px;
+  padding: 0;
 }
 
 #workspaces button {
-    /* Gray circular button - warm medium gray */
-    background: @btn_gray;
-    color: @text_light;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 0;
-    margin: 4px 3px;
-    border-radius: 16px;
-    /* Simple bottom-right shadow only - no clipping */
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    /* Smooth press animation */
-    transition:
-        box-shadow 100ms ease-out,
-        background 100ms ease-out,
-        color 100ms ease-out;
+  /* Rounded rectangle button - matches toggle modules */
+  background: @cream_base;
+  color: @text_muted;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  margin: 2px 3px;
+  border-radius: 12px;
+  border: 1px solid @cream_shadow;
+  font-size: 11px;
+  /* Default: indicator OFF (left border dim) */
+  border-left: 3px solid @amber_dim;
+  /* Subtle elevation */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition:
+    box-shadow 100ms ease-out,
+    background 100ms ease-out,
+    border-color 100ms ease-out,
+    border-left-color 100ms ease-out;
 }
 
 #workspaces button:hover {
-    /* Same color - neumorphism uses shadow for depth, not color changes */
-    background: @btn_gray;
-    color: @text_light;
-    /* Slightly larger shadow on hover - button "lifts" */
-    box-shadow: 3px 3px 6px rgba(0,0,0,0.25);
+  /* Hover = subtle lighten, no color change */
+  background: @cream_light;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #workspaces button.active {
-    /* PRESSED: same color, inset shadow creates "pushed into surface" effect */
-    /* Neumorphism uses shadow for depth, not color changes */
-    background: @btn_gray;
-    color: @text_light;
-    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.25);
+  /* Indicator ON + amber glow - matches toggle modules */
+  background: @cream_shadow;
+  border-left: 3px solid @amber_primary;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.15),
+    0 0 8px @amber_glow;
 }
 
 #workspaces button.urgent {
-    color: #B54A4A;
-    /* Urgent glow effect */
-    box-shadow:
-        2px 2px 4px rgba(0,0,0,0.2),
-        0 0 6px rgba(181, 74, 74, 0.3);
+  /* Urgent glow effect */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 0 6px rgba(173, 29, 29, 0.3);
+  border-color: @red_off;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAUNCHER - Cream circular button
+   LAUNCHER - Amber-bordered cream button (the "equals key")
    ═══════════════════════════════════════════════════════════════════════════ */
 #custom-launcher {
-    background: @bg_raised;
-    color: @text_muted;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 0;
-    margin: 4px 4px 4px 2px;
-    border-radius: 16px;
-    font-size: 16px;
-    /* Simple bottom-right shadow */
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.15);
-    transition:
-        box-shadow 100ms ease-out,
-        background 100ms ease-out,
-        color 100ms ease-out;
+  background: @cream_base;
+  color: @text_primary;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 14px;
+  margin: 5px 4px 5px 0;
+  border-radius: 12px;
+  border: 2px solid @amber_primary;
+  font-size: 14px;
+  /* Subtle elevation */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light;
+  transition:
+    box-shadow 100ms ease-out,
+    background 100ms ease-out;
 }
 
 #custom-launcher:hover {
-    color: @accent;
-    box-shadow: 3px 3px 5px rgba(0,0,0,0.18);
+  background: @cream_light;
 }
 
 #custom-launcher:active {
-    background: @bg_pressed;
-    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+  /* Depression effect */
+  background: @cream_shadow;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CLOCK - Recessed LCD display (pill shape)
+   CLOCK - Inset display on plastic surface
+   Non-interactive display, appears pressed into the cream surface
    ═══════════════════════════════════════════════════════════════════════════ */
 #clock {
-    background: rgba(235, 231, 224, 0.9);
-    color: @text_primary;
-    padding: 0 16px;        /* No vertical padding - match button height */
-    margin: 4px 4px;        /* Match button margins */
-    min-height: 32px;       /* Match button height */
-    border-radius: 16px;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    /* RECESSED: inset shadow - below surface */
-    box-shadow:
-        inset 1px 1px 3px rgba(0,0,0,0.1),
-        inset -1px -1px 2px rgba(255,255,255,0.5);
+  /* Inset display on plastic surface */
+  background: @cream_shadow;
+  color: @text_primary;
+  padding: 0 14px;
+  margin: 5px 4px;
+  min-height: 32px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 13px;
+  /* Inset shadow - pressed into surface */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid @cream_shadow;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   STATUS ICONS - Cream circular buttons, subtle elevation
-   Secondary indicators - consistent sizing with workspaces
+   STANDARD MODULE - Battery percentage (non-interactive display)
+   Transparent background, text only
    ═══════════════════════════════════════════════════════════════════════════ */
-#battery,
-#network,
-#pulseaudio,
-#bluetooth,
-#custom-notification {
-    background: @bg_raised;
-    color: @text_muted;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 0;
-    margin: 4px 2px;
-    border-radius: 16px;
-    /* Subtle bottom-right shadow */
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    transition:
-        box-shadow 100ms ease-out,
-        background 100ms ease-out,
-        color 100ms ease-out;
-}
-
-#battery:hover,
-#network:hover,
-#pulseaudio:hover,
-#bluetooth:hover,
-#custom-notification:hover {
-    color: @text_primary;
-    box-shadow: 2px 2px 3px rgba(0,0,0,0.12);
-}
-
-#battery:active,
-#network:active,
-#pulseaudio:active,
-#bluetooth:active,
-#custom-notification:active {
-    background: @bg_pressed;
-    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.08);
+#battery {
+  background: transparent;
+  color: @text_secondary;
+  padding: 6px 12px;
+  margin: 5px 2px;
+  font-size: 11px;
 }
 
 /* Battery states */
 #battery.warning {
-    color: @accent;
+  color: @amber_primary;
 }
 
 #battery.critical {
-    color: #B54A4A;
-    /* Critical glow effect */
-    box-shadow:
-        1px 1px 2px rgba(0,0,0,0.1),
-        0 0 6px rgba(181, 74, 74, 0.3);
+  color: @red_off;
 }
 
 #battery.charging {
-    color: #5A8050;
+  color: @green_on;
 }
 
-/* Network connected state */
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOGGLE MODULES - Cream buttons with indicator lights
+   Network, Bluetooth, Audio, Notification
+   State via border-left glow, NOT color change
+   ═══════════════════════════════════════════════════════════════════════════ */
+#network,
+#pulseaudio,
+#bluetooth,
+#custom-notification {
+  background: @cream_base;
+  color: @text_primary;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  margin: 5px 2px;
+  border-radius: 12px;
+  border: 1px solid @cream_shadow;
+  font-size: 14px;
+  /* Subtle elevation */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light;
+  /* Default: indicator OFF (left border dim) */
+  border-left: 3px solid @amber_dim;
+  transition:
+    box-shadow 100ms ease-out,
+    background 100ms ease-out,
+    border-left-color 100ms ease-out;
+}
+
+#network:hover,
+#pulseaudio:hover,
+#bluetooth:hover,
+#custom-notification:hover {
+  background: @cream_light;
+}
+
+#network:active,
+#pulseaudio:active,
+#bluetooth:active,
+#custom-notification:active {
+  /* Depression effect */
+  background: @cream_shadow;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Network connected - indicator ON */
 #network.wifi {
-    color: @text_primary;
+  border-left: 3px solid @amber_primary;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light,
+    0 0 8px @amber_glow;
 }
 
-/* Bluetooth connected - amber indicator */
+#network.disconnected {
+  border-left: 3px solid @amber_dim;
+}
+
+/* Bluetooth connected - indicator ON */
 #bluetooth.connected {
-    color: @accent;
-    box-shadow:
-        1px 1px 2px rgba(0,0,0,0.1),
-        0 0 4px @accent_glow;
+  border-left: 3px solid @amber_primary;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light,
+    0 0 8px @amber_glow;
 }
 
-/* Muted state - slightly recessed */
+#bluetooth.disabled {
+  border-left: 3px solid @amber_dim;
+  color: @text_muted;
+}
+
+/* Audio - indicator based on mute state */
 #pulseaudio.muted {
-    color: #A8A299;
-    background: @bg_pressed;
-    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.08);
+  border-left: 3px solid @amber_dim;
+  color: @text_muted;
 }
 
-/* Reset inner label constraints for circular buttons */
+/* Audio unmuted (normal) - indicator ON */
+#pulseaudio:not(.muted) {
+  border-left: 3px solid @amber_primary;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light,
+    0 0 8px @amber_glow;
+}
+
+/* Notification - indicator when there are notifications */
+#custom-notification.notification {
+  border-left: 3px solid @amber_primary;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 @cream_light,
+    0 0 8px @amber_glow;
+}
+
+#custom-notification.dnd-notification,
+#custom-notification.dnd-none {
+  /* DND active - dim indicator */
+  border-left: 3px solid @amber_dim;
+  color: @text_muted;
+}
+
+/* Reset inner label constraints */
 #battery label,
 #network label,
 #pulseaudio label,
@@ -253,37 +336,38 @@ tooltip label {
 #custom-notification label,
 #custom-launcher label,
 #custom-power label {
-    padding: 0;
-    min-width: 0;
-    min-height: 0;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   POWER BUTTON - Amber (special function key like Braun calculators)
+   POWER BUTTON - Amber background (special function key)
    ═══════════════════════════════════════════════════════════════════════════ */
 #custom-power {
-    background: @accent;
-    color: @bg_raised;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 0;
-    margin: 4px 4px 4px 2px;
-    border-radius: 16px;
-    /* Modest shadow for amber button */
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    transition:
-        box-shadow 100ms ease-out,
-        background 100ms ease-out,
-        color 100ms ease-out;
+  background: @amber_primary;
+  color: @cream_light;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  margin: 5px 0 5px 2px;
+  border-radius: 12px;
+  font-size: 14px;
+  /* Elevation matching other buttons */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 @amber_bright;
+  transition:
+    box-shadow 100ms ease-out,
+    background 100ms ease-out;
 }
 
 #custom-power:hover {
-    background: #D4954A;
-    color: @bg_raised;
-    box-shadow: 3px 3px 5px rgba(0,0,0,0.25);
+  background: @amber_bright;
 }
 
 #custom-power:active {
-    background: #B4752A;
-    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
+  /* Depression effect */
+  background: @amber_dim;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
