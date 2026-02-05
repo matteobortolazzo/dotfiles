@@ -44,43 +44,39 @@
 #
 font-family = JetBrainsMono Nerd Font
 font-size = 14
-# Braun RT20/SK4/ET66 Dark Theme
-# Inset/recessed effect via background image with baked-in shadows
-background-image = /home/mborto/Pictures/wallpapers/ghostty-inset-dark.png
-background-image-fit = stretch
-background-image-opacity = 1
-background = 2A2520
-foreground = E8E4DC
-cursor-color = D4A04A
-selection-background = 5F503E
-selection-foreground = F2EFE8
+# Glassmorphic Dark Theme
+background = 1a1a1e
+foreground = e8e4df
+cursor-color = c8a67e
+selection-background = 3a3a40
+selection-foreground = e8e4df
 
 # ANSI normal
-palette = 0=#2A2520
-palette = 1=#AD1D1D
-palette = 2=#5A6B4A
-palette = 3=#D4A04A
-palette = 4=#7A8B9A
-palette = 5=#8A7A6A
-palette = 6=#6A8A7A
-palette = 7=#D9D2C6
+palette = 0=#1a1a1e
+palette = 1=#cf6a6a
+palette = 2=#7ab88a
+palette = 3=#d4a954
+palette = 4=#6fa3c7
+palette = 5=#b88aaf
+palette = 6=#6abab0
+palette = 7=#e8e4df
 
 # ANSI bright
-palette = 8=#5F503E
-palette = 9=#C73030
-palette = 10=#6B7C5A
-palette = 11=#E8B04A
-palette = 12=#8A9BAA
-palette = 13=#9A8A7A
-palette = 14=#7A9A8A
-palette = 15=#F2EFE8
+palette = 8=#5a5752
+palette = 9=#e08080
+palette = 10=#90d0a0
+palette = 11=#e8c070
+palette = 12=#88b8d8
+palette = 13=#d0a0c8
+palette = 14=#80d0c8
+palette = 15=#faf7f2
 window-decoration = none
 confirm-close-surface = false
 mouse-hide-while-typing = true
 scrollback-limit = 1000000
 window-save-state = always
 gtk-titlebar = false
-background-opacity = 1
+background-opacity = 0.88
 window-padding-x = 16
 window-padding-y = 8
 term = xterm-256color

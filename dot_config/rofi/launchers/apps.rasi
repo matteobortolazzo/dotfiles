@@ -1,5 +1,5 @@
 /**
- * App Launcher - Rams Theme (Dieter Rams / Braun inspired)
+ * App Launcher - Glassmorphic Dark Theme
  */
 
 /*****----- Configuration -----*****/
@@ -15,7 +15,7 @@ configuration {
 }
 
 /*****----- Global Properties -----*****/
-@import "../themes/rams.rasi"
+@import "../themes/glass.rasi"
 
 * {
     font:                        "Jost* Medium 11";
@@ -56,9 +56,9 @@ window {
     enabled:                     true;
     margin:                      0px;
     padding:                     0px;
-    border:                      0px solid;
-    border-radius:               8px;
-    border-color:                @border-colour;
+    border:                      1px solid;
+    border-radius:               12px;
+    border-color:                rgba(255, 255, 255, 0.08);
     cursor:                      "default";
     background-color:            @background-colour;
 }
@@ -191,7 +191,7 @@ element normal.active {
 }
 element selected.normal {
     background-color:            var(selected);
-    text-color:                  #FFFCF8;
+    text-color:                  #1a1a1e;
 }
 element selected.urgent {
     background-color:            var(selected-urgent-background);

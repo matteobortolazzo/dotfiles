@@ -1,0 +1,22 @@
+/**
+ * Glassmorphic Dark Theme
+ * Translucent surfaces with blur, warm gold accents
+ */
+
+* {
+    /* Dark glass surfaces */
+    background:     rgba(20, 20, 24, 0.65);
+    background-alt: rgba(36, 36, 40, 0.70);
+
+    /* Light text */
+    foreground:     #e8e4dfFF;
+    foreground-alt: #9a9590FF;
+
+    /* Gold accent */
+    selected:       #c8a67eFF;
+    active:         #c8a67eFF;
+    urgent:         #cf6a6aFF;
+
+    /* Borders */
+    border:         rgba(255, 255, 255, 0.08);
+}

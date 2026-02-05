@@ -3,7 +3,7 @@ return {
   name = "catppuccin",
   priority = 1000,
   opts = {
-    flavour = "latte",
+    flavour = "macchiato",
     transparent_background = true,
     integrations = {
       gitsigns = true,

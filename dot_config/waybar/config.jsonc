@@ -1,5 +1,6 @@
 {
   "layer": "top",
+  "margin-bottom": -16,
   "modules-left": [
     "custom/launcher",
     "hyprland/workspaces"
@@ -44,11 +45,11 @@
       "weeks-pos": "right",
       "on-scroll": 1,
       "format": {
-        "months": "<span color='#F2EFE8'><b>{}</b></span>",
-        "days": "<span color='#D9D2C6'><b>{}</b></span>",
-        "weeks": "<span color='#8A8278'><b>W{}</b></span>",
-        "weekdays": "<span color='#8A8278'><b>{}</b></span>",
-        "today": "<span color='#D4A04A'><b><u>{}</u></b></span>"
+        "months": "<span color='#e8e4df'><b>{}</b></span>",
+        "days": "<span color='#9a9590'><b>{}</b></span>",
+        "weeks": "<span color='#5a5752'><b>W{}</b></span>",
+        "weekdays": "<span color='#5a5752'><b>{}</b></span>",
+        "today": "<span color='#c8a67e'><b><u>{}</u></b></span>"
       }
     },
     "actions": {
@@ -121,8 +122,8 @@
   "battery": {
     "interval": 60,
     "states": {
-      "warning": 30,
-      "critical": 15
+      "warning": 20,
+      "critical": 10
     },
     "format": "{icon}",
     "format-icons": [

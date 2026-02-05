@@ -17,7 +17,6 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 |---|---|
 | `dot_config/` | `~/.config/` |
 | `dot_zshrc` | `~/.zshrc` |
-| `dot_zprofile` | `~/.zprofile` |
 | `dot_ideavimrc` | `~/.ideavimrc` |
 | `private_` prefix | File with restricted permissions |
 | `executable_` prefix | File with +x permission |
@@ -29,20 +28,20 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
 | WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
-| Bar | Waybar | `~/.config/waybar/` | Neumorphic circular buttons, transparent bar, Linux-only |
+| Bar | Waybar | `~/.config/waybar/` | Minimal transparent, dark icons for light wallpapers, Linux-only |
 | Screen locker | hyprlock | `~/.config/hypr/hyprlock.conf` | Linux-only, Hyprland native |
 | Idle daemon | hypridle | `~/.config/hypr/hypridle.conf` | Linux-only, Hyprland native |
-| App launcher | rofi | `~/.config/rofi/` | Braun SK 1 light theme, Linux-only |
+| App launcher | rofi | `~/.config/rofi/` | Glassmorphic dark theme, Linux-only |
 | Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
 | Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
 | Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
-| Wallpaper | awww (formerly swww) | — | Runtime daemon; Braun plastic-grain texture at `~/Pictures/wallpapers/braun-plastic.png` |
+| Wallpaper | awww (formerly swww) | — | Runtime daemon; dark texture at `~/Pictures/wallpapers/glass-dark.png` |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
 | Editor (IDE) | IdeaVim | `~/.ideavimrc` | Cross-platform, JetBrains plugin |
 | Multiplexer | tmux | `~/.config/tmux/tmux.conf` or `~/.tmux.conf` | Cross-platform |
-| Shell | zsh | `~/.zshrc`, `~/.zprofile` | Cross-platform, Oh My Zsh |
+| Shell | zsh | `~/.zshrc` | Cross-platform, Oh My Zsh |
 | Git TUI | lazygit | `~/.config/lazygit/` | YAML config, cross-platform |
 | Syntax highlighting | bat | `~/.config/bat/` | Config + tmTheme, cross-platform |
 | System info | neofetch | `~/.config/neofetch/` | Shell-like config, cross-platform |
@@ -51,69 +50,80 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 ## System theme
 
-Braun RT20/SK4/ET66 aesthetic - the desktop as a physical device surface. Inspired by Dieter Rams' work at Braun: RT20 radio (cream + wood), SK4 phonosuper, ET66 calculator. Core principle: **state via physical metaphors** (depression, indicator lights, mechanical pointers) rather than color changes.
+Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents on a dark base. Core principle: **depth through transparency and blur** rather than solid colors.
 
-### Braun RT20/SK4/ET66 palette
+### Glassmorphic Dark palette
 
-| Element | Value |
-|---|---|
-| Cream base | `#E8E4DC` (primary background) |
-| Cream light | `#F2EFE8` (hover/highlight) |
-| Cream shadow | `#D9D2C6` (pressed, borders) |
-| Warm grey | `#B8B0A4` (disabled) |
-| Fabric light | `#C4BDB0` (speaker grille) |
-| Fabric mid | `#A89F8F` |
-| Fabric dark | `#7A7265` |
-| Amber primary | `#D4A04A` (indicator ON) |
-| Amber bright | `#E8B04A` |
-| Amber dim | `#8B7034` (indicator OFF) |
-| Wood light | `#C09C6F` |
-| Wood mid | `#A68B5B` (clock bg) |
-| Text primary | `#2A2520` |
-| Text secondary | `#5F503E` |
-| Text muted | `#8A8278` |
-| Green | `#5A6B4A` (success) |
-| Red | `#AD1D1D` (critical) |
-| Terminal bg | `#2A2520` (dark theme) |
+| Token | Value | Usage |
+|---|---|---|
+| `bg-solid` | `#1a1a1e` | Opaque fallbacks |
+| `bg-glass` | `rgba(20,20,24,0.55)` | Waybar, rofi, swaync |
+| `bg-glass-deep` | `rgba(20,20,24,0.75)` | Tooltips, dropdowns |
+| `surface` | `#242428` | Terminal bg, raised elements |
+| `surface-raised` | `#2c2c31` | Cards, panels |
+| `border` | `rgba(255,255,255,0.08)` | Subtle dividers |
+| `border-focus` | `rgba(255,255,255,0.15)` | Active window |
+| `text-primary` | `#e8e4df` | Body text |
+| `text-secondary` | `#9a9590` | Muted labels |
+| `text-disabled` | `#5a5752` | Placeholders |
+| `accent` | `#c8a67e` | Warm gold - focused elements |
+| `accent-muted` | `#8a7560` | Lower intensity accent |
+| `urgent` | `#cf6a6a` | Errors |
+| `success` | `#7ab88a` | Positive |
+| `warning` | `#d4a954` | Warnings |
+| `info` | `#6fa3c7` | Informational |
 
-Applied to: Hyprland borders, Waybar, rofi, hyprlock, swaync, Ghostty (dark).
+### ANSI Terminal colors
 
-### Physical state metaphors
+```
+0=#1a1a1e, 1=#cf6a6a, 2=#7ab88a, 3=#d4a954, 4=#6fa3c7, 5=#b88aaf, 6=#6abab0, 7=#e8e4df
+8=#5a5752, 9=#e08080, 10=#90d0a0, 11=#e8c070, 12=#88b8d8, 13=#d0a0c8, 14=#80d0c8, 15=#faf7f2
+```
 
-- **Depression**: Buttons look pressed via inset shadows + `translateY(1px)`. Color stays same.
-- **Indicator lights**: Small amber glow (via `box-shadow` + `border-left`) shows ON state. OFF = dim amber, ON = bright amber glow.
-- **Mechanical pointer**: Active workspace marked by amber `border-bottom`, not color change.
+Applied to: Hyprland, rofi, hyprlock, swaync, wlogout, Ghostty, yazi, Neovim (catppuccin macchiato).
+
+### Waybar - Minimal Transparent Theme
+
+Waybar uses a separate minimal theme optimized for light wallpapers:
+
+| Token | Value | Usage |
+|---|---|---|
+| `icon` | `#3c3c40` | Default icon color |
+| `icon-muted` | `#5a5a5e` | Inactive/disabled states |
+| `icon-active` | `#1a1a1e` | Active/hovered elements |
+| `warning` | `#8a6420` | Low battery warning |
+| `critical` | `#8a3030` | Critical battery |
+| `success` | `#3a6a4a` | Charging indicator |
+
+Design: Fully transparent bar with no backgrounds or borders. Dark icons float directly over the wallpaper.
 
 ### Wallpaper
 
-Plastic-grain texture: cream `#E8E4DC` base + subtle monochrome noise (8% opacity).
-Generated with ImageMagick, stored at `~/Pictures/wallpapers/braun-plastic.png`.
+Dark texture: `#1a1a1e` base + subtle gaussian noise.
+Generated with ImageMagick, stored at `~/Pictures/wallpapers/glass-dark.png`.
 
-### Waybar module types
+### Blur configuration
 
-| Type | Use | Visual |
+| Component | Blur | Notes |
 |---|---|---|
-| Standard | Battery % | Transparent bg, text only |
-| Fabric | Workspaces container | Horizontal stripe texture |
-| Toggle | Network, BT, audio, notif | Cream button + amber indicator glow |
-| Wood | Clock only | Wood gradient (RT20 beech veneer) |
-| Launcher | App launcher | Cream + amber border ("equals key") |
-| Power | Shutdown | Amber background |
+| Hyprland | size=6, passes=3 | Window blur |
+| Ghostty | opacity=0.88 | Terminal transparency |
+| Waybar | — | Fully transparent, no blur |
+| rofi/swaync | layerrule blur | Menu blur-through |
 
 ### Window decorations
 
-- `rounding = 8`, `gaps_in = 8`, `gaps_out = 16`
-- Active border: amber `#D4A04A`
-- Inactive border: cream shadow `#D9D2C6`
-- Shadow range: 20
+- `rounding = 12`, `gaps_in = 8`, `gaps_out = 16`
+- Active border: `rgba(255,255,255,0.15)`
+- Inactive border: `rgba(255,255,255,0.08)`
+- Shadow color: `rgba(0,0,0,0.40)`
 
 **Design principles:**
-- Transparent Waybar with physical button metaphors
-- No color change on interaction - use shadow/depression instead
-- Amber is sacred: only for indicators, active pointers, launcher border
-- Wood = time (clock only)
-- Fabric texture = system status containers
-- Use gammastep/wlsunset for comfortable night use
+- Dark base with translucent surfaces
+- Gold accent (`#c8a67e`) for active/focused states
+- Subtle white borders for depth
+- Blur-through for glass effect
+- Consistent rgba backgrounds across components
 
 ## Chezmoi structure
 
@@ -121,7 +131,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. *Note: No templates are currently in use; this is documented for future reference.*
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
-- **`.chezmoiignore`** — exclude Linux-only configs on macOS and vice versa. Example pattern for future use:
+- **`.chezmoiignore`** — exclude Linux-only configs on macOS and vice versa. *Note: No `.chezmoiignore` currently exists; example pattern for future use:*
   ```
   {{ if ne .chezmoi.os "linux" }}
   .config/hypr/**
@@ -180,12 +190,12 @@ hyprlock                          # Lock screen manually
 When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
 1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
-2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is Braun Calculator with neumorphic circular buttons floating on transparent bar.
+2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is minimal transparent with dark icons (macOS-style, no backgrounds/borders).
 3. **swaync** — `config.json` (JSON) + `style.css` (imports theme). Theme directory: `themes/nova-dark/`. Icons directory: `icons/`. Reload with `swaync-client --reload-config` and `swaync-client --reload-css`.
 4. **hyprlock** — Hyprland DSL config at `hyprlock.conf`. Defines lock screen appearance/behavior.
 5. **hypridle** — Hyprland DSL config at `hypridle.conf`. Defines idle timeouts: dim (2.5min), lock (5min), DPMS (5.5min), suspend (30min). Also controls keyboard backlight. Started via exec-once in hyprland.conf.
-6. **rofi** — rasi config format. Main config: `config.rasi`. Theme: `themes/catppuccin.rasi`. Launcher: `launchers/apps.rasi` + `apps.sh`. Utility scripts: `scripts/wifi.sh`, `scripts/bluetooth.sh`.
-7. **wlogout** — `layout` file (custom format) + `style.css`. Defines logout/reboot/shutdown menu.
+6. **rofi** — rasi config format. Main config: `config.rasi`. Theme: `themes/glass.rasi` (glassmorphic dark). Launcher: `launchers/apps.rasi` + `apps.sh`. Utility scripts: `scripts/wifi.sh`, `scripts/bluetooth.sh`.
+7. **wlogout** — `layout` file (custom format) + `style.css` (imports `nova.css` theme). Defines logout/reboot/shutdown menu.
 8. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
 9. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
 10. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.

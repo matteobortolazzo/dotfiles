@@ -1,20 +1,21 @@
-/* Braun RT20/SK4/ET66 Theme - Control Center
- * Cream plastic, amber accents, physical state metaphors */
+/* Glassmorphic Dark Theme - Control Center
+ * Translucent surfaces with blur, warm gold accents */
 
-@define-color background      #E8E4DC;
-@define-color text            #2A2520;
-@define-color subtext         #5F503E;
-@define-color surface0        #D9D2C6;
-@define-color surface1        #F2EFE8;
-@define-color overlay0        #B8B0A4;
-@define-color accent          #D4A04A;
-@define-color accent-dim      #8B7034;
-@define-color urgent          #AD1D1D;
-@define-color success         #5A6B4A;
+@define-color background      rgba(20, 20, 24, 0.65);
+@define-color text            #e8e4df;
+@define-color subtext         #9a9590;
+@define-color surface0        rgba(36, 36, 40, 0.70);
+@define-color surface1        rgba(44, 44, 49, 0.70);
+@define-color overlay0        #5a5752;
+@define-color accent          #c8a67e;
+@define-color accent-muted    #8a7560;
+@define-color urgent          #cf6a6a;
+@define-color success         #7ab88a;
 
-@define-color background-alt  alpha(@surface0, .85);
+@define-color background-alt  @surface0;
 @define-color selected        @accent;
-@define-color hover           alpha(@accent, .15);
+@define-color hover           rgba(200, 166, 126, 0.15);
+@define-color border          rgba(255, 255, 255, 0.08);
 
 * {
   all: unset;
@@ -32,19 +33,11 @@
 /* CONTROL CENTER */
 
 .control-center {
-  /* Cream plastic panel */
-  background: linear-gradient(
-    180deg,
-    rgba(242, 239, 232, 0.98) 0%,
-    rgba(232, 228, 220, 0.96) 10%,
-    rgba(217, 210, 198, 0.94) 100%
-  );
-  border-radius: 8px;
-  border: 1px solid rgba(42, 37, 32, 0.08);
-  box-shadow:
-    0 4px 16px 0 rgba(42, 37, 32, 0.12),
-    0 8px 32px 0 rgba(42, 37, 32, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  /* Glass panel */
+  background: @background;
+  border-radius: 12px;
+  border: 1px solid @border;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
   margin: 18px;
   padding: 12px;
 }
@@ -53,7 +46,7 @@
 .control-center .notification-row .notification-background,
 .control-center .notification-row .notification-background .notification.critical {
   background-color: @background-alt;
-  border-radius: 6px;
+  border-radius: 8px;
   margin: 4px 0px;
   padding: 4px;
 }
@@ -72,14 +65,14 @@
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action {
-  background: alpha(@accent, .15);
+  background: rgba(200, 166, 126, 0.12);
   color: @text;
-  border-radius: 4px;
+  border-radius: 6px;
   margin: 6px;
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
-  background: alpha(@accent, .3);
+  background: rgba(200, 166, 126, 0.25);
 }
 
 .control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
@@ -90,14 +83,14 @@
 
 .control-center .notification-row .notification-background .close-button {
   background: transparent;
-  border-radius: 4px;
+  border-radius: 6px;
   color: @text;
   margin: 0px;
   padding: 4px;
 }
 
 .control-center .notification-row .notification-background .close-button:hover {
-  background-color: alpha(@accent, .2);
+  background-color: @hover;
 }
 
 .control-center .notification-row .notification-background .close-button:active {
@@ -111,7 +104,7 @@ trough {
 }
 
 progressbar {
-  background-color: alpha(@overlay0, .3);
+  background-color: rgba(90, 87, 82, 0.3);
 }
 
 progress {
@@ -140,7 +133,7 @@ progress {
   background: transparent;
   color: @text;
   margin: 4px;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 4px;
 }
 
@@ -159,8 +152,9 @@ progress {
 
 .widget-title button {
   background: @background-alt;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 4px 16px;
+  border: 1px solid @border;
 }
 
 .widget-title button:hover {
@@ -180,7 +174,7 @@ progress {
 .widget-dnd > switch {
   background: @background-alt;
   font-size: initial;
-  border-radius: 4px;
+  border-radius: 6px;
   box-shadow: none;
   padding: 2px;
 }
@@ -194,33 +188,28 @@ progress {
 }
 
 .widget-dnd > switch:checked:hover {
-  background: alpha(@accent, .8);
+  background: rgba(200, 166, 126, 0.8);
 }
 
 .widget-dnd > switch slider {
   background: @text;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-/* Buttons menu - with subtle perforated grille pattern (fabric texture) */
+/* Buttons menu */
 .widget-buttons-grid {
   font-size: x-large;
   padding: 6px 2px;
   margin: 6px;
-  border-radius: 6px;
-  /* Fabric texture - like speaker grille */
-  background:
-    radial-gradient(circle at center, rgba(42, 37, 32, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(196, 189, 176, 0.9) 0%, rgba(168, 159, 143, 0.9) 100%);
-  background-size: 8px 8px, 100% 100%;
-  box-shadow: inset 0 1px 3px rgba(42, 37, 32, 0.06);
+  border-radius: 8px;
+  background: @surface0;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button {
   margin: 4px 10px;
   padding: 6px 12px;
   background: transparent;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
@@ -230,23 +219,17 @@ progress {
 /* Music player */
 .widget-mpris {
   background: @background-alt;
-  border-radius: 6px;
+  border-radius: 8px;
   color: @text;
   margin: 20px 6px;
 }
 
 /* NOTE: Background need *opacity 1* otherwise will turn into the album art blurred */
 .widget-mpris-player {
-  /* Embossed recessed area - like the speaker grille section */
-  background: linear-gradient(
-    180deg,
-    rgba(217, 210, 198, 0.95) 0%,
-    rgba(232, 228, 220, 0.95) 100%
-  );
+  background: @surface1;
   border-radius: 8px;
   padding: 6px 14px;
   margin: 6px;
-  box-shadow: inset 0 1px 3px rgba(42, 37, 32, 0.08);
 }
 
 .widget-mpris > box > button {
@@ -255,7 +238,7 @@ progress {
 }
 
 .widget-mpris button {
-  color: alpha(@text, .6);
+  color: rgba(232, 228, 223, 0.6);
 }
 
 .widget-mpris button:hover {
@@ -287,7 +270,7 @@ picture.mpris-background {
   color: @text;
   padding: 8px 12px;
   margin: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 /* Backlight */
@@ -296,7 +279,7 @@ picture.mpris-background {
   color: @text;
   padding: 8px 12px;
   margin: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 /* Icon spacing for volume and backlight */
@@ -313,14 +296,9 @@ picture.mpris-background {
 
 .widget-volume scale trough,
 .widget-backlight scale trough {
-  background: linear-gradient(
-    180deg,
-    rgba(184, 176, 164, 0.8) 0%,
-    rgba(217, 210, 198, 0.8) 100%
-  );
+  background: rgba(90, 87, 82, 0.5);
   border-radius: 4px;
   min-height: 8px;
-  box-shadow: inset 0 1px 2px rgba(42, 37, 32, 0.1);
 }
 
 .widget-volume scale highlight,
@@ -345,41 +323,22 @@ picture.mpris-background {
 
 /* Toggle button states - active class is added when toggle is "on" */
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active {
-  /* Active toggle: amber glow indicator */
-  background: linear-gradient(
-    180deg,
-    rgba(212, 160, 74, 0.25) 0%,
-    rgba(212, 160, 74, 0.35) 100%
-  );
-  color: @accent-dim;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 0 8px rgba(212, 160, 74, 0.4);
+  /* Active toggle: gold glow */
+  background: rgba(200, 166, 126, 0.25);
+  color: @accent;
+  box-shadow: 0 0 8px rgba(200, 166, 126, 0.3);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active) {
-  /* Inactive: recessed plastic look */
-  background: linear-gradient(
-    180deg,
-    rgba(184, 176, 164, 0.4) 0%,
-    rgba(184, 176, 164, 0.6) 100%
-  );
+  /* Inactive: muted */
+  background: rgba(90, 87, 82, 0.3);
   color: @subtext;
-  box-shadow: inset 0 1px 2px rgba(42, 37, 32, 0.06);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle.active:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(212, 160, 74, 0.35) 0%,
-    rgba(212, 160, 74, 0.45) 100%
-  );
+  background: rgba(200, 166, 126, 0.35);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button.toggle:not(.active):hover {
-  background: linear-gradient(
-    180deg,
-    rgba(184, 176, 164, 0.5) 0%,
-    rgba(184, 176, 164, 0.7) 100%
-  );
+  background: rgba(90, 87, 82, 0.5);
 }

@@ -1,20 +1,21 @@
-/* Braun RT20/SK4/ET66 Theme - Notifications
- * Cream plastic, amber accents, physical state metaphors */
+/* Glassmorphic Dark Theme - Notifications
+ * Translucent surfaces with blur, warm gold accents */
 
-@define-color background      #E8E4DC;
-@define-color text            #2A2520;
-@define-color subtext         #5F503E;
-@define-color surface0        #D9D2C6;
-@define-color surface1        #F2EFE8;
-@define-color overlay0        #B8B0A4;
-@define-color accent          #D4A04A;
-@define-color accent-dim      #8B7034;
-@define-color urgent          #AD1D1D;
-@define-color success         #5A6B4A;
+@define-color background      rgba(20, 20, 24, 0.65);
+@define-color text            #e8e4df;
+@define-color subtext         #9a9590;
+@define-color surface0        rgba(36, 36, 40, 0.70);
+@define-color surface1        rgba(44, 44, 49, 0.70);
+@define-color overlay0        #5a5752;
+@define-color accent          #c8a67e;
+@define-color accent-muted    #8a7560;
+@define-color urgent          #cf6a6a;
+@define-color success         #7ab88a;
 
 @define-color background-alt  @surface0;
 @define-color selected        @accent;
-@define-color hover           @surface1;
+@define-color hover           rgba(200, 166, 126, 0.15);
+@define-color border          rgba(255, 255, 255, 0.08);
 
 * {
   all: unset;
@@ -31,28 +32,20 @@
 }
 
 .floating-notifications.background .notification-row .notification-background {
-  /* Cream plastic card */
-  background: linear-gradient(
-    180deg,
-    rgba(242, 239, 232, 0.98) 0%,
-    rgba(232, 228, 220, 0.96) 15%,
-    rgba(217, 210, 198, 0.94) 100%
-  );
-  box-shadow:
-    0 2px 8px 0 rgba(42, 37, 32, 0.10),
-    0 4px 16px 0 rgba(42, 37, 32, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(42, 37, 32, 0.08);
-  /* Amber left stripe indicator */
+  /* Glass card */
+  background: @background;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid @border;
+  /* Gold left stripe indicator */
   border-left: 4px solid @accent;
-  border-radius: 8px;
+  border-radius: 12px;
   margin: 16px;
   padding: 0;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification {
   padding: 6px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification.critical {
@@ -68,20 +61,20 @@
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action {
-  border-radius: 4px;
-  background-color: @background-alt;
+  border-radius: 6px;
+  background-color: @surface0;
   margin: 6px;
-  border: 1px solid transparent;
+  border: 1px solid @border;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
   background-color: @hover;
-  border: 1px solid rgba(212, 160, 74, 0.4);
+  border: 1px solid @accent-muted;
 }
 
 .floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
   background-color: @selected;
-  color: @background;
+  color: #1a1a1e;
 }
 
 .image {
@@ -101,18 +94,18 @@
 .floating-notifications.background .notification-row .notification-background .close-button {
   margin: 6px;
   padding: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: transparent;
   border: 1px solid transparent;
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button:hover {
-  background-color: alpha(@accent, .2);
+  background-color: @hover;
 }
 
 .floating-notifications.background .notification-row .notification-background .close-button:active {
   background-color: @selected;
-  color: @background;
+  color: #1a1a1e;
 }
 
 .notification.critical progress {

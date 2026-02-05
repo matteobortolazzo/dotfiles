@@ -1,51 +1,28 @@
-/* Braun RT20/SK4/ET66 Theme
- * Physical state metaphors: depression, indicator lights, mechanical pointers
- * "Less, but better." - Dieter Rams */
+/* Minimal Transparent Theme
+ * macOS-style floating bar with dark icons on light backgrounds
+ * Fully transparent, no borders, no backgrounds */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLOR PALETTE - Braun RT20/SK4/ET66
+   COLOR PALETTE - Minimal Dark Icons
    ═══════════════════════════════════════════════════════════════════════════ */
-@define-color cream_base #E8E4DC;
-/* Primary background */
-@define-color cream_light #F2EFE8;
-/* Hover/highlight surface */
-@define-color cream_shadow #D9D2C6;
-/* Pressed surface, borders */
-@define-color warm_grey #B8B0A4;
-/* Disabled/muted elements */
+@define-color icon #3c3c40;
+/* Default icon color */
+@define-color icon_muted #5a5a5e;
+/* Inactive/disabled states */
+@define-color icon_active #1a1a1e;
+/* Active/hovered elements */
 
-@define-color fabric_light #C4BDB0;
-/* Light weave */
-@define-color fabric_mid #A89F8F;
-/* Medium weave */
-@define-color fabric_dark #7A7265;
-/* Dark weave, shadows */
+@define-color warning #8a6420;
+/* Low battery warning */
+@define-color critical #8a3030;
+/* Critical battery */
+@define-color success #3a6a4a;
+/* Charging indicator */
 
-@define-color amber_primary #D4A04A;
-/* Indicator ON (normal) */
-@define-color amber_bright #E8B04A;
-/* Indicator ON (bright) */
-@define-color amber_dim #8B7034;
-/* Indicator OFF */
-@define-color amber_glow rgba(212, 160, 74, 0.4);
-/* Amber indicator glow */
-
-@define-color wood_light #C09C6F;
-/* Decorative accent */
-@define-color wood_mid #A68B5B;
-/* Time/date module bg */
-
-@define-color text_primary #2A2520;
-/* Primary text */
-@define-color text_secondary #5F503E;
-/* Secondary text */
-@define-color text_muted #8A8278;
-/* Disabled text */
-
-@define-color green_on #5A6B4A;
-/* Connected, success */
-@define-color red_off #AD1D1D;
-/* Critical, error */
+/* Tooltip colors (keep subtle dark theme for readability) */
+@define-color tooltip_bg rgba(20, 20, 24, 0.85);
+@define-color tooltip_text #e8e4df;
+@define-color tooltip_border rgba(255, 255, 255, 0.1);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BASE STYLES
@@ -57,23 +34,23 @@
   font-size: 11px;
   font-weight: 400;
   min-height: 0;
+  background: transparent;
+  box-shadow: none;
+  color: @icon;
 }
 
 window#waybar {
   background: transparent;
-  color: @text_primary;
-  box-shadow: none;
 }
 
 tooltip {
-  background: @cream_base;
-  border: 1px solid @cream_shadow;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: @tooltip_bg;
+  border: 1px solid @tooltip_border;
+  border-radius: 8px;
 }
 
 tooltip label {
-  color: @text_primary;
+  color: @tooltip_text;
   padding: 4px 8px;
 }
 
@@ -93,239 +70,157 @@ tooltip label {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   WORKSPACES - Cream circular buttons floating on transparent bar
-   Amber pointer indicates active workspace
+   WORKSPACES - Minimal text indicators
    ═══════════════════════════════════════════════════════════════════════════ */
 #workspaces {
-  background: transparent;
-  border: none;
   margin: 5px 4px;
   padding: 0;
 }
 
 #workspaces button {
-  /* Rounded rectangle button - matches toggle modules */
-  background: @cream_base;
-  color: @text_muted;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0;
-  margin: 2px 3px;
-  border-radius: 12px;
-  border: 1px solid @cream_shadow;
+  color: @icon_muted;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 0 4px 0;  /* Bottom padding for dot space */
+  margin: 2px 2px;
   font-size: 11px;
-  /* Default: indicator OFF (left border dim) */
-  border-left: 3px solid @amber_dim;
-  /* Subtle elevation */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  transition:
-    box-shadow 100ms ease-out,
-    background 100ms ease-out,
-    border-color 100ms ease-out,
-    border-left-color 100ms ease-out;
+  border-bottom: 4px solid transparent;  /* Reserve space for indicator */
+  transition: color 150ms ease, border-color 150ms ease;
 }
 
 #workspaces button:hover {
-  /* Hover = subtle lighten, no color change */
-  background: @cream_light;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: @icon;
 }
 
 #workspaces button.active {
-  /* Indicator ON + amber glow - matches toggle modules */
-  background: @cream_shadow;
-  border-left: 3px solid @amber_primary;
-  box-shadow:
-    inset 0 1px 3px rgba(0, 0, 0, 0.15),
-    0 0 8px @amber_glow;
+  color: @icon;
+  font-weight: 500;
+  border-bottom: 4px solid rgba(60, 60, 64, 0.6);
+  border-radius: 2px;
 }
 
 #workspaces button.urgent {
-  /* Urgent glow effect */
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 0 6px rgba(173, 29, 29, 0.3);
-  border-color: @red_off;
+  color: @critical;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAUNCHER - Amber-bordered cream button (the "equals key")
+   LAUNCHER - Simple icon
    ═══════════════════════════════════════════════════════════════════════════ */
 #custom-launcher {
-  background: @cream_base;
-  color: @text_primary;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 14px;
+  color: @icon;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
   margin: 5px 4px 5px 0;
-  border-radius: 12px;
-  border: 2px solid @amber_primary;
   font-size: 14px;
-  /* Subtle elevation */
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light;
-  transition:
-    box-shadow 100ms ease-out,
-    background 100ms ease-out;
+  transition: color 150ms ease;
 }
 
 #custom-launcher:hover {
-  background: @cream_light;
-}
-
-#custom-launcher:active {
-  /* Depression effect */
-  background: @cream_shadow;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: @icon_active;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CLOCK - Inset display on plastic surface
-   Non-interactive display, appears pressed into the cream surface
+   CLOCK - Clean text
    ═══════════════════════════════════════════════════════════════════════════ */
 #clock {
-  /* Inset display on plastic surface */
-  background: @cream_shadow;
-  color: @text_primary;
-  padding: 0 14px;
+  color: @icon;
+  padding: 0 12px;
   margin: 5px 4px;
-  min-height: 32px;
-  border-radius: 12px;
+  min-height: 24px;
   font-weight: 500;
-  font-size: 13px;
-  /* Inset shadow - pressed into surface */
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
-  border: 1px solid @cream_shadow;
+  font-size: 12px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   STANDARD MODULE - Battery percentage (non-interactive display)
-   Transparent background, text only
+   BATTERY - Icon with state colors
    ═══════════════════════════════════════════════════════════════════════════ */
 #battery {
-  background: transparent;
-  color: @text_secondary;
-  padding: 6px 12px;
+  color: @icon;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
   margin: 5px 2px;
-  font-size: 11px;
+  font-size: 14px;
 }
 
-/* Battery states */
 #battery.warning {
-  color: @amber_primary;
+  color: @warning;
+}
+
+@keyframes critical-blink {
+  from { opacity: 1; }
+  to { opacity: 0.3; }
 }
 
 #battery.critical {
-  color: @red_off;
+  color: @critical;
+  animation: critical-blink 0.5s ease-in-out infinite alternate;
 }
 
 #battery.charging {
-  color: @green_on;
+  color: @success;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TOGGLE MODULES - Cream buttons with indicator lights
+   STATUS MODULES - Simple icons
    Network, Bluetooth, Audio, Notification
-   State via border-left glow, NOT color change
    ═══════════════════════════════════════════════════════════════════════════ */
 #network,
 #pulseaudio,
 #bluetooth,
 #custom-notification {
-  background: @cream_base;
-  color: @text_primary;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 12px;
+  color: @icon;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
   margin: 5px 2px;
-  border-radius: 12px;
-  border: 1px solid @cream_shadow;
   font-size: 14px;
-  /* Subtle elevation */
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light;
-  /* Default: indicator OFF (left border dim) */
-  border-left: 3px solid @amber_dim;
-  transition:
-    box-shadow 100ms ease-out,
-    background 100ms ease-out,
-    border-left-color 100ms ease-out;
+  transition: color 150ms ease;
 }
 
 #network:hover,
 #pulseaudio:hover,
 #bluetooth:hover,
 #custom-notification:hover {
-  background: @cream_light;
+  color: @icon_active;
 }
 
-#network:active,
-#pulseaudio:active,
-#bluetooth:active,
-#custom-notification:active {
-  /* Depression effect */
-  background: @cream_shadow;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Network connected - indicator ON */
+/* Network states */
 #network.wifi {
-  border-left: 3px solid @amber_primary;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light,
-    0 0 8px @amber_glow;
+  color: @icon;
 }
 
 #network.disconnected {
-  border-left: 3px solid @amber_dim;
+  color: @icon_muted;
 }
 
-/* Bluetooth connected - indicator ON */
+/* Bluetooth states */
 #bluetooth.connected {
-  border-left: 3px solid @amber_primary;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light,
-    0 0 8px @amber_glow;
+  color: @icon;
 }
 
 #bluetooth.disabled {
-  border-left: 3px solid @amber_dim;
-  color: @text_muted;
+  color: @icon_muted;
 }
 
-/* Audio - indicator based on mute state */
+/* Audio states */
 #pulseaudio.muted {
-  border-left: 3px solid @amber_dim;
-  color: @text_muted;
+  color: @icon_muted;
 }
 
-/* Audio unmuted (normal) - indicator ON */
 #pulseaudio:not(.muted) {
-  border-left: 3px solid @amber_primary;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light,
-    0 0 8px @amber_glow;
+  color: @icon;
 }
 
-/* Notification - indicator when there are notifications */
+/* Notification states */
 #custom-notification.notification {
-  border-left: 3px solid @amber_primary;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 @cream_light,
-    0 0 8px @amber_glow;
+  color: @icon;
 }
 
 #custom-notification.dnd-notification,
 #custom-notification.dnd-none {
-  /* DND active - dim indicator */
-  border-left: 3px solid @amber_dim;
-  color: @text_muted;
+  color: @icon_muted;
 }
 
 /* Reset inner label constraints */
@@ -342,32 +237,18 @@ tooltip label {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   POWER BUTTON - Amber background (special function key)
+   POWER BUTTON - Simple icon
    ═══════════════════════════════════════════════════════════════════════════ */
 #custom-power {
-  background: @amber_primary;
-  color: @cream_light;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 12px;
+  color: @icon;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
   margin: 5px 0 5px 2px;
-  border-radius: 12px;
   font-size: 14px;
-  /* Elevation matching other buttons */
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 @amber_bright;
-  transition:
-    box-shadow 100ms ease-out,
-    background 100ms ease-out;
+  transition: color 150ms ease;
 }
 
 #custom-power:hover {
-  background: @amber_bright;
-}
-
-#custom-power:active {
-  /* Depression effect */
-  background: @amber_dim;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: @icon_active;
 }
