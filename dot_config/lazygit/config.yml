@@ -1,22 +1,22 @@
 gui:
   theme:
-    lightTheme: true
+    lightTheme: false
     activeBorderColor:
-      - "#C4853A" # Amber accent
+      - "#c8a67e" # accent (warm gold)
       - bold
     inactiveBorderColor:
-      - "#C5C0B8" # Border muted
+      - "#5a5752" # text-disabled
     optionsTextColor:
-      - "#4A6A8A" # Blue
+      - "#6fa3c7" # info (blue)
     selectedLineBgColor:
-      - "#E2DDD5" # Surface
+      - "#2c2c31" # surface-raised
     selectedRangeBgColor:
-      - "#E2DDD5" # Surface
+      - "#2c2c31" # surface-raised
     cherryPickedCommitBgColor:
-      - "#4A7A7A" # Teal
+      - "#7ab88a" # success (teal-green)
     cherryPickedCommitFgColor:
-      - "#F5F2ED" # Background
+      - "#1a1a1e" # bg-solid
     unstagedChangesColor:
-      - "#B54A4A" # Red
+      - "#cf6a6a" # urgent (red)
     defaultFgColor:
-      - "#2C2825" # Foreground
+      - "#e8e4df" # text-primary
