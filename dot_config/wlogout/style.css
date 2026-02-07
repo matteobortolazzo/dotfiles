@@ -1,0 +1,60 @@
+/* Glassmorphic Dark Theme for wlogout
+ * Translucent surfaces with blur, warm gold accents */
+
+* {
+  background-image: none;
+  font-family: "Space Mono", "JetBrainsMono Nerd Font Propo", monospace;
+}
+
+window {
+  background-color: rgba(20, 20, 24, 0.85);
+}
+
+button {
+  background-color: rgba(36, 36, 40, 0.70);
+  color: #e8e4df;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.40);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 25%;
+  margin: 16px;
+  min-width: 120px;
+  min-height: 120px;
+}
+
+button:hover,
+button:focus {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 20px rgba(200, 166, 126, 0.30);
+  outline-style: none;
+}
+
+button:active {
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+#lock {
+  background-image: image(url("/usr/share/wlogout/icons/lock.png"));
+}
+
+#logout {
+  background-image: image(url("/usr/share/wlogout/icons/logout.png"));
+}
+
+#suspend {
+  background-image: image(url("/usr/share/wlogout/icons/suspend.png"));
+}
+
+#hibernate {
+  background-image: image(url("/usr/share/wlogout/icons/hibernate.png"));
+}
+
+#shutdown {
+  background-image: image(url("/usr/share/wlogout/icons/shutdown.png"));
+}
+
+#reboot {
+  background-image: image(url("/usr/share/wlogout/icons/reboot.png"));
+}

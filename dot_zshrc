@@ -38,6 +38,11 @@ alias kubectl="k3s kubectl"
 # zoxide initialization
 eval "$(zoxide init zsh)"
 
+# direnv — per-directory environment overrides
+if command -v direnv &>/dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+
 # Load Angular CLI autocompletion.
 source <(ng completion script)
 

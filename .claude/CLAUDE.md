@@ -35,7 +35,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
 | Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
 | Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
-| Wallpaper | awww (formerly swww) | — | Runtime daemon; dark texture at `~/Pictures/wallpapers/glass-dark.png` |
+| Wallpaper | hyprpaper | `~/.config/hypr/hyprpaper.conf` | Hyprland native wallpaper daemon, Linux-only |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
@@ -46,6 +46,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Syntax highlighting | bat | `~/.config/bat/` | Config + tmTheme, cross-platform |
 | System info | neofetch | `~/.config/neofetch/` | Shell-like config, cross-platform |
 | Git config | git | `~/.config/git/` | Cross-platform |
+| Env overrides | direnv | per-project `.envrc` | Cross-platform; loads env per directory |
 | Dotfile mgr | chezmoi | `~/.local/share/chezmoi/` | Source of truth |
 
 ## System theme
@@ -99,8 +100,7 @@ Design: Fully transparent bar with no backgrounds or borders. Dark icons float d
 
 ### Wallpaper
 
-Dark texture: `#1a1a1e` base + subtle gaussian noise.
-Generated with ImageMagick, stored at `~/Pictures/wallpapers/glass-dark.png`.
+Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via hyprpaper config.
 
 ### Blur configuration
 
@@ -147,7 +147,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 | Scope | Linux | macOS | Shared |
 |---|---|---|---|
-| Hyprland, Waybar, hyprlock, hypridle, rofi, swaync, wlogout, polkit-gnome, awww | ✓ | — | — |
+| Hyprland, Waybar, hyprlock, hypridle, hyprpaper, rofi, swaync, wlogout, polkit-gnome | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 
@@ -172,9 +172,8 @@ pkill waybar; waybar &            # Reload waybar
 swaync-client --reload-config     # Reload config
 swaync-client --reload-css        # Reload styles
 
-# awww
-awww-daemon                       # Start daemon (exec-once in hyprland.conf)
-awww img <path>                   # Set wallpaper
+# hyprpaper (started via exec-once in hyprland.conf)
+# Config: ~/.config/hypr/hyprpaper.conf
 
 # hyprlock
 hyprlock                          # Lock screen manually
@@ -183,6 +182,10 @@ hyprlock                          # Lock screen manually
 
 # rofi
 ~/.config/rofi/launchers/apps.sh  # Run app launcher
+
+# direnv
+direnv allow                      # Trust .envrc in current directory
+direnv edit .                     # Create/edit .envrc and auto-allow
 ```
 
 ## Editing guidelines
@@ -216,6 +219,19 @@ Since we're working directly in the chezmoi source directory:
 - **One concern per commit** — prefix with tool name: `waybar: add battery module`, `nvim: configure LSP`
 - **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
 - **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
+
+## Per-project environment overrides (direnv)
+
+Global secrets are set in `~/.config/environment` (from `environment.tmpl`). For per-project overrides (e.g., different ADO org), create an `.envrc` in the project root:
+
+```bash
+# .envrc — copy to project root, edit, then `direnv allow`
+export ADO_ORG="my-org"
+export AZURE_DEVOPS_EXT_PAT="$(op read 'op://Private/ADO PAT - my-org/credential')"
+export ADO_MCP_AUTH_TOKEN="$AZURE_DEVOPS_EXT_PAT"
+```
+
+`.envrc` files are globally gitignored (`~/.config/git/ignore`) to prevent accidental secret commits.
 
 ## Documentation resources
 
