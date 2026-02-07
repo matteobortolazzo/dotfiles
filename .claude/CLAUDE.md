@@ -35,7 +35,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
 | Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
 | Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
-| Wallpaper | hyprpaper | `~/.config/hypr/hyprpaper.conf` | Hyprland native wallpaper daemon, Linux-only |
+| Wallpaper | awww | — | awww daemon, started via exec-once, Linux-only |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
@@ -58,7 +58,7 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 | Token | Value | Usage |
 |---|---|---|
 | `bg-solid` | `#1a1a1e` | Opaque fallbacks |
-| `bg-glass` | `rgba(20,20,24,0.55)` | Waybar, rofi, swaync |
+| `bg-glass` | `rgba(20,20,24,0.55)` | rofi, swaync |
 | `bg-glass-deep` | `rgba(20,20,24,0.75)` | Tooltips, dropdowns |
 | `surface` | `#242428` | Terminal bg, raised elements |
 | `surface-raised` | `#2c2c31` | Cards, panels |
@@ -100,7 +100,7 @@ Design: Fully transparent bar with no backgrounds or borders. Dark icons float d
 
 ### Wallpaper
 
-Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via hyprpaper config.
+Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via awww daemon (exec-once in hyprland.conf).
 
 ### Blur configuration
 
@@ -116,7 +116,7 @@ Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via hyprpaper config.
 - `rounding = 12`, `gaps_in = 8`, `gaps_out = 16`
 - Active border: `rgba(255,255,255,0.15)`
 - Inactive border: `rgba(255,255,255,0.08)`
-- Shadow color: `rgba(0,0,0,0.40)`
+- Shadow color: `rgba(0,0,0,0.25)`
 
 **Design principles:**
 - Dark base with translucent surfaces
@@ -129,7 +129,7 @@ Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via hyprpaper config.
 
 Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
-- **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. *Note: No templates are currently in use; this is documented for future reference.*
+- **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `environment.tmpl` (secrets via 1Password).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
 - **`.chezmoiignore`** — exclude Linux-only configs on macOS and vice versa. *Note: No `.chezmoiignore` currently exists; example pattern for future use:*
   ```
@@ -147,7 +147,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 | Scope | Linux | macOS | Shared |
 |---|---|---|---|
-| Hyprland, Waybar, hyprlock, hypridle, hyprpaper, rofi, swaync, wlogout, polkit-gnome | ✓ | — | — |
+| Hyprland, Waybar, hyprlock, hypridle, awww, rofi, swaync, wlogout, polkit-gnome | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 
@@ -172,8 +172,8 @@ pkill waybar; waybar &            # Reload waybar
 swaync-client --reload-config     # Reload config
 swaync-client --reload-css        # Reload styles
 
-# hyprpaper (started via exec-once in hyprland.conf)
-# Config: ~/.config/hypr/hyprpaper.conf
+# awww (wallpaper daemon, started via exec-once in hyprland.conf)
+awww img ~/Pictures/Wallpapers/foo.jpg  # Set wallpaper
 
 # hyprlock
 hyprlock                          # Lock screen manually
