@@ -1,2 +1,4 @@
 # direnv per-project environment files (may contain op:// secret references)
 .envrc
+
+**/.claude/settings.local.json
