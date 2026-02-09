@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.config/tmux/scripts/claude-tmux-state.sh clear",
+            "command": "~/.config/tmux/scripts/claude-tmux-state.sh running",
             "timeout": 5000
           }
         ]
