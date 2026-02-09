@@ -31,14 +31,16 @@ alias yz="yazi"
 alias bat="batcat"
 alias tn="tmux new-session -s"
 t() { tmux new-session -s "$(basename "$PWD")"; }
-cc() {
+_claude_tmux() {
   local name="$(basename "$PWD")"
   if tmux has-session -t "$name" 2>/dev/null; then
     tmux attach-session -t "$name"
   else
-    tmux new-session -s "$name" "claude"
+    tmux new-session -s "$name" "$1; tmux kill-session -t $name"
   fi
 }
+cc() { _claude_tmux "claude"; }
+ccd() { _claude_tmux "claude --plugin-dir ~/Repos/ccflow/"; }
 alias tl="tmux list-sessions"
 alias ta="tmux attach-session"
 alias kubectl="k3s kubectl"
