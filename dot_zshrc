@@ -1,6 +1,5 @@
 # Path
 export PATH=/opt/nvim-linux-x86_64/bin:$PATH
-export PATH=/$HOME/.tmuxifier/bin:$PATH
 export PATH=/$HOME/.config/scripts:$PATH
 export PATH=/opt/webp:$PATH
 export PATH=/$HOME/.dotnet:/$HOME/.dotnet/tools:$PATH
@@ -31,6 +30,15 @@ alias lg="lazygit"
 alias yz="yazi"
 alias bat="batcat"
 alias tn="tmux new-session -s"
+t() { tmux new-session -s "$(basename "$PWD")"; }
+cc() {
+  local name="$(basename "$PWD")"
+  if tmux has-session -t "$name" 2>/dev/null; then
+    tmux attach-session -t "$name"
+  else
+    tmux new-session -s "$name" "claude"
+  fi
+}
 alias tl="tmux list-sessions"
 alias ta="tmux attach-session"
 alias kubectl="k3s kubectl"
@@ -45,6 +53,11 @@ fi
 
 # Load Angular CLI autocompletion.
 source <(ng completion script)
+
+claude() {
+	command claude "$@"
+	~/.config/tmux/scripts/claude-tmux-state.sh clear
+}
 
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
