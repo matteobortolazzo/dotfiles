@@ -31,7 +31,8 @@
     "on-click": "activate",
     "sort-by-number": true,
     "persistent-workspaces": {
-      "*": 5
+      "DP-4": [1, 2, 3, 4, 5],
+      "eDP-1": [6, 7, 8, 9, 10]
     }
   },
   // Right
@@ -96,14 +97,13 @@
     ]
   },
   "network": {
-    "interface": "wlo1",
     "format": "{ifname}",
     "format-wifi": "",
-    "format-ethernet": "{ipaddr}/{cidr} 󰊗",
+    "format-ethernet": "󰈀",
     "format-disconnected": "",
-    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
+    "tooltip-format": "{ifname} via {gwaddr} 󰈀",
     "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
-    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-ethernet": "{ifname} 󰈀",
     "tooltip-format-disconnected": "Disconnected",
     "max-length": 50,
     "on-click": "~/.config/rofi/scripts/wifi.sh",
