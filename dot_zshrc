@@ -36,9 +36,8 @@ _claude_tmux() {
   if tmux has-session -t "$name" 2>/dev/null; then
     tmux attach-session -t "$name"
   else
-    tmux new-session -s "$name" -n claude \; \
-      set-option -w automatic-rename off \; \
-      send-keys "$1; ~/.config/tmux/scripts/claude-tmux-state.sh clear; tmux kill-session -t $name" Enter
+    tmux new-session -s "$name" -n claude "$1" \; \
+      set-option -w automatic-rename off
   fi
 }
 cc() { _claude_tmux "claude"; }
