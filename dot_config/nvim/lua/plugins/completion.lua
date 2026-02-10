@@ -1,7 +1,7 @@
 return {
   "saghen/blink.cmp",
   version = "*",
-  event = "InsertEnter",
+  event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
     "rafamadriz/friendly-snippets",
   },
@@ -36,6 +36,15 @@ return {
         auto_show_delay_ms = 200,
         window = {
           border = "rounded",
+        },
+      },
+    },
+    cmdline = {
+      completion = {
+        menu = {
+          auto_show = function(ctx)
+            return vim.fn.getcmdtype() == ':'
+          end,
         },
       },
     },
