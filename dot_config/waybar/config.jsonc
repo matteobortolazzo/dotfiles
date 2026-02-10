@@ -125,7 +125,8 @@
       "warning": 20,
       "critical": 10
     },
-    "format": "{icon}",
+    "format": "{icon}  {capacity}%",
+    "format-charging": "󰂄  {capacity}%",
     "format-icons": [
       "",
       "",

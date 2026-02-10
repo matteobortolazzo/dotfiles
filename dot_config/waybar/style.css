@@ -139,9 +139,9 @@ tooltip label {
   color: @icon;
   min-width: 24px;
   min-height: 24px;
-  padding: 0;
+  padding: 0 2px;
   margin: 5px 2px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 #battery.warning {
