@@ -6,6 +6,7 @@ return {
     flavour = "macchiato",
     transparent_background = true,
     integrations = {
+      blink_cmp = true,
       gitsigns = true,
       mason = true,
       neo_tree = true,

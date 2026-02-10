@@ -25,7 +25,7 @@ return {
         "docker_language_server",
         "jsonls",
         "lua_ls",
-        "omnisharp",
+        "csharp_ls",
         "pylsp",
         "tailwindcss",
         "ts_ls",
@@ -106,7 +106,7 @@ return {
           },
         },
       })
-      vim.lsp.config("omnisharp", {})
+      vim.lsp.config("csharp_ls", {})
       vim.lsp.config("pylsp", {})
       vim.lsp.config("tailwindcss", {})
       vim.lsp.config("ts_ls", {})
@@ -120,7 +120,7 @@ return {
         "docker_language_server",
         "jsonls",
         "lua_ls",
-        "omnisharp",
+        "csharp_ls",
         "pylsp",
         "tailwindcss",
         "ts_ls",

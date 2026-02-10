@@ -10,7 +10,9 @@ return {
         return vim.fn.executable("make") == 1
       end,
     },
+    "nvim-telescope/telescope-ui-select.nvim",
   },
+  event = "VeryLazy",
   keys = {
     -- Find files
     { "<leader>sf", "<cmd>Telescope find_files<CR>", desc = "Find files" },
@@ -57,7 +59,19 @@ return {
   },
   config = function(_, opts)
     local telescope = require("telescope")
-    telescope.setup(opts)
+    telescope.setup(vim.tbl_deep_extend("force", opts, {
+      extensions = {
+        ["ui-select"] = {
+          require("telescope.themes").get_dropdown({
+            layout_config = {
+              width = 0.5,
+              height = 0.4,
+            },
+          }),
+        },
+      },
+    }))
     pcall(telescope.load_extension, "fzf")
+    pcall(telescope.load_extension, "ui-select")
   end,
 }
