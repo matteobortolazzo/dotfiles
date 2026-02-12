@@ -40,6 +40,7 @@ return {
     dependencies = {
       "mason.nvim",
       "mason-lspconfig.nvim",
+      "saghen/blink.cmp",
     },
     config = function()
       -- LSP keymaps (set on attach)
@@ -85,6 +86,11 @@ return {
           border = "rounded",
           source = true,
         },
+      })
+
+      -- Pass blink.cmp capabilities to all LSP servers (Neovim 0.11+ wildcard)
+      vim.lsp.config("*", {
+        capabilities = require("blink.cmp").get_lsp_capabilities(),
       })
 
       -- Server configurations using vim.lsp.config (Neovim 0.11+)
