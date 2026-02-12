@@ -10,6 +10,7 @@
   ],
   "modules-right": [
     "battery",
+    "custom/dictation",
     "pulseaudio",
     "network",
     "bluetooth",
@@ -25,6 +26,20 @@
     "format": "󰐥",
     "tooltip": "Power menu",
     "on-click": "wlogout"
+  },
+  "custom/dictation": {
+    "format": "{icon}",
+    "format-icons": {
+      "active": "󰍬",
+      "inactive": "󰍭"
+    },
+    "return-type": "json",
+    "exec": "~/.config/waybar/scripts/dictation-status.sh",
+    "exec-if": "which nerd-dictation",
+    "interval": "once",
+    "signal": 8,
+    "on-click": "~/.config/hypr/scripts/dictation-toggle.sh",
+    "tooltip": true
   },
   "hyprland/workspaces": {
     "format": "{name}",

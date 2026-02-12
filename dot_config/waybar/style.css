@@ -169,7 +169,8 @@ tooltip label {
 #network,
 #pulseaudio,
 #bluetooth,
-#custom-notification {
+#custom-notification,
+#custom-dictation {
   color: @icon;
   min-width: 24px;
   min-height: 24px;
@@ -182,7 +183,8 @@ tooltip label {
 #network:hover,
 #pulseaudio:hover,
 #bluetooth:hover,
-#custom-notification:hover {
+#custom-notification:hover,
+#custom-dictation:hover {
   color: @icon_active;
 }
 
@@ -223,12 +225,22 @@ tooltip label {
   color: @icon_muted;
 }
 
+/* Dictation states */
+#custom-dictation.active {
+  color: @icon_active;
+}
+
+#custom-dictation.inactive {
+  color: @icon_muted;
+}
+
 /* Reset inner label constraints */
 #battery label,
 #network label,
 #pulseaudio label,
 #bluetooth label,
 #custom-notification label,
+#custom-dictation label,
 #custom-launcher label,
 #custom-power label {
   padding: 0;
