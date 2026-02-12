@@ -33,11 +33,21 @@ alias tn="tmux new-session -s"
 t() { tmux new-session -s "$(basename "$PWD")"; }
 _claude_tmux() {
   local name="$(basename "$PWD")"
-  if tmux has-session -t "$name" 2>/dev/null; then
-    tmux attach-session -t "$name"
+  if tmux has-session -t "=$name" 2>/dev/null; then
+    if [ -n "${TMUX:-}" ]; then
+      tmux switch-client -t "=$name"
+    else
+      tmux attach-session -t "=$name"
+    fi
   else
-    tmux new-session -s "$name" -n claude "$1" \; \
-      set-option -w automatic-rename off
+    if [ -n "${TMUX:-}" ]; then
+      tmux new-session -d -s "$name" -n claude "$1" \; \
+        set-option -w automatic-rename off
+      tmux switch-client -t "=$name"
+    else
+      tmux new-session -s "$name" -n claude "$1" \; \
+        set-option -w automatic-rename off
+    fi
   fi
 }
 cc() { _claude_tmux "claude"; }

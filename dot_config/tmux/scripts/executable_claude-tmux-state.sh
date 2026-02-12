@@ -28,6 +28,9 @@ case "$mode" in
         set_state input
         notify-send 'Claude Code' 'Plan ready for review' 2>/dev/null || true
         ;;
+      *)
+        set_state running
+        ;;
     esac
     ;;
   --stop)
