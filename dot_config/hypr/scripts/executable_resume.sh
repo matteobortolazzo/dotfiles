@@ -2,7 +2,7 @@
 # Resume script - re-enable display after lid open or suspend resume
 
 # Re-enable the internal monitor with correct scale
-hyprctl keyword monitor "eDP-1, preferred, auto, auto"
+hyprctl keyword monitor "eDP-1, preferred, auto-left, 2"
 
 # Ensure DPMS is on
 hyprctl dispatch dpms on

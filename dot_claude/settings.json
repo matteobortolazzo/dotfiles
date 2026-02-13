@@ -11,50 +11,6 @@
             "timeout": 5000
           }
         ]
-      },
-      {
-        "matcher": "permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.config/tmux/scripts/claude-tmux-state.sh input",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.config/tmux/scripts/claude-tmux-state.sh --post-tool",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.config/tmux/scripts/claude-tmux-state.sh --stop",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.config/tmux/scripts/claude-tmux-state.sh running",
-            "timeout": 5000
-          }
-        ]
       }
     ]
   },

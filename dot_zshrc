@@ -35,27 +35,6 @@ alias yz="yazi"
 alias bat="batcat"
 alias tn="tmux new-session -s"
 t() { tmux new-session -s "$(basename "$PWD")"; }
-_claude_tmux() {
-  local name="$(basename "$PWD")"
-  if tmux has-session -t "=$name" 2>/dev/null; then
-    if [ -n "${TMUX:-}" ]; then
-      tmux switch-client -t "=$name"
-    else
-      tmux attach-session -t "=$name"
-    fi
-  else
-    if [ -n "${TMUX:-}" ]; then
-      tmux new-session -d -s "$name" -n claude "$1" \; \
-        set-option -w automatic-rename off
-      tmux switch-client -t "=$name"
-    else
-      tmux new-session -s "$name" -n claude "$1" \; \
-        set-option -w automatic-rename off
-    fi
-  fi
-}
-cc() { _claude_tmux "claude"; }
-ccd() { _claude_tmux "claude --plugin-dir ~/Repos/ccflow/"; }
 alias tl="tmux list-sessions"
 alias ta="tmux attach-session"
 alias kubectl="k3s kubectl"
@@ -70,11 +49,6 @@ fi
 
 # Load Angular CLI autocompletion.
 source <(ng completion script)
-
-claude() {
-	command claude "$@"
-	~/.config/tmux/scripts/claude-tmux-state.sh clear
-}
 
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
