@@ -29,5 +29,30 @@
     "greptile@claude-plugins-official": false,
     "claude-md-management@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false
+  },
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Sganassando",
+      "Sbrisigando",
+      "Ciapando",
+      "Sgraffignando",
+      "Impiastando",
+      "Sbatociando",
+      "Sgnaolando",
+      "Intorcolando",
+      "Sbraghessando",
+      "Pitocando",
+      "Sbrojando",
+      "Ciocolando",
+      "Sgangarando",
+      "Impirandose",
+      "Magnando",
+      "Tociando",
+      "Sbregando",
+      "Ingrumando",
+      "Sgarbando",
+      "Brontolando"
+    ]
   }
 }

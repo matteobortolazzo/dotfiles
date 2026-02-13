@@ -35,10 +35,11 @@
     },
     "return-type": "json",
     "exec": "~/.config/waybar/scripts/dictation-status.sh",
-    "exec-if": "which nerd-dictation",
+    "exec-if": "which hyprvoice",
     "interval": "once",
     "signal": 8,
     "on-click": "~/.config/hypr/scripts/dictation-toggle.sh",
+    "on-click-right": "pavucontrol",
     "tooltip": true
   },
   "hyprland/workspaces": {

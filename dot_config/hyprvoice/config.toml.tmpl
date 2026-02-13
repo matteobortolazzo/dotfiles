@@ -1,0 +1,94 @@
+# HyprVoice configuration
+# API key injected from 1Password via chezmoi
+
+# Keywords improve transcription accuracy for domain-specific terms
+keywords = [
+  "Hyprland", "hyprlock", "hypridle", "HyprVoice", "Wayland",
+  "Ghostty", "yazi", "rofi", "chezmoi", "tmux", "lazygit", "swaync",
+  "Neovim", "neofetch", "Waybar", "PipeWire", "systemd",
+  "Docker", "Kubernetes", "kubectl", "GitHub", "GitLab", "nginx",
+  "Redis", "PostgreSQL", "MongoDB", "ESLint", "GraphQL", "Terraform",
+  "TypeScript", "JavaScript", "Node.js", "Python", "Rust",
+  ".NET", "NuGet", "Blazor", "Azure", "LINQ", "ASP.NET", "SignalR",
+  "Angular", "React", "Tailwind", "Svelte", "RxJS", "Next.js", "Vue.js",
+  "gRPC", "protobuf", "pacman", "Arch Linux",
+]
+
+[providers.openai]
+  api_key = "{{ onepasswordRead "op://Private/OpenAI/HyprvoiceApiKey" }}"
+
+[recording]
+  sample_rate = 16000
+  channels = 1
+  format = "s16"
+  buffer_size = 8192
+  channel_buffer_size = 30
+  timeout = "5m0s"
+  device = ""
+
+[transcription]
+  provider = "openai"
+  model = "gpt-4o-realtime-preview"
+  language = ""
+  streaming = true
+  threads = 0
+
+[llm]
+  enabled = true
+  provider = "openai"
+  model = "gpt-4o-mini"
+
+  [llm.post_processing]
+    remove_stutters = true
+    add_punctuation = true
+    fix_grammar = true
+    remove_filler_words = true
+
+  [llm.custom_prompt]
+    enabled = true
+    prompt = """You are a post-processor for voice-dictated text from a software developer.
+
+Rules:
+1. Fix capitalization of technical terms exactly as listed below.
+2. Preserve the speaker's intent and meaning; do not rephrase.
+3. Convert spoken punctuation ("period", "comma", "question mark",
+   "exclamation point", "colon", "semicolon", "new line", "new paragraph",
+   "open paren", "close paren", "dash") into their symbols.
+4. Capitalize the first word of each sentence.
+5. Do not add extra words or commentary; return only the corrected text.
+
+Technical term casing (always use these exact forms):
+Hyprland, hyprlock, hypridle, HyprVoice, Wayland, Ghostty, yazi, rofi,
+chezmoi, tmux, lazygit, swaync, Neovim, neofetch, Waybar, PipeWire,
+PulseAudio, systemd, systemctl, journalctl,
+Docker, Kubernetes, kubectl, GitHub, GitLab, nginx, Redis, PostgreSQL,
+MongoDB, webpack, ESLint, Prettier, GraphQL, VS Code, CI/CD, REST API,
+DevOps, GitHub Actions, Terraform, MySQL,
+TypeScript, JavaScript, Go, Node.js, Python, Rust, C#, .NET, NuGet,
+Blazor, Azure, Azure DevOps, LINQ, Razor, ASP.NET, Entity Framework,
+SignalR, Angular, React, Tailwind, Tailwind CSS, Svelte, Figma,
+RxJS, Next.js, Vue.js, goroutine, goroutines, gRPC, protobuf,
+Arch Linux, Ubuntu, Fedora, pacman, sudo,
+HTML, CSS, SCSS, JSON, YAML, TOML, API, SDK, SSH, UI, UX, X11"""
+
+[injection]
+  backends = ["wtype", "ydotool", "clipboard"]
+  wtype_timeout = "5s"
+  ydotool_timeout = "5s"
+  clipboard_timeout = "3s"
+
+[notifications]
+  enabled = true
+  type = "desktop"
+
+  [notifications.messages.recording_started]
+    title = "HyprVoice"
+    body = "Recording..."
+
+  [notifications.messages.transcribing]
+    title = "HyprVoice"
+    body = "Transcribing..."
+
+  [notifications.messages.operation_cancelled]
+    title = "HyprVoice"
+    body = "Cancelled"
