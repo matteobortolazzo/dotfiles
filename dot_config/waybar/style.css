@@ -12,11 +12,11 @@
 @define-color icon_active #1a1a1e;
 /* Active/hovered elements */
 
-@define-color warning #8a6420;
+@define-color warning #6e5018;
 /* Low battery warning */
-@define-color critical #8a3030;
+@define-color critical #6e2626;
 /* Critical battery */
-@define-color success #3a6a4a;
+@define-color success #2e553c;
 /* Charging indicator */
 
 /* Tooltip colors (keep subtle dark theme for readability) */
@@ -170,6 +170,7 @@ tooltip label {
 #pulseaudio,
 #bluetooth,
 #custom-notification,
+#custom-muxwatch,
 #custom-dictation {
   color: @icon;
   min-width: 24px;
@@ -180,10 +181,12 @@ tooltip label {
   transition: color 150ms ease;
 }
 
+
 #network:hover,
 #pulseaudio:hover,
 #bluetooth:hover,
 #custom-notification:hover,
+#custom-muxwatch:hover,
 #custom-dictation:hover {
   color: @icon_active;
 }
@@ -225,6 +228,19 @@ tooltip label {
   color: @icon_muted;
 }
 
+/* Muxwatch states */
+#custom-muxwatch.running {
+  color: @icon;
+}
+
+#custom-muxwatch.done {
+  color: @success;
+}
+
+#custom-muxwatch.need-input {
+  color: @warning;
+}
+
 /* Dictation states */
 #custom-dictation.active {
   color: @icon_active;
@@ -240,6 +256,7 @@ tooltip label {
 #pulseaudio label,
 #bluetooth label,
 #custom-notification label,
+#custom-muxwatch label,
 #custom-dictation label,
 #custom-launcher label,
 #custom-power label {

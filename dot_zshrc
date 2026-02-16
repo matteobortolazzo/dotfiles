@@ -5,6 +5,7 @@ export PATH=/opt/webp:$PATH
 export PATH=/usr/share/dotnet:/usr/share/dotnet/tools:$HOME/.dotnet/tools:$PATH
 export PATH="$HOME/.aspire/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
 
 # Environment Variables
 export DOTNET_ROOT=/usr/share/dotnet
