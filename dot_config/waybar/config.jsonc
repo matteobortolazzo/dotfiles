@@ -10,6 +10,7 @@
   ],
   "modules-right": [
     "battery",
+    "custom/muxwatch",
     "custom/dictation",
     "pulseaudio",
     "network",
@@ -26,6 +27,14 @@
     "format": "󰐥",
     "tooltip": "Power menu",
     "on-click": "wlogout"
+  },
+  "custom/muxwatch": {
+    "format": "󰚩 {}",
+    "return-type": "json",
+    "exec": "muxwatch waybar",
+    "exec-if": "muxwatch waybar > /dev/null 2>&1",
+    "interval": 2,
+    "tooltip": true
   },
   "custom/dictation": {
     "format": "{icon}",
