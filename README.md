@@ -65,26 +65,6 @@ Create `~/.config/chezmoi/chezmoi.toml` with:
 
 This tells chezmoi to use 1Password account mode for secret resolution.
 
-## Per-project ADO environment
-
-Global secrets (OpenAI, Anthropic, GitHub, etc.) are auto-populated into `~/.config/environment` by chezmoi templates. The file is sourced by `.zshrc`.
-
-For per-project Azure DevOps overrides, [direnv](https://direnv.net/) is hooked into zsh and `.envrc` files are globally gitignored.
-
-Create an `.envrc` in the project root:
-
-```bash
-export ADO_ORG="my-org"
-export AZURE_DEVOPS_EXT_PAT="$(op read 'op://Private/ADO PAT - my-org/credential')"
-export ADO_MCP_AUTH_TOKEN="$AZURE_DEVOPS_EXT_PAT"
-```
-
-Then allow it:
-
-```bash
-direnv allow
-```
-
 ## Day-to-day commands
 
 ```bash

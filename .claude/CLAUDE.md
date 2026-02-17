@@ -220,19 +220,6 @@ Since we're working directly in the chezmoi source directory:
 - **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
 - **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
 
-## Per-project environment overrides (direnv)
-
-Global secrets are set in `~/.config/environment` (from `environment.tmpl`). For per-project overrides (e.g., different ADO org), create an `.envrc` in the project root:
-
-```bash
-# .envrc — copy to project root, edit, then `direnv allow`
-export ADO_ORG="my-org"
-export AZURE_DEVOPS_EXT_PAT="$(op read 'op://Private/ADO PAT - my-org/credential')"
-export ADO_MCP_AUTH_TOKEN="$AZURE_DEVOPS_EXT_PAT"
-```
-
-`.envrc` files are globally gitignored (`~/.config/git/ignore`) to prevent accidental secret commits.
-
 ## Documentation resources
 
 For up-to-date documentation, use Context7 MCP:
