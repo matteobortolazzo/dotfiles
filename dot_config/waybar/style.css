@@ -241,6 +241,10 @@ tooltip label {
   color: @warning;
 }
 
+#custom-muxwatch.idle {
+  color: @icon_muted;
+}
+
 /* Dictation states */
 #custom-dictation.active {
   color: @icon_active;
