@@ -9,6 +9,9 @@ export PATH="$HOME/go/bin:$PATH"
 
 # Environment Variables
 export DOTNET_ROOT=/usr/share/dotnet
+if [ -n "$WSL_DISTRO_NAME" ]; then
+    export BROWSER=wslview
+fi
 export KUBECONFIG=~/.kube/config
 export ZSH="$HOME/.oh-my-zsh"
 
