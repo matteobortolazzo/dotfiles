@@ -1,0 +1,27 @@
+provider: github
+action_refresh_delay: 60
+columns:
+  - name: New
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    actions:
+      R:
+        name: Refine ticket
+        type: shell
+        command: 'tmux new-window -d -n {session} ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/refine {number}"'''
+  - name: Refined
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    actions:
+      I:
+        name: Implement ticket
+        type: shell
+        command: 'tmux new-window -d -n {session} ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/implement {number}"'''
+  - name: Implemented
+actions:
+  C:
+    name: Claude Code
+    type: shell
+    command: "tmux new-window 'claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/'"
+  S:
+    name: Sync Git
+    type: shell
+    command: 'tmux new-window -d -n "Git Sync" ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/sync"'''
