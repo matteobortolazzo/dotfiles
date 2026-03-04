@@ -7,6 +7,10 @@ export PATH="$HOME/.aspire/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/go/bin:$PATH"
 
+# Editor
+export EDITOR=nvim
+export VISUAL=nvim
+
 # Environment Variables
 export DOTNET_ROOT=/usr/share/dotnet
 if [ -n "$WSL_DISTRO_NAME" ]; then
