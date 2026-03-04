@@ -2,26 +2,31 @@ provider: github
 action_refresh_delay: 60
 columns:
   - name: New
-    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    cleanup: "~/.config/lazyboards/scripts/cleanup.sh {session}"
     actions:
       R:
-        name: Refine ticket
+        name: Refine
         type: shell
-        command: 'tmux new-window -d -n {session} ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/refine {number}"'''
+        command: "~/.config/lazyboards/scripts/refine.sh {number} {session}"
   - name: Refined
-    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    cleanup: "~/.config/lazyboards/scripts/cleanup.sh {session}"
     actions:
       I:
-        name: Implement ticket
+        name: Implement
         type: shell
-        command: 'tmux new-window -d -n {session} ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/implement {number}"'''
+        command: "~/.config/lazyboards/scripts/implement.sh {number} {session}"
+      D:
+        name: Design
+        type: shell
+        command: "~/.config/lazyboards/scripts/design.sh {number} {session}"
+  - name: Designed
   - name: Implemented
 actions:
   C:
     name: Claude Code
     type: shell
-    command: "tmux new-window 'claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/'"
+    command: "~/.config/lazyboards/scripts/claude.sh"
   S:
     name: Sync Git
     type: shell
-    command: 'tmux new-window -d -n "Git Sync" ''claude --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- "/sync"'''
+    command: "~/.config/lazyboards/scripts/sync.sh"
