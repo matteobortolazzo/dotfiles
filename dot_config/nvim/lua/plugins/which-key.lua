@@ -20,6 +20,7 @@ return {
 
     -- Register group names
     wk.add({
+      { "<leader>c", group = "copilot" },
       { "<leader>g", group = "git" },
       { "<leader>h", group = "hunk" },
       { "<leader>s", group = "search" },
