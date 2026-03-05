@@ -14,7 +14,7 @@ columns:
       I:
         name: Implement
         type: shell
-        command: "~/.config/lazyboards/scripts/implement.sh {number} {session}"
+        command: "~/.config/lazyboards/scripts/implement.sh {number} {session} {tags}"
       D:
         name: Design
         type: shell
