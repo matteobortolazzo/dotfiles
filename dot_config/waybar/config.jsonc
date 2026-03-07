@@ -16,6 +16,7 @@
     "network",
     "bluetooth",
     "custom/notification",
+    "tray",
     "custom/power"
   ],
   // Left
@@ -143,6 +144,10 @@
     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
     "on-click": "~/.config/rofi/scripts/bluetooth.sh",
     "on-click-right": "blueman-manager"
+  },
+  "tray": {
+    "icon-size": 16,
+    "spacing": 8
   },
   "battery": {
     "interval": 60,
