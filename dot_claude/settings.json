@@ -1,5 +1,13 @@
 {
   "cleanupPeriodDays": 7,
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
+  },
+  "permissions": {
+    "allow": [
+      "mcp__pencil"
+    ]
+  },
   "hooks": {
     "Notification": [
       {
@@ -21,7 +29,33 @@
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true
+    "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "csharp-lsp@claude-plugins-official": true,
+    "ccflow@ccflow": true,
+    "muxwatch@muxwatch": true,
+    "dotnet-nuget-proxy@dotnet-nuget-proxy": true
+  },
+  "extraKnownMarketplaces": {
+    "ccflow": {
+      "source": {
+        "source": "github",
+        "repo": "matteobortolazzo/ccflow"
+      }
+    },
+    "muxwatch": {
+      "source": {
+        "source": "github",
+        "repo": "matteobortolazzo/muxwatch"
+      }
+    },
+    "dotnet-nuget-proxy": {
+      "source": {
+        "source": "github",
+        "repo": "logiclabs/dotnet-nuget-proxy-skill"
+      }
+    }
   },
   "spinnerVerbs": {
     "mode": "replace",
@@ -46,12 +80,5 @@
       "Pareciando"
     ]
   },
-  "permissions": {
-    "allow": [
-      "mcp__pencil"
-    ]
-  },
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
-  }
+  "effortLevel": "high"
 }
