@@ -8,33 +8,19 @@
       "mcp__pencil"
     ]
   },
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '\"Claude Code: \" + (.message // \"Needs attention\")' | xargs -0 notify-send 'Claude Code'",
-            "timeout": 5000
-          }
-        ]
-      }
-    ]
-  },
   "statusLine": {
     "type": "command",
-    "command": "npx -y ccstatusline@latest",
+    "command": "~/.claude/ccline/ccline",
     "padding": 0
   },
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "csharp-lsp@claude-plugins-official": true,
     "ccflow@ccflow": true,
     "muxwatch@muxwatch": true,
+    "csharp-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
     "dotnet-nuget-proxy@dotnet-nuget-proxy": true
   },
   "extraKnownMarketplaces": {
