@@ -50,6 +50,7 @@ audio/ogg=mpv.desktop
 audio/flac=mpv.desktop
 audio/x-m4a=mpv.desktop
 audio/mp4=mpv.desktop
+x-scheme-handler/jetbrains=jetbrainsd.desktop
 
 [Added Associations]
 image/png=org.xfce.ristretto.desktop;
