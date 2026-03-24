@@ -14,32 +14,19 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "ccflow@ccflow": true,
-    "muxwatch@muxwatch": true,
     "csharp-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "dotnet-nuget-proxy@dotnet-nuget-proxy": true
+    "ccflow@claude-tools": true,
+    "muxwatch@claude-tools": true
   },
   "extraKnownMarketplaces": {
-    "ccflow": {
+    "claude-tools": {
       "source": {
         "source": "github",
-        "repo": "matteobortolazzo/ccflow"
-      }
-    },
-    "muxwatch": {
-      "source": {
-        "source": "github",
-        "repo": "matteobortolazzo/muxwatch"
-      }
-    },
-    "dotnet-nuget-proxy": {
-      "source": {
-        "source": "github",
-        "repo": "logiclabs/dotnet-nuget-proxy-skill"
+        "repo": "matteobortolazzo/claude-tools"
       }
     }
   },

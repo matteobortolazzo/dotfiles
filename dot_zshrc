@@ -43,10 +43,10 @@ alias lg="lazygit"
 alias yz="yazi"
 alias bat="batcat"
 alias tn="tmux new-session -s"
-t() { tmux new-session -s "$(basename "$PWD")"; }
 alias tl="tmux list-sessions"
 alias ta="tmux attach-session"
 alias kubectl="k3s kubectl"
+t() { tmux new-session -A -s "$(basename "$PWD")"; }
 
 # zoxide initialization
 eval "$(zoxide init zsh)"
