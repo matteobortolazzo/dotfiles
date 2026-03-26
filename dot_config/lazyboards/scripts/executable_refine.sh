@@ -2,4 +2,4 @@
 number=$1
 session=$2
 tmux new-window -d -n "$session" \
-  "claude-sand --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- \"/refine $number\""
+  "claude -- \"/refine $number\""

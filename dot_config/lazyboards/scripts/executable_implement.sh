@@ -4,4 +4,4 @@ session=$2
 tags=$3
 
 tmux new-window -d -n "$session" \
-  "claude-sand --plugin-dir ~/Repos/muxwatch/plugin --plugin-dir ~/Repos/ccflow/ -- \"/implement $number\""
+  "claude-sand -- \"/implement $number\""
