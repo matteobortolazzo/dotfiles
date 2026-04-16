@@ -38,7 +38,8 @@ chmod +x "$INSTALL_DIR/pencil" "$INSTALL_DIR/chrome-sandbox" "$INSTALL_DIR/chrom
 
 # Create symlink
 mkdir -p "$(dirname "$SYMLINK")"
-ln -sf "$INSTALL_DIR/pencil" "$SYMLINK"
+rm -rf "$SYMLINK"
+ln -s "$INSTALL_DIR/pencil" "$SYMLINK"
 
 # Install desktop entry
 mkdir -p "$HOME/.local/share/applications"
