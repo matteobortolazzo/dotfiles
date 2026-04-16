@@ -1,8 +1,7 @@
 return {
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     cmd = "Mason",
-    build = ":MasonUpdate",
     opts = {
       ui = {
         border = "rounded",
@@ -15,7 +14,7 @@ return {
     },
   },
   {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" },
     opts = {
       ensure_installed = {
@@ -31,7 +30,7 @@ return {
         "ts_ls",
         "yamlls",
       },
-      automatic_installation = true,
+      automatic_enable = true,
     },
   },
   {

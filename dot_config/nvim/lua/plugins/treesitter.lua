@@ -1,7 +1,9 @@
 return {
   "nvim-treesitter/nvim-treesitter",
+  branch = "master",
   build = ":TSUpdate",
   event = { "BufReadPost", "BufNewFile" },
+  main = "nvim-treesitter.configs",
   opts = {
     ensure_installed = {
       "bash",
@@ -39,7 +41,4 @@ return {
       },
     },
   },
-  config = function(_, opts)
-    require("nvim-treesitter").setup(opts)
-  end,
 }
