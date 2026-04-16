@@ -27,6 +27,10 @@ actions:
     type: shell
     command: "~/.config/lazyboards/scripts/claude.sh"
   S:
-    name: Sync Git
+    name: Git Sync
     type: shell
     command: "~/.config/lazyboards/scripts/sync.sh"
+  P:
+    name: Git Pull
+    type: shell
+    command: "git pull"
