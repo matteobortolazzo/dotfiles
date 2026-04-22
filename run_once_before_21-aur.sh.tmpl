@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
+set -euo pipefail
+
+pkg_file="{{ .chezmoi.sourceDir }}/packages/arch-aur.txt"
+[ -f "$pkg_file" ] || { echo "no $pkg_file — skipping"; exit 0; }
+[ -s "$pkg_file" ] || exit 0
+
+paru -S --needed --noconfirm --skipreview - < "$pkg_file"
+{{ end -}}

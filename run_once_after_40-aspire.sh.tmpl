@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+# Aspire CLI standalone (installs into ~/.aspire/bin, matches .zshrc PATH entry).
+# Not the `dotnet tool install` flavour — that one lives under ~/.dotnet/tools.
+
+[ -x "$HOME/.aspire/bin/aspire" ] && exit 0
+
+curl -fsSL https://aspire.dev/install.sh | bash
+{{ end -}}

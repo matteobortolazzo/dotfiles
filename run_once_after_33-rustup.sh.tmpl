@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+command -v rustup >/dev/null && exit 0
+[ -x "$HOME/.cargo/bin/rustup" ] && exit 0
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+{{ end -}}

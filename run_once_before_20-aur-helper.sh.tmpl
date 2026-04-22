@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
+set -euo pipefail
+
+command -v paru >/dev/null && exit 0
+
+sudo pacman -S --needed --noconfirm base-devel git
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$tmp/paru-bin"
+(cd "$tmp/paru-bin" && makepkg -si --noconfirm)
+{{ end -}}

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+# install path matches $DOTNET_ROOT in .zshrc
+[ -x "$HOME/.dotnet/dotnet" ] && exit 0
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+curl -fsSL -o "$tmp" https://dot.net/v1/dotnet-install.sh
+chmod +x "$tmp"
+"$tmp" --channel LTS --install-dir "$HOME/.dotnet"
+{{ end -}}

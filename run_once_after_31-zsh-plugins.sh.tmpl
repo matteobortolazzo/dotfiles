@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+[ -d "$ZSH_CUSTOM" ] || { echo "oh-my-zsh not installed yet — skipping"; exit 0; }
+
+clone() {
+  [ -d "$2" ] && return 0
+  git clone --depth=1 "$1" "$2"
+}
+
+clone https://github.com/zsh-users/zsh-autosuggestions     "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+clone https://github.com/jeffreytse/zsh-vi-mode            "$ZSH_CUSTOM/plugins/zsh-vi-mode"
+{{ end -}}

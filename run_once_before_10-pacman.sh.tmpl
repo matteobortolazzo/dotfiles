@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
+set -euo pipefail
+
+pkg_file="{{ .chezmoi.sourceDir }}/packages/arch-native.txt"
+[ -f "$pkg_file" ] || { echo "no $pkg_file — skipping"; exit 0; }
+
+sudo pacman -Syu --needed --noconfirm - < "$pkg_file"
+{{ end -}}

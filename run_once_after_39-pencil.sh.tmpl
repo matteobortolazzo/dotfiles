@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" -}}
+set -euo pipefail
+
+# Pencil ships as a tarball from pencil.dev — reuses ~/.config/scripts/install-pencil.sh
+# which handles extraction, symlink, and desktop entry idempotently.
+
+[ -x "$HOME/.local/share/pencil/pencil" ] && exit 0
+
+installer="$HOME/.config/scripts/install-pencil.sh"
+[ -x "$installer" ] || { echo "install-pencil.sh not deployed yet — skipping"; exit 0; }
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+curl -fsSL -o "$tmp/pencil.tar.gz" https://www.pencil.dev/download/Pencil-linux-x64.tar.gz
+"$installer" "$tmp/pencil.tar.gz"
+{{ end -}}
