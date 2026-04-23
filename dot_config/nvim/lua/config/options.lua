@@ -35,3 +35,8 @@ opt.timeoutlen = 300
 
 -- Undo
 opt.undofile = true
+
+-- Folding (treesitter-based, configured per-filetype in treesitter plugin)
+opt.foldlevel = 99
+opt.foldlevelstart = 99
+opt.foldenable = true
