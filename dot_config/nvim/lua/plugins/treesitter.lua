@@ -1,11 +1,12 @@
 return {
   "nvim-treesitter/nvim-treesitter",
-  branch = "master",
+  branch = "main",
+  lazy = false,
   build = ":TSUpdate",
-  event = { "BufReadPost", "BufNewFile" },
-  main = "nvim-treesitter.configs",
-  opts = {
-    ensure_installed = {
+  config = function()
+    require("nvim-treesitter").setup()
+
+    local parsers = {
       "bash",
       "c",
       "c_sharp",
@@ -22,23 +23,34 @@ return {
       "vim",
       "vimdoc",
       "yaml",
-    },
-    auto_install = true,
-    highlight = {
-      enable = true,
-      additional_vim_regex_highlighting = false,
-    },
-    indent = {
-      enable = true,
-    },
-    incremental_selection = {
-      enable = true,
-      keymaps = {
-        init_selection = "<C-space>",
-        node_incremental = "<C-space>",
-        scope_incremental = false,
-        node_decremental = "<bs>",
-      },
-    },
-  },
+    }
+    require("nvim-treesitter").install(parsers)
+
+    -- markdown_inline has no buffer filetype (injection-only).
+    local filetypes = {
+      "bash",
+      "c",
+      "cs",
+      "css",
+      "html",
+      "javascript",
+      "json",
+      "lua",
+      "markdown",
+      "python",
+      "typescript",
+      "vim",
+      "help",
+      "yaml",
+    }
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = filetypes,
+      callback = function()
+        pcall(vim.treesitter.start)
+        vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+        vim.wo.foldmethod = "expr"
+        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end,
+    })
+  end,
 }

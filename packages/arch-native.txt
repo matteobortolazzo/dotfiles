@@ -81,6 +81,7 @@ texinfo
 thunar
 tmux
 tree
+tree-sitter-cli
 ttf-jetbrains-mono-nerd
 ttf-liberation
 ttyd
