@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
+set -euo pipefail
+
+# NVIDIA + s2idle on Wayland corrupts GPU state across suspend unless the
+# driver is told to preserve video memory and the nvidia-{suspend,resume,
+# hibernate} services are enabled. Without this, resuming from a long idle
+# lock leaves the compositor spinning on a half-broken GPU — the symptom is
+# a system that feels hung and needs a reboot.
+# Arch wiki: NVIDIA#Suspend/resume.
+
+# Skip if this box has no NVIDIA driver installed.
+if ! systemctl list-unit-files nvidia-suspend.service >/dev/null 2>&1; then
+  echo "no nvidia-suspend.service — skipping NVIDIA suspend setup"
+  exit 0
+fi
+
+conf=/etc/modprobe.d/nvidia-power-management.conf
+desired='options nvidia NVreg_PreserveVideoMemoryAllocations=1'
+
+if ! [ -f "$conf" ] || ! grep -qxF "$desired" "$conf"; then
+  echo "$desired" | sudo tee "$conf" >/dev/null
+  sudo mkinitcpio -P
+fi
+
+sudo systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+{{ end -}}

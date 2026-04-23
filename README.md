@@ -65,6 +65,21 @@ Create `~/.config/chezmoi/chezmoi.toml` with:
 
 This tells chezmoi to use 1Password account mode for secret resolution.
 
+## Hardware quirks
+
+### NVIDIA + suspend (laptops with NVIDIA GPU)
+
+On machines with the proprietary NVIDIA driver, s2idle suspend corrupts GPU
+state on resume — the symptom is a system that is hyper slow and unusable
+after unlocking from a long idle lock, requiring a reboot.
+
+`run_once_after_22-nvidia-suspend.sh.tmpl` applies the Arch-wiki fix on first
+apply: writes `/etc/modprobe.d/nvidia-power-management.conf` with
+`NVreg_PreserveVideoMemoryAllocations=1`, regenerates the initramfs, and
+enables `nvidia-{suspend,resume,hibernate}.service`. The script is a no-op
+on hosts without `nvidia-suspend.service` installed. A reboot is required
+after first apply for the modprobe option to take effect.
+
 ## Day-to-day commands
 
 ```bash
