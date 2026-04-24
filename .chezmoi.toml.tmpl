@@ -1,0 +1,7 @@
+{{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
+
+[data]
+  profile = {{ $profile | quote }}
+
+[onepassword]
+  mode = "account"

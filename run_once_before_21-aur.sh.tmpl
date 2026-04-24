@@ -2,9 +2,13 @@
 {{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
 set -euo pipefail
 
-pkg_file="{{ .chezmoi.sourceDir }}/packages/arch-aur.txt"
-[ -f "$pkg_file" ] || { echo "no $pkg_file — skipping"; exit 0; }
-[ -s "$pkg_file" ] || exit 0
+src="{{ .chezmoi.sourceDir }}/packages"
 
-yay -S --needed --noconfirm - < "$pkg_file"
+pkg="$src/arch-aur-terminal.txt"
+[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+
+{{ if eq .profile "main" -}}
+pkg="$src/arch-aur-desktop.txt"
+[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+{{ end -}}
 {{ end -}}

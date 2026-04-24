@@ -1,2 +1,15 @@
-# package lists are data for run_once scripts, not target files
 packages
+
+{{ if ne .profile "main" -}}
+.config/hypr
+.config/rofi
+.config/swaync
+.config/waybar
+.config/wlogout
+.config/ghostty
+.config/scripts/install-pencil.sh
+{{ end -}}
+
+{{ if eq .profile "mac" -}}
+.config/environment.d
+{{ end -}}

@@ -1,0 +1,13 @@
+bluez
+bluez-utils
+bolt
+brightnessctl
+networkmanager
+pipewire-pulse
+power-profiles-daemon
+python-vosk
+sof-firmware
+speech-dispatcher
+usb_modeswitch
+vosk-api
+wireless_tools

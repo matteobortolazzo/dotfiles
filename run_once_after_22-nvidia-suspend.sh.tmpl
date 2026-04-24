@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-{{ if eq .chezmoi.osRelease.id "cachyos" "arch" -}}
+{{ if eq .profile "main" -}}
 set -euo pipefail
 
 # NVIDIA + s2idle on Wayland corrupts GPU state across suspend unless the

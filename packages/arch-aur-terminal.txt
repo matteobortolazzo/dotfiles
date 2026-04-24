@@ -1,0 +1,3 @@
+1password-cli
+sesh-bin
+yay-bin
