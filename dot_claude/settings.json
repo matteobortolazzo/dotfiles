@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mborto/.claude/hooks/rtk-rewrite.sh"
+            "command": "rtk hook claude"
           }
         ]
       }
