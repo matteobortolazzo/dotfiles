@@ -16,6 +16,7 @@ qt5-wayland
 qt6-wayland
 rofi
 slurp
+swayimg
 swaync
 swayosd
 thunar
@@ -26,3 +27,5 @@ waybar
 wtype
 xdg-desktop-portal-hyprland
 ydotool
+zathura
+zathura-pdf-mupdf
