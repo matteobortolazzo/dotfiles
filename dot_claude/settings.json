@@ -9,7 +9,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-opus-4-6",
+  "model": "claude-opus-4-6[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -69,5 +69,6 @@
     ]
   },
   "effortLevel": "high",
+  "autoCompactEnabled": false,
   "skipAutoPermissionPrompt": true
 }
