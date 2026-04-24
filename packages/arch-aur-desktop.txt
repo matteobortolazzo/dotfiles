@@ -2,17 +2,11 @@
 apple-fonts
 awww-bin
 google-chrome
-hyprpanel
-hyprvoice-bin
 jetbrains-toolbox
-nerd-dictation-git
 obsidian-bin
-python-pywal16
 rofi-bluetooth-git
 sunsetr-bin
 ttf-jost
 ttf-ms-fonts
-tuxedo-control-center-bin
-webcord
 wlogout
 zen-browser-bin
