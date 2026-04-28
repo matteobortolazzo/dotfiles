@@ -27,7 +27,7 @@ neovim
 openssh
 pacman-contrib
 poppler
-reflector
+scaleway-cli
 ripgrep
 sudo
 television

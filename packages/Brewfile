@@ -29,6 +29,7 @@ brew "yazi"
 brew "zoxide"
 
 brew "azure-cli"
+brew "scw"
 brew "fastfetch"
 brew "1password-cli"
 
