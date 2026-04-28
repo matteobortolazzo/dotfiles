@@ -1,8 +1,5 @@
 {
   "cleanupPeriodDays": 7,
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
-  },
   "permissions": {
     "allow": [
       "mcp__pencil"
