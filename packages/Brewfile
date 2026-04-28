@@ -31,11 +31,13 @@ brew "zoxide"
 brew "azure-cli"
 brew "scw"
 brew "fastfetch"
-brew "1password-cli"
+
+tap "1password/tap"
+brew "1password/tap/1password-cli"
 
 tap "joshmedeski/sesh"
 brew "joshmedeski/sesh/sesh"
 
-cask "docker"
+cask "docker-desktop"
 cask "ghostty"
 cask "font-jetbrains-mono-nerd-font"

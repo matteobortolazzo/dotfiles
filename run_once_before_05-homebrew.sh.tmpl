@@ -10,5 +10,5 @@ fi
 brewfile="{{ .chezmoi.sourceDir }}/packages/Brewfile"
 [ -f "$brewfile" ] || { echo "no $brewfile — skipping"; exit 0; }
 
-brew bundle --file="$brewfile" --no-lock
+brew bundle --file="$brewfile"
 {{ end -}}
