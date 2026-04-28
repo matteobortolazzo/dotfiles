@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+command -v lazyboards >/dev/null && exit 0
+[ -x "$HOME/go/bin/lazyboards" ] && exit 0
+
+go install github.com/matteobortolazzo/lazyboards@latest
+{{ end -}}

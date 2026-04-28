@@ -14,4 +14,8 @@ pkg_desktop="$src/arch-desktop.txt"
 pkg_system="$src/arch-system.txt"
 [ -f "$pkg_system" ] && sudo pacman -S --needed --noconfirm - < "$pkg_system"
 {{ end -}}
+
+{{ if eq .profile "wsl" -}}
+sudo pacman -S --needed --noconfirm docker docker-buildx docker-compose
+{{ end -}}
 {{ end -}}

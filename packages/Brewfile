@@ -1,4 +1,5 @@
 brew "bat"
+brew "rtk"
 brew "chezmoi"
 brew "cmake"
 brew "direnv"

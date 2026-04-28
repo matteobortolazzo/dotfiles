@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+# muxwatch
+if ! command -v muxwatch >/dev/null && ! [ -x "$HOME/go/bin/muxwatch" ]; then
+  go install github.com/matteobortolazzo/claude-tools/muxwatch@latest
+fi
+
+# ccflow
+if command -v claude >/dev/null; then
+  claude plugin marketplace add matteobortolazzo/claude-tools
+  claude plugin install ccflow
+fi
+
+# dev-sandbox
+if [ ! -x "$HOME/.local/bin/claude-sand" ]; then
+  sandbox_dir="$HOME/.local/share/dev-sandbox"
+  mkdir -p "$sandbox_dir" "$HOME/.local/bin"
+  base="https://raw.githubusercontent.com/matteobortolazzo/claude-tools/main/dev-sandbox"
+  curl -fsSL -o "$sandbox_dir/Dockerfile"    "$base/Dockerfile"
+  curl -fsSL -o "$sandbox_dir/entrypoint.sh" "$base/entrypoint.sh"
+  curl -fsSL -o "$sandbox_dir/claude-sand"   "$base/claude-sand"
+  chmod +x "$sandbox_dir/claude-sand" "$sandbox_dir/entrypoint.sh"
+  ln -s "$sandbox_dir/claude-sand" "$HOME/.local/bin/claude-sand"
+fi
+{{ end -}}

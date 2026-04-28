@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+command -v rtk >/dev/null && exit 0
+
+{{ if eq .chezmoi.os "darwin" -}}
+# macOS: installed via Brewfile
+exit 0
+{{ else -}}
+curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+{{ end -}}
+{{ end -}}
