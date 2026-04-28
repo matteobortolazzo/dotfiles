@@ -32,8 +32,7 @@ brew "azure-cli"
 brew "scw"
 brew "fastfetch"
 
-tap "1password/tap"
-brew "1password/tap/1password-cli"
+cask "1password-cli"
 
 tap "joshmedeski/sesh"
 brew "joshmedeski/sesh/sesh"
