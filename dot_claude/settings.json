@@ -6,7 +6,6 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-opus-4-6[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -67,5 +66,8 @@
   },
   "effortLevel": "high",
   "autoCompactEnabled": false,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
+  }
 }
