@@ -2,10 +2,7 @@ packages
 
 {{ if ne .profile "main" -}}
 .config/hypr
-.config/rofi
-.config/swaync
-.config/waybar
-.config/wlogout
+.config/noctalia
 .config/ghostty
 .config/scripts/install-pencil.sh
 {{ end -}}

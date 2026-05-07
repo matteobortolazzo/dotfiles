@@ -28,14 +28,8 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
 | WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
-| Bar | Waybar | `~/.config/waybar/` | Minimal transparent, dark icons for light wallpapers, Linux-only |
-| Screen locker | hyprlock | `~/.config/hypr/hyprlock.conf` | Linux-only, Hyprland native |
-| Idle daemon | hypridle | `~/.config/hypr/hypridle.conf` | Linux-only, Hyprland native |
-| App launcher | rofi | `~/.config/rofi/` | Glassmorphic dark theme, Linux-only |
-| Notifications | swaync | `~/.config/swaync/` | nova-dark theme, Linux-only |
-| Logout menu | wlogout | `~/.config/wlogout/` | Linux-only |
-| Auth agent | polkit-gnome | — | Provides GUI auth dialogs; started via exec-once, Linux-only |
-| Wallpaper | awww | — | awww daemon, started via exec-once, Linux-only |
+| Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | noctalia-shell | `~/.config/noctalia/` | Quickshell-based single daemon; configured via in-app GUI; IPC via `qs -c noctalia-shell ipc call ...` |
+| Auth agent | polkit-gnome | — | GUI auth dialogs; started via exec-once, Linux-only |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
@@ -58,7 +52,7 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 | Token | Value | Usage |
 |---|---|---|
 | `bg-solid` | `#1a1a1e` | Opaque fallbacks |
-| `bg-glass` | `rgba(20,20,24,0.55)` | rofi, swaync |
+| `bg-glass` | `rgba(20,20,24,0.55)` | noctalia panels |
 | `bg-glass-deep` | `rgba(20,20,24,0.75)` | Tooltips, dropdowns |
 | `surface` | `#242428` | Terminal bg, raised elements |
 | `surface-raised` | `#2c2c31` | Cards, panels |
@@ -81,26 +75,11 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 8=#5a5752, 9=#e08080, 10=#90d0a0, 11=#e8c070, 12=#88b8d8, 13=#d0a0c8, 14=#80d0c8, 15=#faf7f2
 ```
 
-Applied to: Hyprland, rofi, hyprlock, swaync, wlogout, Ghostty, yazi, Neovim (catppuccin macchiato).
-
-### Waybar - Minimal Transparent Theme
-
-Waybar uses a separate minimal theme optimized for light wallpapers:
-
-| Token | Value | Usage |
-|---|---|---|
-| `icon` | `#3c3c40` | Default icon color |
-| `icon-muted` | `#5a5a5e` | Inactive/disabled states |
-| `icon-active` | `#1a1a1e` | Active/hovered elements |
-| `warning` | `#8a6420` | Low battery warning |
-| `critical` | `#8a3030` | Critical battery |
-| `success` | `#3a6a4a` | Charging indicator |
-
-Design: Fully transparent bar with no backgrounds or borders. Dark icons float directly over the wallpaper.
+Applied to: Hyprland, noctalia-shell (custom user color scheme: "Glassmorphic Dark"), Ghostty, yazi, Neovim (catppuccin macchiato).
 
 ### Wallpaper
 
-Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via awww daemon (exec-once in hyprland.conf).
+Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via noctalia Settings → Wallpaper.
 
 ### Blur configuration
 
@@ -108,8 +87,7 @@ Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via awww daemon (exec-once 
 |---|---|---|
 | Hyprland | size=6, passes=3 | Window blur |
 | Ghostty | opacity=0.88 | Terminal transparency |
-| Waybar | — | Fully transparent, no blur |
-| rofi/swaync | layerrule blur | Menu blur-through |
+| noctalia-shell | layerrule blur on `noctalia-background-.*` | Bar/panel/launcher blur-through |
 
 ### Window decorations
 
@@ -131,15 +109,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `environment.tmpl` (secrets via 1Password).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
-- **`.chezmoiignore`** — exclude Linux-only configs on macOS and vice versa. *Note: No `.chezmoiignore` currently exists; example pattern for future use:*
-  ```
-  {{ if ne .chezmoi.os "linux" }}
-  .config/hypr/**
-  .config/waybar/**
-  .config/rofi/**
-  .config/swaync/**
-  {{ end }}
-  ```
+- **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/hypr`, `.config/noctalia`, `.config/ghostty`).
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
 
@@ -147,7 +117,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 | Scope | Linux | macOS | Shared |
 |---|---|---|---|
-| Hyprland, Waybar, hyprlock, hypridle, awww, rofi, swaync, wlogout, polkit-gnome | ✓ | — | — |
+| Hyprland, noctalia-shell, polkit-gnome | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 
@@ -165,23 +135,14 @@ chezmoi edit ~/.config/foo/bar    # Edit source state copy (not needed when alre
 chezmoi update                    # Pull remote + apply
 
 # Hyprland (changes auto-reload on save)
-# Waybar
-pkill waybar; waybar &            # Reload waybar
 
-# swaync
-swaync-client --reload-config     # Reload config
-swaync-client --reload-css        # Reload styles
-
-# awww (wallpaper daemon, started via exec-once in hyprland.conf)
-awww img ~/Pictures/Wallpapers/foo.jpg  # Set wallpaper
-
-# hyprlock
-hyprlock                          # Lock screen manually
-
-# hypridle (started via exec-once in hyprland.conf)
-
-# rofi
-~/.config/rofi/launchers/apps.sh  # Run app launcher
+# noctalia-shell (single daemon; restart by killing + relaunching)
+qs -c noctalia-shell                                     # Run shell (also via exec-once)
+qs -c noctalia-shell ipc call launcher toggle            # Open launcher
+qs -c noctalia-shell ipc call lockScreen lock            # Lock
+qs -c noctalia-shell ipc call sessionMenu toggle         # Power menu
+qs -c noctalia-shell ipc call settings toggle            # In-app settings GUI
+qs -c noctalia-shell ipc call state all                  # Dump current state
 
 # direnv
 direnv allow                      # Trust .envrc in current directory
@@ -192,22 +153,17 @@ direnv edit .                     # Create/edit .envrc and auto-allow
 
 When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
-1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Keep `exec-once` block tidy and grouped.
-2. **Waybar** — `config.jsonc` (JSONC) + `style.css`. Use `hyprland/workspaces` and `hyprland/window` modules, NOT `sway/*`. Current aesthetic is minimal transparent with dark icons (macOS-style, no backgrounds/borders).
-3. **swaync** — `config.json` (JSON) + `style.css` (imports theme). Theme directory: `themes/nova-dark/`. Icons directory: `icons/`. Reload with `swaync-client --reload-config` and `swaync-client --reload-css`.
-4. **hyprlock** — Hyprland DSL config at `hyprlock.conf`. Defines lock screen appearance/behavior.
-5. **hypridle** — Hyprland DSL config at `hypridle.conf`. Defines idle timeouts: dim (2.5min), lock (5min), DPMS (5.5min), suspend (30min). Also controls keyboard backlight. Started via exec-once in hyprland.conf.
-6. **rofi** — rasi config format. Main config: `config.rasi`. Theme: `themes/glass.rasi` (glassmorphic dark). Launcher: `launchers/apps.rasi` + `apps.sh`. Utility scripts: `scripts/wifi.sh`, `scripts/bluetooth.sh`.
-7. **wlogout** — `layout` file (custom format) + `style.css` (imports `nova.css` theme). Defines logout/reboot/shutdown menu.
-8. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
-9. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
-10. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
-11. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
-12. **Ghostty** — Plain config file. Cross-platform terminal emulator.
-13. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
-14. **bat** — Config file + theme. Cross-platform syntax highlighter.
-15. **git** — Standard git config format. Cross-platform.
-16. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
+1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Wire shell features through the `$ipc` variable (`$ipc = qs -c noctalia-shell ipc call`). Keep `exec-once` block tidy and grouped.
+2. **noctalia-shell** — Configured via the in-app Settings GUI (open with SUPER+R). User color schemes live in `~/.config/noctalia/color-schemes/`. Don't hand-edit JSON unless reproducing it on a new machine — let the GUI write it, then `chezmoi add ~/.config/noctalia` to capture. Docs: <https://docs.noctalia.dev/v4/>. Full IPC reference: <https://docs.noctalia.dev/v4/getting-started/keybinds/>.
+3. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
+4. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
+5. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
+6. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
+7. **Ghostty** — Plain config file. Cross-platform terminal emulator.
+8. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
+9. **bat** — Config file + theme. Cross-platform syntax highlighter.
+10. **git** — Standard git config format. Cross-platform.
+11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
 
 ## Workflow
 
@@ -216,7 +172,7 @@ Since we're working directly in the chezmoi source directory:
 - **Edit source files directly** — no need for `chezmoi edit` or `chezmoi cd`
 - **Git operations happen here** — commit, push, pull as normal
 - **Apply after editing** — run `chezmoi diff` → `chezmoi apply` to sync to `~/`
-- **One concern per commit** — prefix with tool name: `waybar: add battery module`, `nvim: configure LSP`
+- **One concern per commit** — prefix with tool name: `noctalia: tweak control center`, `nvim: configure LSP`
 - **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
 - **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
 
@@ -227,7 +183,8 @@ For up-to-date documentation, use Context7 MCP:
 | Tool | Context7 library ID |
 |---|---|
 | Hyprland | `/websites/wiki_hypr_land` |
-| Waybar | `/alexays/waybar` |
+
+For noctalia-shell, fetch the docs site directly (no Context7): <https://docs.noctalia.dev/v4/>.
 
 Query with `mcp__context7__resolve-library-id` (to find library IDs) and `mcp__context7__query-docs` (to fetch docs).
 

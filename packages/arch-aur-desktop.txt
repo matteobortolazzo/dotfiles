@@ -1,12 +1,9 @@
 1password
 apple-fonts
-awww-bin
 google-chrome
 jetbrains-toolbox
+noctalia-shell
 obsidian-bin
-rofi-bluetooth-git
-sunsetr-bin
 ttf-jost
 ttf-ms-fonts
-wlogout
 zen-browser-bin
