@@ -1,11 +1,8 @@
 #!/bin/bash
 # Resume script - re-enable display after lid open or suspend resume
 
-# Re-enable the internal monitor with correct scale
-hyprctl keyword monitor "eDP-1, preferred, auto-left, 2"
-
-# Ensure DPMS is on
-hyprctl dispatch dpms on
+# Turn the screen back on
+hyprctl dispatch dpms on eDP-1
 
 # Restore brightness (may have been dimmed before suspend)
 brightnessctl -r 2>/dev/null || true
