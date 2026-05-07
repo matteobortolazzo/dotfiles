@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# Graphical login: greetd + regreet hosted by cage. System-level configs live
+# in {{ .chezmoi.sourceDir }}/system/ (chezmoi only manages $HOME, so this
+# script mirrors them into /etc/ via sudo install).
+#
+# Service is enabled but NOT started — starting it here would kill the TTY
+# running chezmoi apply. Reboot to activate.
+#
+# Recovery: if greetd fails on boot, switch to TTY2 (Ctrl+Alt+F2) and run
+#   sudo systemctl disable --now greetd
+# to drop back to plain TTY login. getty@tty1 is intentionally not masked.
+
+# Skip if greetd isn't installed yet (clean-machine bootstrap installs via
+# arch-system.txt; on existing machines: sudo pacman -S greetd cage greetd-regreet).
+if ! command -v greetd >/dev/null 2>&1; then
+  echo "greetd not installed — skipping (run: sudo pacman -S greetd cage greetd-regreet)"
+  exit 0
+fi
+
+src="{{ .chezmoi.sourceDir }}/system"
+
+install_if_changed() {
+  local source="$1" target="$2"
+  if ! [ -f "$target" ] || ! sudo cmp -s "$source" "$target"; then
+    sudo install -m 0644 -o root -g root "$source" "$target"
+    echo "installed $target"
+  fi
+}
+
+install_if_changed "$src/greetd/config.toml"   /etc/greetd/config.toml
+install_if_changed "$src/greetd/regreet.toml"  /etc/greetd/regreet.toml
+install_if_changed "$src/greetd/regreet.css"   /etc/greetd/regreet.css
+install_if_changed "$src/greetd/environments"  /etc/greetd/environments
+
+# Pacman hook to hide the broken hyprland-uwsm session entry whenever hyprland
+# upgrades reinstall it. The hook only fires on future installs/upgrades, so we
+# also apply the patch immediately below.
+sudo install -d -o root -g root -m 0755 /etc/pacman.d/hooks
+install_if_changed "$src/pacman-hooks/hide-uwsm-session.hook" /etc/pacman.d/hooks/hide-uwsm-session.hook
+
+uwsm_session=/usr/share/wayland-sessions/hyprland-uwsm.desktop
+if [ -f "$uwsm_session" ] && ! grep -q "^Hidden=true" "$uwsm_session"; then
+  echo "Hidden=true" | sudo tee -a "$uwsm_session" >/dev/null
+  echo "hid $uwsm_session from greeters"
+fi
+
+# regreet panics if its cache dir is missing or unwritable by the greeter user.
+if ! [ -d /var/cache/regreet ]; then
+  sudo install -d -o greeter -g greeter -m 0755 /var/cache/regreet
+fi
+
+# Resolve the wallpaper to mirror as the greeter background. Prefer noctalia's
+# currently configured wallpaper (first monitor's dark variant), then fall
+# back to noctalia's defaultWallpaper, then to anything in ~/Pictures/Wallpapers.
+wallpaper=""
+noctalia_cache="$HOME/.cache/noctalia/wallpapers.json"
+if [ -f "$noctalia_cache" ] && command -v jq >/dev/null 2>&1; then
+  wallpaper=$(jq -r '
+      (.wallpapers // {} | to_entries | (.[0].value.dark // empty))
+      // (.defaultWallpaper // empty)
+    ' "$noctalia_cache" 2>/dev/null || true)
+fi
+if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
+  wallpaper=$(find "$HOME/Pictures/Wallpapers" -maxdepth 1 -type f \
+    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) 2>/dev/null \
+    | head -n 1 || true)
+fi
+
+target_bg=/var/lib/regreet/background.jpg
+if [ -n "$wallpaper" ] && [ -f "$wallpaper" ]; then
+  if ! [ -f "$target_bg" ] || ! sudo cmp -s "$wallpaper" "$target_bg"; then
+    sudo install -d -o root -g root -m 0755 /var/lib/regreet
+    sudo install -m 0644 -o root -g root "$wallpaper" "$target_bg"
+    echo "installed $target_bg (from $wallpaper)"
+  fi
+fi
+
+sudo systemctl enable greetd.service
+{{ end -}}

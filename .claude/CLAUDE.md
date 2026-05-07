@@ -27,6 +27,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
+| Display manager / greeter | greetd + regreet (via cage) | `/etc/greetd/{config,regreet}.{toml,css}` (mirrored from `system/greetd/` by `run_once_after_45-greetd.sh.tmpl`) | Linux-only, system-level. Themed via custom `regreet.css` (Glassmorphic Dark). Pacman hook in `system/pacman-hooks/` keeps the broken `hyprland-uwsm.desktop` session hidden across hyprland upgrades. |
 | WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
 | Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | noctalia-shell | `~/.config/noctalia/` | Quickshell-based single daemon; configured via in-app GUI; IPC via `qs -c noctalia-shell ipc call ...` |
 | Auth agent | polkit-gnome | — | GUI auth dialogs; started via exec-once, Linux-only |
@@ -75,11 +76,11 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 8=#5a5752, 9=#e08080, 10=#90d0a0, 11=#e8c070, 12=#88b8d8, 13=#d0a0c8, 14=#80d0c8, 15=#faf7f2
 ```
 
-Applied to: Hyprland, noctalia-shell (custom user color scheme: "Glassmorphic Dark"), Ghostty, yazi, Neovim (catppuccin macchiato).
+Applied to: Hyprland, noctalia-shell (custom user color scheme: "Glassmorphic Dark"), Ghostty, yazi, Neovim (catppuccin macchiato), regreet (`/etc/greetd/regreet.css`).
 
 ### Wallpaper
 
-Stored at `~/Pictures/Wallpapers/wp6990351.jpg`. Set via noctalia Settings → Wallpaper.
+Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via noctalia Settings → Wallpaper; the current selection per monitor is recorded in `~/.cache/noctalia/wallpapers.json`. The greetd install script reads that cache to mirror the active wallpaper to `/var/lib/regreet/background.jpg` so the login screen matches the desktop.
 
 ### Blur configuration
 
@@ -164,6 +165,7 @@ When editing configs, you're working with **source files** using chezmoi naming 
 9. **bat** — Config file + theme. Cross-platform syntax highlighter.
 10. **git** — Standard git config format. Cross-platform.
 11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
+12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`, `environments`) and `system/pacman-hooks/hide-uwsm-session.hook`. They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` and `/etc/pacman.d/hooks/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start). The pacman hook fires on every `hyprland` install/upgrade and re-applies `Hidden=true` to `/usr/share/wayland-sessions/hyprland-uwsm.desktop` — only the plain `hyprland.desktop` session works on this machine.
 
 ## Workflow
 

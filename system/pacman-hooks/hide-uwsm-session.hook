@@ -1,0 +1,15 @@
+# Installed by run_once_after_45-greetd.sh.tmpl into /etc/pacman.d/hooks/.
+# After hyprland installs/upgrades, hide hyprland-uwsm.desktop from greeters
+# (the uwsm-managed session is broken on this machine; only the plain
+# /usr/bin/start-hyprland session works).
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/share/wayland-sessions/hyprland-uwsm.desktop
+
+[Action]
+Description = Hide hyprland-uwsm session from greeters
+When = PostTransaction
+Exec = /usr/bin/sh -c 'grep -q "^Hidden=true" /usr/share/wayland-sessions/hyprland-uwsm.desktop || printf "Hidden=true\n" >> /usr/share/wayland-sessions/hyprland-uwsm.desktop'

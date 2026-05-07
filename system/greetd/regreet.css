@@ -1,0 +1,173 @@
+/* Glassmorphic Dark — regreet custom CSS.
+ * Loaded by regreet from /etc/greetd/regreet.css. Stacks on top of the GTK theme
+ * configured in regreet.toml ([GTK]).
+ */
+
+/* Translucent dark panel that holds login form. regreet's main login box uses
+ * the .background style class on its top-level container. */
+window,
+window.background,
+.background {
+  background-color: transparent;
+}
+
+/* The actual login frame — rgba dark glass with subtle border. */
+box.vertical,
+frame {
+  background-color: rgba(20, 20, 24, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  color: #e8e4df;
+}
+
+/* Greeting / labels */
+label {
+  color: #e8e4df;
+}
+
+label.title-1,
+label.title-2,
+label.title-3,
+label.title-4 {
+  color: #e8e4df;
+  font-weight: 500;
+}
+
+/* Entries (username/password) */
+entry,
+entry.flat {
+  background-color: rgba(36, 36, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #e8e4df;
+  caret-color: #c8a67e;
+  padding: 8px 12px;
+  min-height: 32px;
+}
+
+entry:focus,
+entry:focus-within {
+  border-color: #c8a67e;
+  box-shadow: 0 0 0 1px rgba(200, 166, 126, 0.3);
+}
+
+entry:disabled {
+  color: #5a5752;
+  background-color: rgba(36, 36, 40, 0.5);
+}
+
+/* Combo boxes (session/user pickers) */
+combobox,
+combobox button.combo {
+  background-color: rgba(36, 36, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #e8e4df;
+  padding: 6px 10px;
+  min-height: 32px;
+}
+
+combobox button.combo:hover {
+  background-color: rgba(44, 44, 49, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+combobox arrow {
+  color: #c8a67e;
+}
+
+/* Dropdown popover */
+popover,
+popover.background,
+popover contents {
+  background-color: rgba(20, 20, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #e8e4df;
+}
+
+popover row:hover,
+popover row:selected {
+  background-color: rgba(200, 166, 126, 0.15);
+  color: #c8a67e;
+}
+
+/* Buttons */
+button {
+  background-color: rgba(44, 44, 49, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #e8e4df;
+  padding: 8px 16px;
+  min-height: 32px;
+  transition: all 150ms ease;
+}
+
+button:hover {
+  background-color: rgba(200, 166, 126, 0.15);
+  border-color: rgba(200, 166, 126, 0.4);
+  color: #c8a67e;
+}
+
+button:active,
+button:checked {
+  background-color: rgba(200, 166, 126, 0.25);
+  border-color: #c8a67e;
+  color: #c8a67e;
+}
+
+button.suggested-action {
+  background-color: rgba(200, 166, 126, 0.85);
+  border-color: #c8a67e;
+  color: #1a1a1e;
+  font-weight: 500;
+}
+
+button.suggested-action:hover {
+  background-color: #c8a67e;
+}
+
+button.destructive-action {
+  background-color: rgba(207, 106, 106, 0.2);
+  border-color: rgba(207, 106, 106, 0.5);
+  color: #cf6a6a;
+}
+
+button.destructive-action:hover {
+  background-color: rgba(207, 106, 106, 0.3);
+  border-color: #cf6a6a;
+}
+
+/* Error / info messages */
+infobar.error,
+.error {
+  background-color: rgba(207, 106, 106, 0.2);
+  border: 1px solid rgba(207, 106, 106, 0.5);
+  border-radius: 8px;
+  color: #cf6a6a;
+}
+
+infobar.warning,
+.warning {
+  background-color: rgba(212, 169, 84, 0.2);
+  border: 1px solid rgba(212, 169, 84, 0.5);
+  border-radius: 8px;
+  color: #d4a954;
+}
+
+infobar.info,
+.info {
+  background-color: rgba(111, 163, 199, 0.2);
+  border: 1px solid rgba(111, 163, 199, 0.5);
+  border-radius: 8px;
+  color: #6fa3c7;
+}
+
+/* Headerbar (clock / hostname) — keep transparent */
+headerbar,
+.titlebar {
+  background-color: transparent;
+  border: none;
+  color: #e8e4df;
+}

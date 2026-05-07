@@ -1,0 +1,20 @@
+# regreet — graphical greeter for greetd. Themed to match Glassmorphic Dark.
+# Docs: https://github.com/rharish101/ReGreet
+
+[appearance]
+greeting_msg = "Welcome"
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+font_name = "Jost 12"
+icon_theme_name = "Adwaita"
+theme_name = "Adwaita-dark"
+
+[background]
+path = "/var/lib/regreet/background.jpg"
+fit = "Cover"

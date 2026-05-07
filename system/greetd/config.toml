@@ -1,0 +1,11 @@
+# greetd — runs regreet inside cage (a minimal wlroots kiosk compositor).
+# Recovery: if greetd fails on boot, switch to TTY2 (Ctrl+Alt+F2) and run
+#   sudo systemctl disable --now greetd
+# to fall back to plain TTY login. getty@tty1 is not masked.
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "env WLR_NO_HARDWARE_CURSORS=1 cage -s -- regreet"
+user = "greeter"
