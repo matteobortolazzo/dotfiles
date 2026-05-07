@@ -2,6 +2,9 @@ bluez
 bluez-utils
 bolt
 brightnessctl
+cage
+greetd
+greetd-regreet
 networkmanager
 pipewire-pulse
 power-profiles-daemon

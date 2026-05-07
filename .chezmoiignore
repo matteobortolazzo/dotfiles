@@ -1,4 +1,5 @@
 packages
+system
 
 {{ if ne .profile "main" -}}
 .config/hypr
