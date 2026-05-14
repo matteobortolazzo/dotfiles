@@ -1,0 +1,6 @@
+# Compositor autostart removed: greetd/regreet on VT1 handles session selection.
+# Leaving the old `exec start-hyprland` guard here broke `niri-session`, which
+# re-execs as a login shell and would get hijacked back into Hyprland.
+
+# Added by Toolbox App
+export PATH="$PATH:/home/mborto/.local/share/JetBrains/Toolbox/scripts"
