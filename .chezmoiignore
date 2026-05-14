@@ -3,8 +3,10 @@ system
 
 {{ if ne .profile "main" -}}
 .config/hypr
+.config/niri
 .config/noctalia
 .config/ghostty
+.config/xdg-desktop-portal
 .config/scripts/install-pencil.sh
 {{ end -}}
 

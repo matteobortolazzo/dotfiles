@@ -1,0 +1,305 @@
+// niri config — ported from dot_config/hypr/hyprland.conf
+// Coexists with Hyprland; selectable at greetd login.
+// Shell: DankMaterialShell (dms), pulled in by `systemctl --user add-wants niri.service dms`.
+// Terminal: ghostty.
+
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+    }
+
+    touchpad {
+        tap
+        dwt
+        natural-scroll
+        click-method "clickfinger"
+    }
+
+    mouse {
+        // mirrors Hyprland `sensitivity = 0`
+        accel-speed 0.0
+    }
+
+    focus-follows-mouse
+    workspace-auto-back-and-forth
+}
+
+// Hyprland: monitor=DP-4, preferred, 0x0, 1  /  monitor=eDP-1, preferred, auto-left, 2
+output "DP-4" {
+    position x=0 y=0
+    scale 1.0
+}
+
+output "eDP-1" {
+    // physical position will be auto-arranged; if you want it strictly left of DP-4,
+    // set position x=-1920 (or run `niri msg outputs` to read its width and pick).
+    scale 2.0
+}
+
+// Hyprland env = lines (HYPRCURSOR_SIZE dropped — Hyprland-only)
+environment {
+    XCURSOR_SIZE "24"
+    LIBVA_DRIVER_NAME "nvidia"
+    __GLX_VENDOR_LIBRARY_NAME "nvidia"
+}
+
+// Spawned at session start (replaces Hyprland exec-once)
+// noctalia is NOT spawned: dms is pulled in via niri.service Wants=dms.
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "zen-browser"
+spawn-at-startup "ghostty"
+spawn-at-startup "1password" "--silent"
+spawn-at-startup "/opt/tuxedo-control-center/tuxedo-control-center" "--tray"
+
+xwayland-satellite {
+    path "/usr/bin/xwayland-satellite"
+}
+
+prefer-no-csd
+hotkey-overlay {
+    skip-at-startup
+}
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+layout {
+    gaps 8
+
+    center-focused-column "always"
+    always-center-single-column
+
+    default-column-width { proportion 0.75; }
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+        proportion 0.75
+        proportion 1.0
+    }
+
+    focus-ring {
+        off
+    }
+
+    border {
+        width 1
+        active-color "rgba(255,255,255,0.15)"
+        inactive-color "rgba(255,255,255,0.08)"
+    }
+
+    shadow {
+        on
+        softness 20
+        spread 0
+        offset x=0 y=0
+        color "rgba(0,0,0,0.25)"
+    }
+
+    struts {
+        left 0
+        right 0
+        top 0
+        bottom 0
+    }
+}
+
+animations {
+    // Closest to Hyprland's "glass" feel
+    workspace-switch {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    window-open {
+        duration-ms 200
+        curve "ease-out-quad"
+    }
+    window-close {
+        duration-ms 150
+        curve "ease-out-quad"
+    }
+}
+
+overview {
+    backdrop-color "rgba(20,20,24,0.75)"
+}
+
+// DMS IPC shorthand: `dms ipc call <module> <action>`
+// If the verb turns out to be different (e.g. `dms-cli`), search/replace here.
+
+binds {
+    // Hotkey overlay
+    Mod+Slash { show-hotkey-overlay; }
+
+    // Programs
+    Mod+Q       { spawn "ghostty"; }
+    Mod+B       { spawn "zen-browser"; }
+    Mod+E       { spawn "thunar"; }
+    Mod+D       { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    Mod+Print   { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
+    Mod+N       { spawn-sh "$HOME/.config/hypr/scripts/dictation-toggle.sh"; }
+
+    // Compositor
+    Mod+C       { close-window; }
+    Mod+V       { toggle-window-floating; }
+    Mod+M       { maximize-column; }
+    Mod+Z       { fullscreen-window; }
+    Mod+R       { spawn "dms" "ipc" "call" "settings" "toggle"; }
+    Mod+P       { expel-window-from-column; }
+    Mod+T       { switch-preset-column-width; }
+
+    // Shell (DMS)
+    Mod+A             { spawn "dms" "ipc" "call" "controlCenter" "toggle"; }
+    Mod+W             { spawn "dms" "ipc" "call" "wallpaper" "toggle"; }
+    Mod+Shift+N       { spawn "dms" "ipc" "call" "notifications" "toggleHistory"; }
+    Mod+Shift+D       { spawn "dms" "ipc" "call" "notifications" "toggleDND"; }
+
+    // System
+    Mod+Escape           { spawn "dms" "ipc" "call" "lock" "lock"; }
+    Ctrl+Alt+Delete      { spawn "dms" "ipc" "call" "session" "toggle"; }
+
+    // Focus columns/windows (vim keys)
+    Mod+H { focus-column-left; }
+    Mod+J { focus-window-down; }
+    Mod+K { focus-window-up; }
+    Mod+L { focus-column-right; }
+
+    // Move window in scrolling layout (vim keys)
+    Mod+Shift+H { move-column-left; }
+    Mod+Shift+J { move-window-down; }
+    Mod+Shift+K { move-window-up; }
+    Mod+Shift+L { move-column-right; }
+
+    // Scroll viewport (focus next/prev column)
+    Mod+Comma  { focus-column-left; }
+    Mod+Period { focus-column-right; }
+
+    // Move window left/right
+    Mod+Shift+Comma  { move-column-left; }
+    Mod+Shift+Period { move-column-right; }
+
+    // Monitor focus + move
+    Mod+Alt+Comma         { focus-monitor-left; }
+    Mod+Alt+Period        { focus-monitor-right; }
+    Mod+Alt+Shift+Comma   { move-window-to-monitor-left; }
+    Mod+Alt+Shift+Period  { move-window-to-monitor-right; }
+
+    // Workspace navigation (niri = vertical workspaces, per-output dynamic)
+    Mod+BracketLeft        { focus-workspace-up; }
+    Mod+BracketRight       { focus-workspace-down; }
+    Mod+Shift+BracketLeft  { move-window-to-workspace-up; }
+    Mod+Shift+BracketRight { move-window-to-workspace-down; }
+
+    // Direct workspace switching (per-output indexed)
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    // Move window to workspace
+    Mod+Shift+1 { move-window-to-workspace 1; }
+    Mod+Shift+2 { move-window-to-workspace 2; }
+    Mod+Shift+3 { move-window-to-workspace 3; }
+    Mod+Shift+4 { move-window-to-workspace 4; }
+    Mod+Shift+5 { move-window-to-workspace 5; }
+    Mod+Shift+6 { move-window-to-workspace 6; }
+    Mod+Shift+7 { move-window-to-workspace 7; }
+    Mod+Shift+8 { move-window-to-workspace 8; }
+    Mod+Shift+9 { move-window-to-workspace 9; }
+
+    // Overview (niri equivalent to a scratchpad/glance view)
+    Mod+S       { toggle-overview; }
+
+    // Scroll workspaces with Mod+wheel
+    Mod+WheelScrollDown   cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp     cooldown-ms=150 { focus-workspace-up; }
+    Mod+WheelScrollRight  cooldown-ms=150 { focus-column-right; }
+    Mod+WheelScrollLeft   cooldown-ms=150 { focus-column-left; }
+
+    // Column width
+    Mod+Ctrl+H       { set-column-width "-10%"; }
+    Mod+Ctrl+L       { set-column-width "+10%"; }
+    Mod+Ctrl+Comma   { switch-preset-column-width-back; }
+    Mod+Ctrl+Period  { switch-preset-column-width; }
+
+    // Fit ops (hyprscroller analogs)
+    Mod+F        { maximize-column; }
+    Mod+Shift+F  { center-visible-columns; }
+
+    // Move entire column across workspaces
+    Mod+Ctrl+Shift+Comma  { move-column-to-workspace-up; }
+    Mod+Ctrl+Shift+Period { move-column-to-workspace-down; }
+
+    // Audio (DMS) + brightness
+    XF86AudioRaiseVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "increase"; }
+    XF86AudioLowerVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "decrease"; }
+    XF86AudioMute            allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "muteOutput"; }
+    XF86AudioMicMute         allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "muteInput"; }
+    XF86MonBrightnessUp      allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increase"; }
+    XF86MonBrightnessDown    allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrease"; }
+    XF86KbdBrightnessUp      allow-when-locked=true { spawn "brightnessctl" "-d" "*::kbd_backlight" "set" "5%+"; }
+    XF86KbdBrightnessDown    allow-when-locked=true { spawn "brightnessctl" "-d" "*::kbd_backlight" "set" "5%-"; }
+
+    // Media (playerctl)
+    XF86AudioNext   allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPause  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPlay   allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPrev   allow-when-locked=true { spawn "playerctl" "previous"; }
+
+    // Function keys
+    XF86Display { power-off-monitors; }
+    XF86RFKill  { spawn "rfkill" "toggle" "all"; }
+    XF86Sleep   allow-when-locked=true { spawn "systemctl" "suspend"; }
+}
+
+// Hyprland windowrules → niri window-rule
+
+// Float small utility/system windows
+window-rule {
+    match app-id=r#"^org\.pulseaudio\.pavucontrol$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^nm-connection-editor$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^\.?blueman-manager(-wrapped)?$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^1Password$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^jetbrains-toolbox$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^Emulator$"#
+    open-floating true
+}
+
+// Glassmorphic terminal opacity (Hyprland used active=0.88, inactive=0.82)
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"#
+    opacity 0.88
+}
+
+// Consistent rounded corners (Hyprland decoration.rounding=12)
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
