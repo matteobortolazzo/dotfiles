@@ -68,18 +68,23 @@ screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 layout {
     gaps 8
 
-    center-focused-column "always"
-    always-center-single-column
+    // Only center when columns overflow the screen; full-width single
+    // window on a laptop is more useful than always-centered with margins.
+    center-focused-column "on-overflow"
 
-    default-column-width { proportion 0.75; }
+    default-column-width { proportion 1.0; }
 
     preset-column-widths {
-        proportion 0.33333
         proportion 0.5
         proportion 0.66667
-        proportion 0.75
         proportion 1.0
     }
+
+    // Transparent workspace background lets the wallpaper (placed within
+    // the backdrop via layer-rule below) show through transparent and
+    // fullscreen windows. Required for the "see-through to wallpaper"
+    // effect on transparent terminals.
+    background-color "transparent"
 
     focus-ring {
         off
@@ -257,6 +262,23 @@ binds {
     XF86Display { power-off-monitors; }
     XF86RFKill  { spawn "rfkill" "toggle" "all"; }
     XF86Sleep   allow-when-locked=true { spawn "systemctl" "suspend"; }
+}
+
+// Place DMS's wallpaper and pre-blurred wallpaper layers inside niri's
+// backdrop. Combined with `layout.background-color "transparent"` this
+// makes them visible behind transparent windows (incl. fullscreen).
+// The blurred layer is published by DMS when the "Duplicate Wallpaper
+// with Blur" toggle is on (settings key: blurredWallpaperLayer). It is
+// what transparent windows like Ghostty see through, approximating
+// Hyprland-style window blur on niri (which has no native blur).
+layer-rule {
+    match namespace="^quickshell$"
+    place-within-backdrop true
+}
+
+layer-rule {
+    match namespace="^dms:blurwallpaper$"
+    place-within-backdrop true
 }
 
 // Hyprland windowrules → niri window-rule
