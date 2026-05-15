@@ -151,14 +151,14 @@ binds {
     Mod+T       { switch-preset-column-width; }
 
     // Shell (DMS)
-    Mod+A             { spawn "dms" "ipc" "call" "controlCenter" "toggle"; }
-    Mod+W             { spawn "dms" "ipc" "call" "wallpaper" "toggle"; }
-    Mod+Shift+N       { spawn "dms" "ipc" "call" "notifications" "toggleHistory"; }
-    Mod+Shift+D       { spawn "dms" "ipc" "call" "notifications" "toggleDND"; }
+    Mod+A             { spawn "dms" "ipc" "call" "control-center" "toggle"; }
+    Mod+W             { spawn "dms" "ipc" "call" "wallpaper" "next"; }
+    Mod+Shift+N       { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Mod+Shift+D       { spawn "dms" "ipc" "call" "notifications" "toggleDoNotDisturb"; }
 
     // System
     Mod+Escape           { spawn "dms" "ipc" "call" "lock" "lock"; }
-    Ctrl+Alt+Delete      { spawn "dms" "ipc" "call" "session" "toggle"; }
+    Ctrl+Alt+Delete      { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
 
     // Focus columns/windows (vim keys)
     Mod+H { focus-column-left; }
@@ -238,12 +238,12 @@ binds {
     Mod+Ctrl+Shift+Period { move-column-to-workspace-down; }
 
     // Audio (DMS) + brightness
-    XF86AudioRaiseVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "increase"; }
-    XF86AudioLowerVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "decrease"; }
-    XF86AudioMute            allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "muteOutput"; }
-    XF86AudioMicMute         allow-when-locked=true { spawn "dms" "ipc" "call" "volume" "muteInput"; }
-    XF86MonBrightnessUp      allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increase"; }
-    XF86MonBrightnessDown    allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrease"; }
+    XF86AudioRaiseVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "increment"; }
+    XF86AudioLowerVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement"; }
+    XF86AudioMute            allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "mute"; }
+    XF86AudioMicMute         allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "micmute"; }
+    XF86MonBrightnessUp      allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increment"; }
+    XF86MonBrightnessDown    allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrement"; }
     XF86KbdBrightnessUp      allow-when-locked=true { spawn "brightnessctl" "-d" "*::kbd_backlight" "set" "5%+"; }
     XF86KbdBrightnessDown    allow-when-locked=true { spawn "brightnessctl" "-d" "*::kbd_backlight" "set" "5%-"; }
 
