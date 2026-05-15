@@ -144,7 +144,7 @@ binds {
 
     // Programs
     Mod+Q       { spawn "ghostty"; }
-    Mod+B       { spawn "zen-browser"; }
+    Mod+B       cooldown-ms=750 { spawn "zen-browser"; }
     Mod+E       { spawn "thunar"; }
     Mod+D       { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
     Mod+Print   { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
@@ -314,11 +314,9 @@ window-rule {
     open-floating true
 }
 
-// Glassmorphic terminal opacity (Hyprland used active=0.88, inactive=0.82)
-window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"#
-    opacity 0.88
-}
+// Terminal transparency is handled by Ghostty's own `background-opacity`
+// (only fades the bg, keeps text fully opaque). niri's `opacity` would
+// dim glyphs too — avoid it for terminals.
 
 // Consistent rounded corners (Hyprland decoration.rounding=12)
 window-rule {
