@@ -43,6 +43,10 @@ environment {
     XCURSOR_SIZE "24"
     LIBVA_DRIVER_NAME "nvidia"
     __GLX_VENDOR_LIBRARY_NAME "nvidia"
+    // Force Mozilla apps (Zen, Firefox, Thunderbird) onto native Wayland.
+    // Without this they fall back to XWayland and ignore niri's
+    // rounded-corner clipping, showing square opaque borders.
+    MOZ_ENABLE_WAYLAND "1"
 }
 
 // Spawned at session start (replaces Hyprland exec-once)
