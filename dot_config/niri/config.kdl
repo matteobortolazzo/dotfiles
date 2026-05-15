@@ -144,7 +144,10 @@ binds {
 
     // Programs
     Mod+Q       { spawn "ghostty"; }
-    Mod+B       cooldown-ms=750 { spawn "zen-browser"; }
+    // Focus existing Zen window if any; else launch. Avoids the
+    // double-window issue caused by Firefox-style remote startup
+    // and by session restore.
+    Mod+B       cooldown-ms=750 { spawn-sh "$HOME/.config/niri/scripts/focus-or-spawn.sh zen zen-browser"; }
     Mod+E       { spawn "thunar"; }
     Mod+D       { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
     Mod+Print   { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
