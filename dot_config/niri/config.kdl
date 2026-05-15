@@ -268,20 +268,16 @@ binds {
     XF86Sleep   allow-when-locked=true { spawn "systemctl" "suspend"; }
 }
 
-// Place DMS's wallpaper and pre-blurred wallpaper layers inside niri's
-// backdrop. Combined with `layout.background-color "transparent"` this
-// makes them visible behind transparent windows (incl. fullscreen).
-// The blurred layer is published by DMS when the "Duplicate Wallpaper
-// with Blur" toggle is on (settings key: blurredWallpaperLayer). It is
-// what transparent windows like Ghostty see through, approximating
-// Hyprland-style window blur on niri (which has no native blur).
+// Place DMS's wallpaper inside niri's overview backdrop so the overview
+// shows the wallpaper instead of a solid color. Pairs with
+// `layout.background-color "transparent"` above.
+//
+// Note: niri has no native window blur. Hyprland's blurred-terminal
+// look cannot be reproduced here — DMS's blurredWallpaperLayer trick
+// blurs the wallpaper *everywhere*, not just behind transparent
+// windows, so it's not used.
 layer-rule {
     match namespace="^quickshell$"
-    place-within-backdrop true
-}
-
-layer-rule {
-    match namespace="^dms:blurwallpaper$"
     place-within-backdrop true
 }
 
