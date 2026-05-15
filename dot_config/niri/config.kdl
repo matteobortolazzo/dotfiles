@@ -321,8 +321,14 @@ window-rule {
 // (only fades the bg, keeps text fully opaque). niri's `opacity` would
 // dim glyphs too — avoid it for terminals.
 
-// Consistent rounded corners (Hyprland decoration.rounding=12)
+// Consistent rounded corners (Hyprland decoration.rounding=12).
+// draw-border-with-background false: render border as a thin outline
+// rather than a solid backing rectangle behind the window. Without
+// this, opaque CSD apps (Zen, Thunar, Firefox-likes) hide the
+// wallpaper in the gap area — ghostty looks fine only because it
+// paints alpha across its surface.
 window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
+    draw-border-with-background false
 }
