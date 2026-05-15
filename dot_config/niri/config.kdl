@@ -327,8 +327,16 @@ window-rule {
 // this, opaque CSD apps (Zen, Thunar, Firefox-likes) hide the
 // wallpaper in the gap area — ghostty looks fine only because it
 // paints alpha across its surface.
+//
+// open-maximized false / open-maximized-to-edges false: refuse the
+// "maximized" state apps request on startup (Zen, Thunar restore
+// their saved maximized state). niri's "maximized to edges" hides
+// struts, gaps, and borders, and squares off corners — looks like a
+// black halo around the window. Force tiled-with-gaps behavior instead.
 window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
     draw-border-with-background false
+    open-maximized false
+    open-maximized-to-edges false
 }
