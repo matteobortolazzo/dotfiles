@@ -26,15 +26,14 @@ input {
     workspace-auto-back-and-forth
 }
 
-// Hyprland: monitor=DP-4, preferred, 0x0, 1  /  monitor=eDP-1, preferred, auto-left, 2
+// DP-4 (external 2560x1440) at 0,0; eDP-1 (laptop, scaled 2x → 1440x900 logical) on the bottom-left, bottoms aligned.
 output "DP-4" {
     position x=0 y=0
     scale 1.0
 }
 
 output "eDP-1" {
-    // physical position will be auto-arranged; if you want it strictly left of DP-4,
-    // set position x=-1920 (or run `niri msg outputs` to read its width and pick).
+    position x=-1440 y=540
     scale 2.0
 }
 
