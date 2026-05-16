@@ -115,17 +115,19 @@ layout {
     }
 
     // Visible tab strip when a column is in tabbed-display mode
-    // (Mod+G toggle). hide-when-single-tab=false → always show, so the
-    // bar is visible immediately and you don't have to wonder whether
-    // tabbed mode is on. Switch tabs with Mod+J / Mod+K.
+    // (Mod+G toggle). hide-when-single-tab is a presence-only keyword
+    // in niri — omitting it means the bar shows on every column,
+    // including single-window ones, so it's always discoverable.
+    // Switch tabs with Mod+J / Mod+K.
     tab-indicator {
-        hide-when-single-tab false
+        on
         width 6
         gap 6
         position "left"
         corner-radius 4
         active-color "#c8a67e"
         inactive-color "rgba(255,255,255,0.25)"
+        urgent-color "#cf6a6a"
     }
 }
 
@@ -153,8 +155,8 @@ overview {
 
 binds {
     // Hotkey overlay (built-in) + offline reference cheat sheet
-    Mod+Slash       hotkey-overlay-title="Show hotkey overlay"      { show-hotkey-overlay; }
-    Mod+Shift+Slash hotkey-overlay-title="Open KEYBINDS.md cheat sheet" { spawn-sh "ghostty -e bat --paging=always --style=plain $HOME/.config/niri/KEYBINDS.md"; }
+    Mod+Slash hotkey-overlay-title="Show hotkey overlay"        { show-hotkey-overlay; }
+    Mod+F1    hotkey-overlay-title="Open KEYBINDS.md cheat sheet" { spawn-sh "ghostty -e bat $HOME/.config/niri/KEYBINDS.md"; }
 
     // Programs
     Mod+T       hotkey-overlay-title="Terminal (Ghostty)" { spawn "ghostty"; }

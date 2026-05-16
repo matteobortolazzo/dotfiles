@@ -108,7 +108,7 @@ Generated from `dot_config/niri/config.kdl`.
 | `Mod+Escape` | Lock |
 | `Ctrl+Alt+Del` | Power menu |
 | `Mod+/` | Hotkey overlay (live cheat sheet — built into niri) |
-| `Mod+?` (i.e. `Mod+Shift+/`) | Open this file (`KEYBINDS.md`) in Ghostty + bat |
+| `Mod+F1` | Open this file (`KEYBINDS.md`) in Ghostty + bat |
 
 ## Hardware keys
 
