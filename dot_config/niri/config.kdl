@@ -142,7 +142,7 @@ binds {
     Mod+Slash { show-hotkey-overlay; }
 
     // Programs
-    Mod+Q       { spawn "ghostty"; }
+    Mod+T       { spawn "ghostty"; }
     // Focus existing Zen window if any; else launch. Avoids the
     // double-window issue caused by Firefox-style remote startup
     // and by session restore.
@@ -153,13 +153,13 @@ binds {
     Mod+N       { spawn-sh "$HOME/.config/hypr/scripts/dictation-toggle.sh"; }
 
     // Compositor
-    Mod+C       { close-window; }
+    Mod+Q       { close-window; }
     Mod+V       { toggle-window-floating; }
     Mod+M       { maximize-column; }
     Mod+Z       { fullscreen-window; }
     Mod+R       { spawn "dms" "ipc" "call" "settings" "toggle"; }
     Mod+P       { expel-window-from-column; }
-    Mod+T       { switch-preset-column-width; }
+    Mod+G       { toggle-column-tabbed-display; }
 
     // Shell (DMS)
     Mod+A             { spawn "dms" "ipc" "call" "control-center" "toggle"; }
@@ -183,9 +183,11 @@ binds {
     Mod+Shift+K { move-window-up; }
     Mod+Shift+L { move-column-right; }
 
-    // Scroll viewport (focus next/prev column)
-    Mod+Comma  { focus-column-left; }
-    Mod+Period { focus-column-right; }
+    // Build/tear stacked columns. Toggles: if a neighbor exists in that
+    // direction, pull it into this column; if focused window is already
+    // stacked, expel it back out as a new column.
+    Mod+Comma  { consume-or-expel-window-left; }
+    Mod+Period { consume-or-expel-window-right; }
 
     // Move window left/right
     Mod+Shift+Comma  { move-column-left; }
