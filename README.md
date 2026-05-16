@@ -1,6 +1,6 @@
 # Dotfiles
 
-Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary target is Arch Linux with Hyprland (Wayland). Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS.
+Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary target is Arch Linux running niri (Wayland), with Hyprland kept as an alternate session selectable at greetd. Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS.
 
 ## Prerequisites
 

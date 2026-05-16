@@ -1,6 +1,6 @@
 # Dotfiles — Arch Linux / macOS (chezmoi)
 
-Cross-platform dotfiles managed with chezmoi. Primary target is an Arch Linux laptop running Hyprland (Wayland). Terminal-only configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS.
+Cross-platform dotfiles managed with chezmoi. Primary target is an Arch Linux laptop running niri (Wayland, primary) with Hyprland kept as an alternate session selectable at greetd. Terminal-only configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS.
 
 ## Operating context
 
@@ -28,8 +28,10 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
 | Display manager / greeter | greetd + regreet (via cage) | `/etc/greetd/{config,regreet}.{toml,css}` (mirrored from `system/greetd/` by `run_once_after_45-greetd.sh.tmpl`) | Linux-only, system-level. Themed via custom `regreet.css` (Glassmorphic Dark). Pacman hook in `system/pacman-hooks/` keeps the broken `hyprland-uwsm.desktop` session hidden across hyprland upgrades. |
-| WM / compositor | Hyprland | `~/.config/hypr/` | Wayland, Linux-only |
-| Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | noctalia-shell | `~/.config/noctalia/` | Quickshell-based single daemon; configured via in-app GUI; IPC via `qs -c noctalia-shell ipc call ...` |
+| WM / compositor (primary) | niri | `~/.config/niri/` | Scrollable-tiling Wayland compositor, Linux-only; selected as the default greetd session. Config is `dot_config/niri/config.kdl` (KDL); hot-reloads on save. |
+| Shell (primary; bar/launcher/notif/lock/idle/session/wallpaper/OSD) | DankMaterialShell (dms) | pulled in by `systemctl --user add-wants niri.service dms` | Quickshell+QML+Go single daemon; auto-started via niri's `Wants=dms`. IPC via `dms ipc call <module> <action>`. |
+| WM / compositor (alternate) | Hyprland | `~/.config/hypr/` | Wayland, Linux-only; selectable at greetd. |
+| Shell (alternate, paired with Hyprland) | noctalia-shell | `~/.config/noctalia/` | Quickshell-based single daemon; configured via in-app GUI; IPC via `qs -c noctalia-shell ipc call ...` |
 | Auth agent | polkit-gnome | — | GUI auth dialogs; started via exec-once, Linux-only |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
@@ -76,19 +78,21 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 8=#5a5752, 9=#e08080, 10=#90d0a0, 11=#e8c070, 12=#88b8d8, 13=#d0a0c8, 14=#80d0c8, 15=#faf7f2
 ```
 
-Applied to: Hyprland, noctalia-shell (custom user color scheme: "Glassmorphic Dark"), Ghostty, yazi, Neovim (catppuccin macchiato), regreet (`/etc/greetd/regreet.css`).
+Applied to: niri (borders + shadow in `dot_config/niri/config.kdl`), DankMaterialShell (theming via its own settings + matugen integration), Hyprland, noctalia-shell (custom user color scheme: "Glassmorphic Dark"), Ghostty, yazi, Neovim (catppuccin macchiato), regreet (`/etc/greetd/regreet.css`).
 
 ### Wallpaper
 
-Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via noctalia Settings → Wallpaper; the current selection per monitor is recorded in `~/.cache/noctalia/wallpapers.json`. The greetd install script reads that cache to mirror the active wallpaper to `/var/lib/regreet/background.jpg` so the login screen matches the desktop.
+Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via noctalia Settings → Wallpaper (Hyprland session) or DMS's wallpaper module (niri session); the current selection per monitor is recorded in `~/.cache/noctalia/wallpapers.json`. The greetd install script reads that cache to mirror the active wallpaper to `/var/lib/regreet/background.jpg` so the login screen matches the desktop. Under niri, the `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in `dot_config/niri/config.kdl` places DMS's wallpaper inside niri's overview backdrop, so the overview shows the wallpaper instead of a solid color.
 
 ### Blur configuration
 
 | Component | Blur | Notes |
 |---|---|---|
-| Hyprland | size=6, passes=3 | Window blur |
+| niri | no native window blur | Compositor doesn't support per-window blur; transparent terminals show wallpaper through the transparent workspace background. |
+| Hyprland | size=6, passes=3 | Window blur (Hyprland session only) |
 | Ghostty | opacity=0.88 | Terminal transparency |
-| noctalia-shell | layerrule blur on `noctalia-background-.*` | Bar/panel/launcher blur-through |
+| DankMaterialShell | no panel blur on niri | Quickshell layer is placed within niri's backdrop rather than blurred. |
+| noctalia-shell | layerrule blur on `noctalia-background-.*` | Bar/panel/launcher blur-through (Hyprland session only) |
 
 ### Window decorations
 
@@ -110,7 +114,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `environment.tmpl` (secrets via 1Password).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
-- **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/hypr`, `.config/noctalia`, `.config/ghostty`).
+- **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/niri`, `.config/hypr`, `.config/noctalia`, `.config/ghostty`).
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
 
@@ -118,7 +122,8 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 
 | Scope | Linux | macOS | Shared |
 |---|---|---|---|
-| Hyprland, noctalia-shell, polkit-gnome | ✓ | — | — |
+| niri, DankMaterialShell, polkit-gnome | ✓ | — | — |
+| Hyprland, noctalia-shell (alternate session) | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 
@@ -135,9 +140,25 @@ chezmoi add --template ~/.config/foo/baz  # Track as template
 chezmoi edit ~/.config/foo/bar    # Edit source state copy (not needed when already in source dir)
 chezmoi update                    # Pull remote + apply
 
-# Hyprland (changes auto-reload on save)
+# niri (config hot-reloads on save of ~/.config/niri/config.kdl)
+niri msg action focus-column-left              # Trigger any action from the CLI
+niri msg windows                               # List current windows
+niri msg outputs                               # List monitors with modes/positions
+niri msg workspaces                            # List workspaces
+# Mod+/ in-session opens niri's built-in hotkey overlay (live cheat sheet).
 
-# noctalia-shell (single daemon; restart by killing + relaunching)
+# DankMaterialShell (auto-started under niri via Wants=dms)
+dms ipc call spotlight toggle                  # App launcher
+dms ipc call control-center toggle             # Quick settings panel
+dms ipc call notifications toggle              # Notifications panel
+dms ipc call lock lock                         # Lock screen
+dms ipc call powermenu toggle                  # Power menu
+dms ipc call settings toggle                   # In-app settings GUI
+dms ipc call wallpaper next                    # Cycle wallpaper
+
+# Hyprland (alternate session; changes auto-reload on save)
+
+# noctalia-shell (alternate session; single daemon; restart by killing + relaunching)
 qs -c noctalia-shell                                     # Run shell (also via exec-once)
 qs -c noctalia-shell ipc call launcher toggle            # Open launcher
 qs -c noctalia-shell ipc call lockScreen lock            # Lock
@@ -154,18 +175,20 @@ direnv edit .                     # Create/edit .envrc and auto-allow
 
 When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/waybar/config.jsonc` → `~/.config/waybar/config.jsonc`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
-1. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Wire shell features through the `$ipc` variable (`$ipc = qs -c noctalia-shell ipc call`). Keep `exec-once` block tidy and grouped.
-2. **noctalia-shell** — Configured via the in-app Settings GUI (open with SUPER+R). User color schemes live in `~/.config/noctalia/color-schemes/`. Don't hand-edit JSON unless reproducing it on a new machine — let the GUI write it, then `chezmoi add ~/.config/noctalia` to capture. Docs: <https://docs.noctalia.dev/v4/>. Full IPC reference: <https://docs.noctalia.dev/v4/getting-started/keybinds/>.
-3. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
-4. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
-5. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
-6. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
-7. **Ghostty** — Plain config file. Cross-platform terminal emulator.
-8. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
-9. **bat** — Config file + theme. Cross-platform syntax highlighter.
-10. **git** — Standard git config format. Cross-platform.
-11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
-12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`, `environments`) and `system/pacman-hooks/hide-uwsm-session.hook`. They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` and `/etc/pacman.d/hooks/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start). The pacman hook fires on every `hyprland` install/upgrade and re-applies `Hidden=true` to `/usr/share/wayland-sessions/hyprland-uwsm.desktop` — only the plain `hyprland.desktop` session works on this machine.
+1. **niri** (`dot_config/niri/config.kdl`) — KDL format, hot-reloads on save of the target file (so `chezmoi apply` triggers a live reload). Binds use `Mod+<Key> { <verb>; }` syntax. Two orthogonal axes: horizontal **columns** (`focus-column-left/right`, `Mod+H`/`Mod+L`) and vertical **workspaces** (`focus-workspace-up/down`, `Mod+[`/`Mod+]`); windows can additionally **stack inside a column** (`focus-window-up/down`, `Mod+J`/`Mod+K`) — build a stack with `Mod+,`/`Mod+.` (`consume-or-expel-window-left/right`), toggle to tabbed display with `Mod+G`. Pop!_OS-style program keys: `Mod+Q` closes, `Mod+T` opens terminal. The bind list is long — read `config.kdl` before adding new ones, and verify in-session with `Mod+/` (hotkey overlay). Wire shell features through `dms ipc call <module> <action>`.
+2. **DankMaterialShell** — Quickshell+QML+Go shell, auto-started by `niri.service` via `Wants=dms`. All shell features (panels, launcher, notifications, control center, lock, power menu, wallpaper, OSD) are reached via `dms ipc call <module> <action>` — never spawn its components directly from binds. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in the niri config is what makes the wallpaper visible in niri's overview. Plugins live in DMS's plugin system (Quickshell QML modules); registry at <https://danklinux.com/plugins>.
+3. **Hyprland** (`dot_config/hypr/hyprland.conf` and splits, alternate session) — Hyprland DSL, not JSON/TOML. Changes hot-reload after apply. Always define new keybinds with `$mainMod`. Wire shell features through the `$ipc` variable (`$ipc = qs -c noctalia-shell ipc call`). Keep `exec-once` block tidy and grouped.
+4. **noctalia-shell** (alternate session, paired with Hyprland) — Configured via the in-app Settings GUI (open with SUPER+R). User color schemes live in `~/.config/noctalia/color-schemes/`. Don't hand-edit JSON unless reproducing it on a new machine — let the GUI write it, then `chezmoi add ~/.config/noctalia` to capture. Docs: <https://docs.noctalia.dev/v4/>. Full IPC reference: <https://docs.noctalia.dev/v4/getting-started/keybinds/>.
+5. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
+6. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
+7. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
+8. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
+9. **Ghostty** — Plain config file. Cross-platform terminal emulator.
+10. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.
+11. **bat** — Config file + theme. Cross-platform syntax highlighter.
+12. **git** — Standard git config format. Cross-platform.
+13. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
+14. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`, `environments`) and `system/pacman-hooks/hide-uwsm-session.hook`. They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` and `/etc/pacman.d/hooks/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start). The pacman hook fires on every `hyprland` install/upgrade and re-applies `Hidden=true` to `/usr/share/wayland-sessions/hyprland-uwsm.desktop` — only the plain `hyprland.desktop` session works on this machine.
 
 ## Workflow
 
@@ -174,7 +197,7 @@ Since we're working directly in the chezmoi source directory:
 - **Edit source files directly** — no need for `chezmoi edit` or `chezmoi cd`
 - **Git operations happen here** — commit, push, pull as normal
 - **Apply after editing** — run `chezmoi diff` → `chezmoi apply` to sync to `~/`
-- **One concern per commit** — prefix with tool name: `noctalia: tweak control center`, `nvim: configure LSP`
+- **One concern per commit** — prefix with tool name: `niri: rebind column ops`, `dms: tweak control center spacing`, `noctalia: tweak control center`, `nvim: configure LSP`
 - **Adding new files** — use `chezmoi add ~/.config/foo/bar` to track a file (creates source entry with correct naming)
 - **Templates** — if a config must differ per-OS, convert with `chezmoi chattr +template <file>`
 
@@ -184,7 +207,10 @@ For up-to-date documentation, use Context7 MCP:
 
 | Tool | Context7 library ID |
 |---|---|
+| niri | resolve via `mcp__context7__resolve-library-id` (search "yalter/niri"); fallback to the wiki at <https://github.com/YaLTeR/niri/wiki> |
 | Hyprland | `/websites/wiki_hypr_land` |
+
+For DankMaterialShell, the repo is <https://github.com/AvengeMedia/DankMaterialShell>, docs are at <https://danklinux.com/docs/dankmaterialshell/>, and the plugin registry is at <https://danklinux.com/plugins>.
 
 For noctalia-shell, fetch the docs site directly (no Context7): <https://docs.noctalia.dev/v4/>.
 
@@ -196,4 +222,4 @@ Query with `mcp__context7__resolve-library-id` (to find library IDs) and `mcp__c
 - Don't change the shell (it's zsh everywhere).
 - Don't restructure the chezmoi source directory layout without asking.
 - Don't convert working non-template files to templates unless there's an actual cross-platform difference.
-- Don't add compositor/WM keybinds that conflict with existing ones — read `hyprland.conf` first.
+- Don't add compositor/WM keybinds that conflict with existing ones — read `dot_config/niri/config.kdl` first (and `hyprland.conf` if touching the alternate session). `Mod+/` in-session shows niri's full bind list.
