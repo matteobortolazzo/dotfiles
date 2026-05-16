@@ -48,8 +48,18 @@ Generated from `dot_config/niri/config.kdl`.
 | `Mod+,` / `Mod+.` | Consume / expel left or right — build / tear a stack |
 | `Mod+G` | Toggle tabbed display (stacked column ↔ i3-style tabs) |
 | `Mod+Shift+F` | Center visible columns |
-| `Mod+Ctrl+H` / `Mod+Ctrl+L` | Shrink / grow column 10% |
-| `Mod+Ctrl+,` / `Mod+Ctrl+.` | Cycle preset width back / forward |
+
+## Resize
+
+`Ctrl` = the resize modifier. `H`/`L` = horizontal (column width).
+`J`/`K` = vertical (window height inside a stacked column).
+
+| Keys | Action |
+|---|---|
+| `Mod+Ctrl+H` / `Mod+Ctrl+L` | Shrink / grow **column width** by 10% |
+| `Mod+Ctrl+J` / `Mod+Ctrl+K` | Shrink / grow **window height** by 10% |
+| `Mod+Ctrl+0` | Reset window height to automatic |
+| `Mod+Ctrl+,` / `Mod+Ctrl+.` | Cycle preset column widths back / forward |
 
 ## Focus (vim keys)
 
@@ -97,7 +107,8 @@ Generated from `dot_config/niri/config.kdl`.
 | `Mod+Shift+D` | Toggle Do-Not-Disturb |
 | `Mod+Escape` | Lock |
 | `Ctrl+Alt+Del` | Power menu |
-| `Mod+/` | Hotkey overlay (live cheat sheet) |
+| `Mod+/` | Hotkey overlay (live cheat sheet — built into niri) |
+| `Mod+?` (i.e. `Mod+Shift+/`) | Open this file (`KEYBINDS.md`) in Ghostty + bat |
 
 ## Hardware keys
 

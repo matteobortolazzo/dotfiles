@@ -115,15 +115,17 @@ layout {
     }
 
     // Visible tab strip when a column is in tabbed-display mode
-    // (Mod+G toggle). Only shows on stacked columns (default
-    // hide-when-single-tab=true). Switch tabs with Mod+J / Mod+K.
+    // (Mod+G toggle). hide-when-single-tab=false → always show, so the
+    // bar is visible immediately and you don't have to wonder whether
+    // tabbed mode is on. Switch tabs with Mod+J / Mod+K.
     tab-indicator {
-        width 4
-        gap 4
+        hide-when-single-tab false
+        width 6
+        gap 6
         position "left"
         corner-radius 4
         active-color "#c8a67e"
-        inactive-color "rgba(255,255,255,0.15)"
+        inactive-color "rgba(255,255,255,0.25)"
     }
 }
 
@@ -150,37 +152,38 @@ overview {
 // If the verb turns out to be different (e.g. `dms-cli`), search/replace here.
 
 binds {
-    // Hotkey overlay
-    Mod+Slash { show-hotkey-overlay; }
+    // Hotkey overlay (built-in) + offline reference cheat sheet
+    Mod+Slash       hotkey-overlay-title="Show hotkey overlay"      { show-hotkey-overlay; }
+    Mod+Shift+Slash hotkey-overlay-title="Open KEYBINDS.md cheat sheet" { spawn-sh "ghostty -e bat --paging=always --style=plain $HOME/.config/niri/KEYBINDS.md"; }
 
     // Programs
-    Mod+T       { spawn "ghostty"; }
+    Mod+T       hotkey-overlay-title="Terminal (Ghostty)" { spawn "ghostty"; }
     // Focus existing Zen window if any; else launch. Avoids the
     // double-window issue caused by Firefox-style remote startup
     // and by session restore.
-    Mod+B       cooldown-ms=750 { spawn-sh "$HOME/.config/niri/scripts/focus-or-spawn.sh zen zen-browser"; }
-    Mod+E       { spawn "thunar"; }
-    Mod+D       { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
-    Mod+Print   { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
+    Mod+B       cooldown-ms=750 hotkey-overlay-title="Browser (Zen)"          { spawn-sh "$HOME/.config/niri/scripts/focus-or-spawn.sh zen zen-browser"; }
+    Mod+E                       hotkey-overlay-title="File manager (Thunar)"  { spawn "thunar"; }
+    Mod+D                       hotkey-overlay-title="App launcher (spotlight)" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    Mod+Print                   hotkey-overlay-title="Screenshot region → clipboard" { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
 
     // Compositor
     Mod+Q       { close-window; }
     Mod+V       { toggle-window-floating; }
     Mod+M       { maximize-column; }
     Mod+Z       { fullscreen-window; }
-    Mod+R       { spawn "dms" "ipc" "call" "settings" "toggle"; }
+    Mod+R       hotkey-overlay-title="DMS settings" { spawn "dms" "ipc" "call" "settings" "toggle"; }
     Mod+P       { expel-window-from-column; }
     Mod+G       { toggle-column-tabbed-display; }
 
     // Shell (DMS)
-    Mod+A             { spawn "dms" "ipc" "call" "control-center" "toggle"; }
-    Mod+W             { spawn "dms" "ipc" "call" "wallpaper" "next"; }
-    Mod+Shift+N       { spawn "dms" "ipc" "call" "notifications" "toggle"; }
-    Mod+Shift+D       { spawn "dms" "ipc" "call" "notifications" "toggleDoNotDisturb"; }
+    Mod+A             hotkey-overlay-title="Control center"   { spawn "dms" "ipc" "call" "control-center" "toggle"; }
+    Mod+W             hotkey-overlay-title="Next wallpaper"   { spawn "dms" "ipc" "call" "wallpaper" "next"; }
+    Mod+Shift+N       hotkey-overlay-title="Notifications panel" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Mod+Shift+D       hotkey-overlay-title="Toggle Do Not Disturb" { spawn "dms" "ipc" "call" "notifications" "toggleDoNotDisturb"; }
 
     // System
-    Mod+Escape           { spawn "dms" "ipc" "call" "lock" "lock"; }
-    Ctrl+Alt+Delete      { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
+    Mod+Escape           hotkey-overlay-title="Lock screen" { spawn "dms" "ipc" "call" "lock" "lock"; }
+    Ctrl+Alt+Delete      hotkey-overlay-title="Power menu"  { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
 
     // Focus columns/windows (vim keys)
     Mod+H { focus-column-left; }
@@ -247,9 +250,14 @@ binds {
     Mod+WheelScrollRight  cooldown-ms=150 { focus-column-right; }
     Mod+WheelScrollLeft   cooldown-ms=150 { focus-column-left; }
 
-    // Column width
+    // Resize — Ctrl + H/L grows/shrinks column width, Ctrl + J/K does
+    // the same for window height inside a stacked column. Ctrl + 0
+    // resets the focused window's height back to automatic.
     Mod+Ctrl+H       { set-column-width "-10%"; }
     Mod+Ctrl+L       { set-column-width "+10%"; }
+    Mod+Ctrl+J       { set-window-height "-10%"; }
+    Mod+Ctrl+K       { set-window-height "+10%"; }
+    Mod+Ctrl+0       { reset-window-height; }
     Mod+Ctrl+Comma   { switch-preset-column-width-back; }
     Mod+Ctrl+Period  { switch-preset-column-width; }
 
