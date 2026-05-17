@@ -52,16 +52,27 @@ if ! [ -d /var/cache/regreet ]; then
   sudo install -d -o greeter -g greeter -m 0755 /var/cache/regreet
 fi
 
-# Resolve the wallpaper to mirror as the greeter background. Prefer noctalia's
-# currently configured wallpaper (first monitor's dark variant), then fall
-# back to noctalia's defaultWallpaper, then to anything in ~/Pictures/Wallpapers.
+# Resolve the wallpaper to mirror as the greeter background.
+# Precedence: DMS (niri session, primary) → noctalia cache (Hyprland session) →
+# first match in ~/Pictures/Wallpapers.
 wallpaper=""
-noctalia_cache="$HOME/.cache/noctalia/wallpapers.json"
-if [ -f "$noctalia_cache" ] && command -v jq >/dev/null 2>&1; then
+dms_session="$HOME/.local/state/DankMaterialShell/session.json"
+if [ -f "$dms_session" ] && command -v jq >/dev/null 2>&1; then
   wallpaper=$(jq -r '
-      (.wallpapers // {} | to_entries | (.[0].value.dark // empty))
-      // (.defaultWallpaper // empty)
-    ' "$noctalia_cache" 2>/dev/null || true)
+      if (.perMonitorWallpaper // false) and ((.monitorWallpapers // {}) | length > 0)
+      then (.monitorWallpapers | to_entries | .[0].value)
+      else (.wallpaperPath // empty)
+      end
+    ' "$dms_session" 2>/dev/null || true)
+fi
+if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
+  noctalia_cache="$HOME/.cache/noctalia/wallpapers.json"
+  if [ -f "$noctalia_cache" ] && command -v jq >/dev/null 2>&1; then
+    wallpaper=$(jq -r '
+        (.wallpapers // {} | to_entries | (.[0].value.dark // empty))
+        // (.defaultWallpaper // empty)
+      ' "$noctalia_cache" 2>/dev/null || true)
+  fi
 fi
 if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
   wallpaper=$(find "$HOME/Pictures/Wallpapers" -maxdepth 1 -type f \

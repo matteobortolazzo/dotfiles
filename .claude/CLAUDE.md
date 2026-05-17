@@ -82,7 +82,12 @@ Applied to: niri (borders + shadow in `dot_config/niri/config.kdl`), DankMateria
 
 ### Wallpaper
 
-Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via noctalia Settings → Wallpaper (Hyprland session) or DMS's wallpaper module (niri session); the current selection per monitor is recorded in `~/.cache/noctalia/wallpapers.json`. The greetd install script reads that cache to mirror the active wallpaper to `/var/lib/regreet/background.jpg` so the login screen matches the desktop. Under niri, the `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in `dot_config/niri/config.kdl` places DMS's wallpaper inside niri's overview backdrop, so the overview shows the wallpaper instead of a solid color.
+Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via noctalia Settings → Wallpaper (Hyprland session) or DMS's wallpaper module (niri session). The current selection is persisted differently by each shell:
+
+- **DMS (niri)** writes `~/.local/state/DankMaterialShell/session.json` (`wallpaperPath`, or `monitorWallpapers` when `perMonitorWallpaper` is true).
+- **noctalia (Hyprland)** writes `~/.cache/noctalia/wallpapers.json`.
+
+The greetd install script (`run_once_after_45-greetd.sh.tmpl`) resolves the greeter background in this precedence — **DMS → noctalia → first file in `~/Pictures/Wallpapers/`** — and mirrors the result to `/var/lib/regreet/background.jpg` so the login screen matches the desktop. The sync runs on `chezmoi apply`; if you change wallpaper mid-session, re-run apply before the next reboot to refresh the greeter background. Under niri, the `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in `dot_config/niri/config.kdl` places DMS's wallpaper inside niri's overview backdrop, so the overview shows the wallpaper instead of a solid color.
 
 ### Blur configuration
 
