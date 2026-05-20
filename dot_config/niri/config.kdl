@@ -39,13 +39,17 @@ output "eDP-1" {
 
 // Hyprland env = lines (HYPRCURSOR_SIZE dropped — Hyprland-only)
 environment {
-    XCURSOR_SIZE "24"
     LIBVA_DRIVER_NAME "nvidia"
     __GLX_VENDOR_LIBRARY_NAME "nvidia"
     // Force Mozilla apps (Zen, Firefox, Thunderbird) onto native Wayland.
     // Without this they fall back to XWayland and ignore niri's
     // rounded-corner clipping, showing square opaque borders.
     MOZ_ENABLE_WAYLAND "1"
+}
+
+cursor {
+    xcursor-theme "Adwaita"
+    xcursor-size 24
 }
 
 // Spawned at session start (replaces Hyprland exec-once)
