@@ -276,8 +276,8 @@ binds {
     Mod+Ctrl+Shift+Period { move-column-to-workspace-down; }
 
     // Audio (DMS) + brightness
-    XF86AudioRaiseVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "increment"; }
-    XF86AudioLowerVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement"; }
+    XF86AudioRaiseVolume     allow-when-locked=true { spawn "sh" "-c" "dms ipc call audio setmaxvolume 200 >/dev/null && dms ipc call audio increment 5"; }
+    XF86AudioLowerVolume     allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement" "5"; }
     XF86AudioMute            allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "mute"; }
     XF86AudioMicMute         allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "micmute"; }
     XF86MonBrightnessUp      allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increment"; }
