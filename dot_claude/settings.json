@@ -1,5 +1,9 @@
 {
   "cleanupPeriodDays": 7,
+  "model": "claude-opus-4-7",
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
+  },
   "permissions": {
     "allow": [
       "mcp__pencil"
@@ -31,7 +35,8 @@
     "frontend-design@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "ccflow@claude-tools": true,
-    "muxwatch@claude-tools": true
+    "muxwatch@claude-tools": true,
+    "resend@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-tools": {
@@ -64,10 +69,7 @@
       "Pareciando"
     ]
   },
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "autoCompactEnabled": false,
-  "skipAutoPermissionPrompt": true,
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
-  }
+  "skipAutoPermissionPrompt": true
 }
