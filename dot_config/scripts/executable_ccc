@@ -17,7 +17,7 @@ case "${1:-}" in
     ;;
   fable)
     shift
-    CLAUDE_CODE_SUBAGENT_MODEL=claude-opus-4-6 exec claude --model 'fable[1m]' "$@"
+    CLAUDE_CODE_SUBAGENT_MODEL=claude-opus-4-6 exec claude --model fable "$@"
     ;;
   *)
     exec claude --model claude-opus-4-6 "$@"
