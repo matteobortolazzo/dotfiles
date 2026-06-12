@@ -7,4 +7,4 @@ TMUX_ENV_ARGS=()
 [[ -n "${CONTEXT7_API_KEY:-}" ]] && TMUX_ENV_ARGS+=(-e "CONTEXT7_API_KEY=$CONTEXT7_API_KEY")
 
 tmux new-window -d -n "$session" \
-  "claude -- \"/implement $number\""
+  "claude --model claude-opus-4-6 -- \"/implement $number\""

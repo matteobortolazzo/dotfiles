@@ -1,3 +1,3 @@
 #!/bin/bash
 tmux new-window \
-  "claude"
+  "claude --model claude-opus-4-6"
