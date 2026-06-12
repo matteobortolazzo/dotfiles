@@ -35,26 +35,13 @@ install_if_changed "$src/greetd/regreet.toml"  /etc/greetd/regreet.toml
 install_if_changed "$src/greetd/regreet.css"   /etc/greetd/regreet.css
 install_if_changed "$src/greetd/environments"  /etc/greetd/environments
 
-# Pacman hook to hide the broken hyprland-uwsm session entry whenever hyprland
-# upgrades reinstall it. The hook only fires on future installs/upgrades, so we
-# also apply the patch immediately below.
-sudo install -d -o root -g root -m 0755 /etc/pacman.d/hooks
-install_if_changed "$src/pacman-hooks/hide-uwsm-session.hook" /etc/pacman.d/hooks/hide-uwsm-session.hook
-
-uwsm_session=/usr/share/wayland-sessions/hyprland-uwsm.desktop
-if [ -f "$uwsm_session" ] && ! grep -q "^Hidden=true" "$uwsm_session"; then
-  echo "Hidden=true" | sudo tee -a "$uwsm_session" >/dev/null
-  echo "hid $uwsm_session from greeters"
-fi
-
 # regreet panics if its cache dir is missing or unwritable by the greeter user.
 if ! [ -d /var/cache/regreet ]; then
   sudo install -d -o greeter -g greeter -m 0755 /var/cache/regreet
 fi
 
 # Resolve the wallpaper to mirror as the greeter background.
-# Precedence: DMS (niri session, primary) → noctalia cache (Hyprland session) →
-# first match in ~/Pictures/Wallpapers.
+# Precedence: DMS session state → first match in ~/Pictures/Wallpapers.
 wallpaper=""
 dms_session="$HOME/.local/state/DankMaterialShell/session.json"
 if [ -f "$dms_session" ] && command -v jq >/dev/null 2>&1; then
@@ -64,15 +51,6 @@ if [ -f "$dms_session" ] && command -v jq >/dev/null 2>&1; then
       else (.wallpaperPath // empty)
       end
     ' "$dms_session" 2>/dev/null || true)
-fi
-if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
-  noctalia_cache="$HOME/.cache/noctalia/wallpapers.json"
-  if [ -f "$noctalia_cache" ] && command -v jq >/dev/null 2>&1; then
-    wallpaper=$(jq -r '
-        (.wallpapers // {} | to_entries | (.[0].value.dark // empty))
-        // (.defaultWallpaper // empty)
-      ' "$noctalia_cache" 2>/dev/null || true)
-  fi
 fi
 if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
   wallpaper=$(find "$HOME/Pictures/Wallpapers" -maxdepth 1 -type f \
