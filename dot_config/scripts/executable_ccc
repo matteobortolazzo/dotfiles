@@ -20,6 +20,6 @@ case "${1:-}" in
     CLAUDE_CODE_SUBAGENT_MODEL=claude-opus-4-6 exec claude --model 'fable[1m]' "$@"
     ;;
   *)
-    exec claude "$@"
+    exec claude --model claude-opus-4-6 "$@"
     ;;
 esac
