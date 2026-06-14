@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+{{ if eq .profile "main" -}}
+set -euo pipefail
+
+if systemctl list-unit-files tailscaled.service >/dev/null 2>&1; then
+  sudo systemctl enable --now tailscaled.service
+fi
+{{ end -}}

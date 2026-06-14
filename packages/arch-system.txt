@@ -9,3 +9,4 @@ networkmanager
 pipewire-pulse
 power-profiles-daemon
 sof-firmware
+tailscale
