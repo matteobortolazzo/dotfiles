@@ -1,7 +1,10 @@
+local vault_path = vim.fn.expand("~/Repos/vault")
+
 return {
   "obsidian-nvim/obsidian.nvim",
   version = "*",
   ft = "markdown",
+  enabled = vim.fn.isdirectory(vault_path) == 1,
   dependencies = {
     "nvim-lua/plenary.nvim",
   },
@@ -12,7 +15,7 @@ return {
     workspaces = {
       {
         name = "vault",
-        path = "~/Repos/vault",
+        path = vault_path,
       },
     },
     daily_notes = {
@@ -24,11 +27,6 @@ return {
       folder = "templates",
       date_format = "%Y-%m-%d",
       time_format = "%H:%M",
-    },
-    completion = {
-      nvim_cmp = false,
-      blink = true,
-      min_chars = 2,
     },
     picker = {
       name = "telescope.nvim",
