@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+FNM_PATH="$HOME/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "$(fnm env)"
+fi
+
+if ! command -v npm >/dev/null; then
+  echo "npm not found — skipping npm globals"
+  exit 0
+fi
+
+packages=(
+  @anthropic-ai/claude-code
+  @playwright/cli
+)
+
+for pkg in "${packages[@]}"; do
+  if ! npm list -g "$pkg" >/dev/null 2>&1; then
+    npm install -g "$pkg"
+  fi
+done
+{{ end -}}
