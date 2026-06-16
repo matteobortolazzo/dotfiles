@@ -5,7 +5,10 @@ system
 .config/niri
 .config/ghostty
 .config/xdg-desktop-portal
-.config/scripts/install-pencil.sh
+{{ end -}}
+
+{{ if ne .profile "wsl" -}}
+.config/scripts/pencil-wsl
 {{ end -}}
 
 {{ if eq .profile "mac" -}}

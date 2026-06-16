@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Launch Pencil with WSL-compatible rendering flags.
+# Pencil must be running before starting a Claude Code session
+# for the MCP tools to connect.
+
+set -euo pipefail
+
+if pgrep -x pencil &>/dev/null; then
+  echo "Pencil is already running."
+  exit 0
+fi
+
+DISPLAY=:0 nohup pencil \
+  --no-sandbox \
+  --use-gl=angle \
+  --use-angle=swiftshader-webgl \
+  "$@" &>/tmp/pencil.log &
+
+echo "Pencil started (pid $!)."
+echo "Log: /tmp/pencil.log"
