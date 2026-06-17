@@ -8,7 +8,7 @@
     "allow": [
       "mcp__pencil"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "default"
   },
   "hooks": {
     "PreToolUse": []
