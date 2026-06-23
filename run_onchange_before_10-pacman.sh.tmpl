@@ -2,6 +2,17 @@
 {{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") -}}
 set -euo pipefail
 
+# run_onchange: re-runs on `chezmoi apply` whenever a referenced list changes.
+# chezmoi only hashes this script's rendered content, not the files it reads at
+# runtime, so the list hashes below are embedded to make edits retrigger it.
+# pacman --needed keeps re-runs idempotent (installed packages are skipped).
+#
+# arch-terminal.txt: {{ include "packages/arch-terminal.txt" | sha256sum }}
+{{- if eq .profile "main" }}
+# arch-desktop.txt:  {{ include "packages/arch-desktop.txt" | sha256sum }}
+# arch-system.txt:   {{ include "packages/arch-system.txt" | sha256sum }}
+{{- end }}
+
 src="{{ .chezmoi.sourceDir }}/packages"
 
 pkg_terminal="$src/arch-terminal.txt"

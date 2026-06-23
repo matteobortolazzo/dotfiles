@@ -2,6 +2,15 @@
 {{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") -}}
 set -euo pipefail
 
+# run_onchange: re-runs whenever a referenced AUR list changes. List hashes are
+# embedded because chezmoi hashes only this script, not the files it reads.
+# yay --needed keeps re-runs idempotent.
+#
+# arch-aur-terminal.txt: {{ include "packages/arch-aur-terminal.txt" | sha256sum }}
+{{- if eq .profile "main" }}
+# arch-aur-desktop.txt:  {{ include "packages/arch-aur-desktop.txt" | sha256sum }}
+{{- end }}
+
 src="{{ .chezmoi.sourceDir }}/packages"
 
 pkg="$src/arch-aur-terminal.txt"

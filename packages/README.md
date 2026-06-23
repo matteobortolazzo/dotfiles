@@ -1,6 +1,10 @@
 # Package lists
 
-Consumed by `run_once_before_10-pacman.sh.tmpl` and `run_once_before_21-aur.sh.tmpl`.
+Consumed by `run_onchange_before_10-pacman.sh.tmpl` and
+`run_onchange_before_21-aur.sh.tmpl`. Each script embeds a `sha256sum` of the
+lists it reads, so editing a list re-triggers the install on the next
+`chezmoi apply` (`--needed` makes that idempotent — installed packages are
+skipped).
 
 ## What these lists include — and what they don't
 
@@ -28,10 +32,10 @@ pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|n
 pacman -Qqem | grep -Ev '^yay-bin-debug$' > arch-aur.txt
 ```
 
-Commit the result. Chezmoi re-hashes the `run_once_*` scripts when they change,
-so refreshing the package lists alone won't retrigger install on machines where
-the scripts already ran. On a clean machine they run; on an existing one you
-add new packages by hand (or bump a comment in the script to force re-run).
+Commit the result. Because the `run_onchange_*` scripts embed each list's
+`sha256sum`, editing a list changes the script's rendered content and chezmoi
+re-runs it on the next `chezmoi apply` — on both clean and existing machines.
+No need to install new packages by hand.
 
 ## Format
 
