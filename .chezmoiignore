@@ -4,6 +4,7 @@ system
 {{ if ne .profile "main" -}}
 .config/niri
 .config/ghostty
+.config/swayimg
 .config/xdg-desktop-portal
 {{ end -}}
 
