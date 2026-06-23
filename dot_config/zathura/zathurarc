@@ -1,0 +1,61 @@
+# Zathura — PDF/document viewer
+# Glassmorphic Dark theme + handy keybindings.
+
+# --- Behaviour ---
+set selection-clipboard clipboard   # yank selected text to the system clipboard
+set adjust-open width                # fit page width when opening
+set scroll-page-aware true
+set window-title-basename true
+set statusbar-home-tilde true
+set guioptions ""                   # hide the GTK toolbar/menubar (use keys)
+
+# --- Keybindings ---
+map p print                         # print (opens GTK print dialog; needs CUPS)
+map r reload
+map R rotate
+map i recolor                       # toggle dark/inverted colours
+map <C-i> recolor
+
+# --- Glassmorphic Dark palette ---
+set default-bg              "#1a1a1e"
+set default-fg              "#e8e4df"
+set statusbar-bg           "#242428"
+set statusbar-fg           "#e8e4df"
+set inputbar-bg            "#1a1a1e"
+set inputbar-fg            "#e8e4df"
+set notification-bg        "#242428"
+set notification-fg        "#e8e4df"
+set notification-error-bg  "#cf6a6a"
+set notification-error-fg  "#1a1a1e"
+set notification-warning-bg "#d4a954"
+set notification-warning-fg "#1a1a1e"
+
+# Index (table of contents) mode
+set index-bg               "#1a1a1e"
+set index-fg               "#9a9590"
+set index-active-bg        "#c8a67e"
+set index-active-fg        "#1a1a1e"
+
+# Completion menu
+set completion-bg          "#242428"
+set completion-fg          "#9a9590"
+set completion-highlight-bg "#c8a67e"
+set completion-highlight-fg "#1a1a1e"
+set completion-group-bg    "#1a1a1e"
+set completion-group-fg    "#c8a67e"
+
+# Search highlight + selection
+set highlight-color        "rgba(212,169,84,0.4)"     # warning gold, translucent
+set highlight-active-color "rgba(200,166,126,0.6)"    # accent gold
+set highlight-fg           "#1a1a1e"
+
+# Recolor (dark mode) — off by default, toggle with `i`. Keeps text warm.
+set recolor false
+set recolor-keephue true
+set recolor-lightcolor     "#1a1a1e"
+set recolor-darkcolor      "#e8e4df"
+
+# Page padding / look
+set page-padding 4
+set render-loading-bg      "#1a1a1e"
+set render-loading-fg      "#9a9590"
