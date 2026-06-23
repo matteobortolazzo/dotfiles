@@ -23,6 +23,7 @@ udiskie
 wl-clipboard
 wlsunset
 wtype
+xarchiver
 xdg-desktop-portal-hyprland
 ydotool
 zathura

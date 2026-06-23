@@ -16,6 +16,22 @@ image/webp=swayimg.desktop
 image/svg+xml=swayimg.desktop
 image/bmp=swayimg.desktop
 image/tiff=swayimg.desktop
+image/avif=swayimg.desktop
+image/heif=swayimg.desktop
+image/heic=swayimg.desktop
+image/jxl=swayimg.desktop
+
+# Archives
+application/zip=xarchiver.desktop
+application/x-7z-compressed=xarchiver.desktop
+application/vnd.rar=xarchiver.desktop
+application/x-rar-compressed=xarchiver.desktop
+application/x-tar=xarchiver.desktop
+application/x-compressed-tar=xarchiver.desktop
+application/gzip=xarchiver.desktop
+application/x-bzip2=xarchiver.desktop
+application/x-xz=xarchiver.desktop
+application/zstd=xarchiver.desktop
 
 # Text/Code (nvim)
 text/plain=nvim.desktop
