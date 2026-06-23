@@ -1,8 +1,10 @@
 {
   "cleanupPeriodDays": 7,
   "model": "claude-opus-4-8",
+  "showClearContextOnPlanAccept": true,
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-4-6"
   },
   "permissions": {
     "allow": [
