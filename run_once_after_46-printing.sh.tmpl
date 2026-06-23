@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# Printing: CUPS daemon + Avahi/nss-mdns for driverless IPP (AirPrint) discovery.
+# Packages come from arch-system.txt (cups, cups-pdf, avahi, nss-mdns) and
+# arch-desktop.txt (system-config-printer GUI). Add a printer afterwards via
+# system-config-printer, the web UI at http://localhost:631, or `lpadmin`.
+
+if command -v cupsd >/dev/null 2>&1; then
+  sudo systemctl enable --now cups.socket
+else
+  echo "cups not installed — skipping (run: sudo pacman -S cups cups-pdf)"
+fi
+
+if command -v avahi-daemon >/dev/null 2>&1; then
+  sudo systemctl enable --now avahi-daemon.service
+else
+  echo "avahi not installed — skipping (run: sudo pacman -S avahi nss-mdns)"
+fi
+
+# Wire nss-mdns into NSS so `.local` printer/host names resolve. Idempotent:
+# only edits the hosts line if no mdns module is present yet.
+nsswitch=/etc/nsswitch.conf
+if [ -f "$nsswitch" ] && ! grep -qE '^hosts:.*mdns' "$nsswitch"; then
+  if grep -qE '^hosts:.*\bresolve\b' "$nsswitch"; then
+    sudo sed -i -E '/^hosts:/ s/\bresolve\b/mdns_minimal [NOTFOUND=return] resolve/' "$nsswitch"
+  else
+    sudo sed -i -E '/^hosts:/ s/\bdns\b/mdns_minimal [NOTFOUND=return] dns/' "$nsswitch"
+  fi
+  echo "added mdns_minimal to $nsswitch hosts line"
+fi
+{{ end -}}

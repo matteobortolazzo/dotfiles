@@ -15,6 +15,7 @@ qt5-wayland
 qt6-wayland
 slurp
 swayimg
+system-config-printer
 thunar
 ttf-jetbrains-mono-nerd
 ttf-liberation

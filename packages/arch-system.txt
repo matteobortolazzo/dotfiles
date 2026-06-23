@@ -1,11 +1,15 @@
+avahi
 bluez
 bluez-utils
 bolt
 brightnessctl
 cage
+cups
+cups-pdf
 greetd
 greetd-regreet
 networkmanager
+nss-mdns
 pipewire-pulse
 power-profiles-daemon
 sof-firmware
