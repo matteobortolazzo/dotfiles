@@ -2,10 +2,20 @@
 {{ if eq .chezmoi.os "linux" "darwin" -}}
 set -euo pipefail
 
-FNM_PATH="$HOME/.local/share/fnm"
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$FNM_PATH:$PATH"
-  eval "$(fnm env)"
+if ! command -v fnm >/dev/null; then
+  echo "fnm not found — skipping npm globals"
+  exit 0
+fi
+
+eval "$(fnm env)"
+
+# Ensure a user-owned fnm Node exists; otherwise npm falls back to the
+# system (Homebrew) prefix, which may be foreign-owned → EACCES on install.
+current="$(fnm current 2>/dev/null || echo none)"
+if [ "$current" = "system" ] || [ "$current" = "none" ]; then
+  fnm install --lts
+  fnm default lts-latest
+  fnm use lts-latest
 fi
 
 if ! command -v npm >/dev/null; then
@@ -15,7 +25,7 @@ fi
 
 packages=(
   @anthropic-ai/claude-code
-  @playwright/cli
+  playwright
 )
 
 for pkg in "${packages[@]}"; do
