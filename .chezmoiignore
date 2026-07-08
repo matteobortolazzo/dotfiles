@@ -1,3 +1,4 @@
+docs
 packages
 system
 
@@ -6,12 +7,10 @@ system
 .config/ghostty
 .config/swayimg
 .config/xdg-desktop-portal
+.config/DankMaterialShell
+.config/environment.d
 {{ end -}}
 
 {{ if ne .profile "wsl" -}}
 .config/scripts/pencil-wsl
-{{ end -}}
-
-{{ if eq .profile "mac" -}}
-.config/environment.d
 {{ end -}}

@@ -2,7 +2,6 @@
 apple-fonts
 google-chrome
 jetbrains-toolbox
-noctalia-shell
 obsidian-bin
 ttf-jost
 ttf-ms-fonts

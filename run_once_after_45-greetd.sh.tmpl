@@ -33,7 +33,6 @@ install_if_changed() {
 install_if_changed "$src/greetd/config.toml"   /etc/greetd/config.toml
 install_if_changed "$src/greetd/regreet.toml"  /etc/greetd/regreet.toml
 install_if_changed "$src/greetd/regreet.css"   /etc/greetd/regreet.css
-install_if_changed "$src/greetd/environments"  /etc/greetd/environments
 
 # regreet panics if its cache dir is missing or unwritable by the greeter user.
 if ! [ -d /var/cache/regreet ]; then

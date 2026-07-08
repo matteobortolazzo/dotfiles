@@ -28,8 +28,10 @@ them to your bootstrap step if you want them tracked.
 
 ```bash
 cd "$(chezmoi source-path)/packages"
-pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$' > arch-native.txt
-pacman -Qqem | grep -Ev '^yay-bin-debug$' > arch-aur.txt
+# Dump the full explicit sets, then fold changes into the split lists by hand
+# (terminal vs desktop vs system):
+pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$'
+pacman -Qqem | grep -Ev '^yay-bin-debug$'
 ```
 
 Commit the result. Because the `run_onchange_*` scripts embed each list's
@@ -42,8 +44,10 @@ No need to install new packages by hand.
 One package name per line. Comments (`# …`) and blank lines are **not** supported
 by `pacman -S -` / `paru -S -`, so keep the files clean.
 
-## Mac / WSL later
+## Mac / WSL
 
-Add `brew.txt` (Brewfile format) or `apt.txt` and corresponding OS-gated
-`run_once_before_*` scripts. The Arch scripts won't fire on non-Arch hosts thanks
-to the `{{ "{{" }} if eq .chezmoi.osRelease.id "cachyos" "arch" {{ "}}" }}` guard.
+macOS installs from `Brewfile` (`run_once_before_05-homebrew.sh.tmpl`). The
+`wsl` profile installs `arch-terminal.txt` plus a small extra set (docker,
+wl-clipboard, wslu) directly in the pacman/AUR scripts. The Arch scripts won't
+fire on non-Arch hosts thanks to the
+`{{ "{{" }} if eq .chezmoi.osRelease.id "cachyos" "arch" {{ "}}" }}` guard.

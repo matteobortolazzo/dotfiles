@@ -1,5 +1,6 @@
 # Secrets managed by 1Password — populated by chezmoi apply
 # To update values, edit items in 1Password, then re-run chezmoi apply
+{{- if and (lookPath "op") (stat (joinPath .chezmoi.homeDir ".config/op")) }}
 
 # OpenAI
 export OPENAI_API_KEY="{{ onepasswordRead "op://Private/OpenAI/ApiKey" }}"
@@ -11,3 +12,9 @@ export CONTEXT7_API_KEY="{{ onepasswordRead "op://Private/Context7 API Key/crede
 # Resend
 export RESEND_API_KEY="{{ onepasswordRead "op://Private/Resend/ApiKey" }}"
 export RESEND_FROM_ADDRESS="{{ onepasswordRead "op://Private/Resend/FromAddress" }}"
+{{- else }}
+
+# 1Password CLI not set up yet — secrets skipped so a fresh bootstrap can
+# complete. Install 1password-cli, sign in (`op signin` or enable the
+# desktop app's CLI integration), then re-run `chezmoi apply`.
+{{- end }}

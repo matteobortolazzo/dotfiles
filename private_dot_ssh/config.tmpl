@@ -2,6 +2,10 @@ Host *
     AddKeysToAgent yes
 {{- if eq .chezmoi.os "darwin" }}
     IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+{{- else if eq .profile "wsl" }}
+    # Agent comes from wsl2-ssh-agent (SSH_AUTH_SOCK set in .zshrc), which
+    # bridges to the Windows OpenSSH agent pipe served by 1Password on
+    # Windows — the Linux 1Password socket doesn't exist inside WSL.
 {{- else }}
     IdentityAgent ~/.1password/agent.sock
 {{- end }}

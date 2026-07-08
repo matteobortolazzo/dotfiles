@@ -89,7 +89,7 @@ The greetd install script (`run_once_after_45-greetd.sh.tmpl`) resolves the gree
 | Component | Blur | Notes |
 |---|---|---|
 | niri | no native window blur | Compositor doesn't support per-window blur; transparent terminals show wallpaper through the transparent workspace background. |
-| Ghostty | opacity=0.88 | Terminal transparency |
+| Ghostty | opacity=0.95 | Terminal transparency |
 | DankMaterialShell | no panel blur on niri | Quickshell layer is placed within niri's backdrop rather than blurred. |
 
 ### Window decorations
@@ -163,7 +163,7 @@ direnv edit .                     # Create/edit .envrc and auto-allow
 When editing configs, you're working with **source files** using chezmoi naming (e.g., `dot_config/niri/config.kdl` → `~/.config/niri/config.kdl`). After editing, run `chezmoi apply` to sync changes to the home directory.
 
 1. **niri** (`dot_config/niri/config.kdl`) — KDL format, hot-reloads on save of the target file (so `chezmoi apply` triggers a live reload). Binds use `Mod+<Key> { <verb>; }` syntax. Two orthogonal axes: horizontal **columns** (`focus-column-left/right`, `Mod+H`/`Mod+L`) and vertical **workspaces** (`focus-workspace-up/down`, `Mod+[`/`Mod+]`); windows can additionally **stack inside a column** (`focus-window-up/down`, `Mod+J`/`Mod+K`) — build a stack with `Mod+,`/`Mod+.` (`consume-or-expel-window-left/right`), toggle to tabbed display with `Mod+G`. Pop!_OS-style program keys: `Mod+Q` closes, `Mod+T` opens terminal. The bind list is long — read `config.kdl` before adding new ones, and verify in-session with `Mod+/` (hotkey overlay). Wire shell features through `dms ipc call <module> <action>`.
-2. **DankMaterialShell** — Quickshell+QML+Go shell, auto-started by `niri.service` via `Wants=dms`. All shell features (panels, launcher, notifications, control center, lock, power menu, wallpaper, OSD) are reached via `dms ipc call <module> <action>` — never spawn its components directly from binds. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in the niri config is what makes the wallpaper visible in niri's overview. Plugins live in DMS's plugin system (Quickshell QML modules); registry at <https://danklinux.com/plugins>.
+2. **DankMaterialShell** — Quickshell+QML+Go shell, auto-started by `niri.service` via `Wants=dms`. All shell features (panels, launcher, notifications, control center, lock, power menu, wallpaper, OSD) are reached via `dms ipc call <module> <action>` — never spawn its components directly from binds. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in the niri config is what makes the wallpaper visible in niri's overview. Plugins live in DMS's plugin system (Quickshell QML modules); registry at <https://danklinux.com/plugins>. DMS-owned runtime files (`~/.config/DankMaterialShell/settings.json`, `~/.config/niri/dms/outputs.kdl`) are tracked as chezmoi `create_` entries: seeded on a fresh machine, never overwritten by `chezmoi apply` — DMS rewrites them at runtime.
 3. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
 4. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
 5. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
@@ -173,7 +173,7 @@ When editing configs, you're working with **source files** using chezmoi naming 
 9. **bat** — Config file + theme. Cross-platform syntax highlighter.
 10. **git** — Standard git config format. Cross-platform.
 11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
-12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`, `environments`). They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start).
+12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`). They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start).
 
 ## Workflow
 
