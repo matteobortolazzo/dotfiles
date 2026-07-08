@@ -34,7 +34,8 @@ Generated from `dot_config/niri/config.kdl`.
 | `Mod+B` | Zen browser (focus if open, else launch) |
 | `Mod+E` | Thunar (file manager) |
 | `Mod+D` | DMS spotlight (app launcher) |
-| `Mod+Print` | Screenshot region → clipboard |
+| `Mod+Print` | Screenshot (interactive; saves + copies to clipboard) |
+| `Mod+Shift+Print` | Screenshot focused window |
 
 ## Window / column
 

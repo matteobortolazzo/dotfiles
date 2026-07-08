@@ -1,0 +1,5 @@
+// Written by DankMaterialShell's display settings at runtime.
+// This placeholder exists so `include "dms/outputs.kdl"` in config.kdl
+// never dangles on a fresh machine (a missing include fails the whole
+// niri config load). DMS overwrites this file once you touch display
+// settings — chezmoi only seeds it.

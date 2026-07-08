@@ -1,6 +1,6 @@
-// niri config — ported from dot_config/hypr/hyprland.conf
-// Coexists with Hyprland; selectable at greetd login.
-// Shell: DankMaterialShell (dms), pulled in by `systemctl --user add-wants niri.service dms`.
+// niri config
+// Shell: DankMaterialShell (dms), pulled in by `systemctl --user add-wants niri.service dms`
+// (wired automatically by run_once_after_47-dms.sh.tmpl).
 // Terminal: ghostty.
 
 input {
@@ -56,6 +56,7 @@ cursor {
 // noctalia is NOT spawned: dms is pulled in via niri.service Wants=dms.
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "xwayland-satellite"
+spawn-at-startup "udiskie"
 spawn-at-startup "zen-browser"
 spawn-at-startup "ghostty"
 
@@ -168,7 +169,10 @@ binds {
     Mod+B       cooldown-ms=750 hotkey-overlay-title="Browser (Zen)"          { spawn-sh "$HOME/.config/niri/scripts/focus-or-spawn.sh zen zen-browser"; }
     Mod+E                       hotkey-overlay-title="File manager (Thunar)"  { spawn "thunar"; }
     Mod+D                       hotkey-overlay-title="App launcher (spotlight)" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
-    Mod+Print                   hotkey-overlay-title="Screenshot region → clipboard" { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy -t image/png"; }
+    // Native niri screenshots: interactive UI (region/window/screen), saves
+    // to screenshot-path AND copies to clipboard. No grim/slurp needed.
+    Mod+Print                   hotkey-overlay-title="Screenshot (interactive)" { screenshot; }
+    Mod+Shift+Print             hotkey-overlay-title="Screenshot focused window" { screenshot-window; }
 
     // Compositor
     Mod+Q       { close-window; }
