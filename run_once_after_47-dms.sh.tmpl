@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# DankMaterialShell autostart: niri.service pulls in dms.service via Wants=.
+# This is the wiring step previously only documented as a comment in
+# config.kdl — a fresh machine got niri with no bar/launcher/lock without it.
+
+if systemctl --user list-unit-files dms.service >/dev/null 2>&1; then
+  systemctl --user add-wants niri.service dms.service \
+    || echo "add-wants failed — run manually: systemctl --user add-wants niri.service dms.service"
+else
+  echo "dms.service not found — install dms-shell, then run: systemctl --user add-wants niri.service dms.service"
+fi
+
+# Directories the config expects: niri screenshot-path and the wallpaper dir
+# used by DMS + the greetd background sync (run_once_after_45).
+mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Pictures/Wallpapers"
+{{ end -}}

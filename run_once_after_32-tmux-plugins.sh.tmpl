@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+# TPM owns tmux plugins (declared with @plugin in tmux.conf); chezmoi only
+# bootstraps tpm itself. Plugins land in ~/.config/tmux/plugins/ (XDG layout,
+# matching the `run` line at the bottom of tmux.conf).
+
+command -v tmux >/dev/null || { echo "tmux not installed yet — skipping"; exit 0; }
+
+plugins_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins"
+
+if ! [ -d "$plugins_dir/tpm" ]; then
+  git clone --depth=1 https://github.com/tmux-plugins/tpm "$plugins_dir/tpm"
+fi
+
+# Headless install of declared plugins (idempotent; skips ones already there).
+"$plugins_dir/tpm/bin/install_plugins" \
+  || echo "tpm headless install failed — press prefix+I inside tmux instead"
+{{ end -}}

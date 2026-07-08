@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# Core services the desktop expects. CachyOS's installer enables these, stock
+# Arch does not — without NetworkManager the first reboot has no network, and
+# DMS's power-profile widget needs power-profiles-daemon running.
+
+enable_unit() {
+  if systemctl list-unit-files "$1" >/dev/null 2>&1; then
+    sudo systemctl enable --now "$1"
+  else
+    echo "$1 not installed — skipping"
+  fi
+}
+
+enable_unit NetworkManager.service
+enable_unit bluetooth.service
+enable_unit power-profiles-daemon.service
+{{ end -}}
