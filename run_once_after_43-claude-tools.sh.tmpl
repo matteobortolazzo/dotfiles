@@ -2,8 +2,12 @@
 {{ if eq .chezmoi.os "linux" "darwin" -}}
 set -euo pipefail
 
+# claude lives in fnm's Node (run_once_after_35) — bring its shims onto PATH
+# for this non-interactive script, or the ccflow step silently never runs.
+command -v fnm >/dev/null && eval "$(fnm env)"
+
 # muxwatch
-if ! command -v muxwatch >/dev/null && ! [ -x "$HOME/go/bin/muxwatch" ]; then
+if command -v go >/dev/null && ! command -v muxwatch >/dev/null && ! [ -x "$HOME/go/bin/muxwatch" ]; then
   go install github.com/matteobortolazzo/claude-tools/muxwatch@latest
 fi
 
