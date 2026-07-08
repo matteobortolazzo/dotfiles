@@ -20,4 +20,9 @@ pkg="$src/arch-aur-terminal.txt"
 pkg="$src/arch-aur-desktop.txt"
 [ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
 {{ end -}}
+
+{{ if eq .profile "wsl" -}}
+# wslu provides wslview (used as $BROWSER in .zshrc)
+yay -S --needed --noconfirm wslu
+{{ end -}}
 {{ end -}}

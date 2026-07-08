@@ -27,6 +27,8 @@ pkg_system="$src/arch-system.txt"
 {{ end -}}
 
 {{ if eq .profile "wsl" -}}
-sudo pacman -S --needed --noconfirm docker docker-buildx docker-compose
+# wl-clipboard: WSLg exposes a Wayland display, giving nvim/tmux-yank a
+# working clipboard provider.
+sudo pacman -S --needed --noconfirm docker docker-buildx docker-compose wl-clipboard
 {{ end -}}
 {{ end -}}

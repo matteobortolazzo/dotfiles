@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "wsl") -}}
+set -euo pipefail
+
+# WSL host configuration. Pair with the Windows-side settings documented in
+# docs/wslconfig.example (memory cap, mirrored networking, autoMemoryReclaim).
+
+# /etc/wsl.conf — systemd so services (docker) work, trimmed Windows PATH so
+# zsh command lookup/completion stays fast. Interop itself stays on: wslview
+# and *.exe still work; .zshrc appends /mnt/c/Windows/System32 explicitly.
+# Takes effect after `wsl --shutdown` from Windows.
+if ! [ -f /etc/wsl.conf ]; then
+  sudo tee /etc/wsl.conf >/dev/null <<'EOF'
+[boot]
+systemd=true
+
+[interop]
+enabled=true
+appendWindowsPath=false
+EOF
+  echo "wrote /etc/wsl.conf — run 'wsl --shutdown' from Windows to apply"
+elif ! grep -q 'appendWindowsPath' /etc/wsl.conf; then
+  echo "NOTE: /etc/wsl.conf exists but doesn't set appendWindowsPath=false —"
+  echo "      consider adding [interop] appendWindowsPath=false for faster shells"
+fi
+
+# Docker engine inside WSL (requires systemd; no-op until first restart if
+# systemd isn't up yet).
+if command -v dockerd >/dev/null 2>&1; then
+  sudo systemctl enable docker.service 2>/dev/null \
+    || echo "systemd not active yet — docker.service will need enabling after wsl --shutdown"
+  sudo usermod -aG docker "$USER"
+fi
+
+# wsl2-ssh-agent — single static binary bridging SSH_AUTH_SOCK to the Windows
+# OpenSSH agent named pipe (1Password on Windows serves that pipe when its
+# SSH agent is enabled). Wired up in .zshrc; ~/.ssh/config intentionally has
+# no IdentityAgent on this profile.
+if ! [ -x "$HOME/.local/bin/wsl2-ssh-agent" ]; then
+  mkdir -p "$HOME/.local/bin"
+  curl -fsSL -o "$HOME/.local/bin/wsl2-ssh-agent" \
+    https://github.com/mame/wsl2-ssh-agent/releases/latest/download/wsl2-ssh-agent
+  chmod +x "$HOME/.local/bin/wsl2-ssh-agent"
+fi
+{{ end -}}

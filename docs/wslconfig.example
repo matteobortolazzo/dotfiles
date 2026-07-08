@@ -1,0 +1,25 @@
+# Windows-side WSL2 settings — chezmoi can't manage files outside the distro,
+# so copy this to %USERPROFILE%\.wslconfig on the Windows host and adjust.
+# Apply with `wsl --shutdown` from PowerShell.
+#
+# Pairs with /etc/wsl.conf inside the distro (written by
+# run_once_after_60-wsl.sh.tmpl: systemd=true, appendWindowsPath=false).
+
+[wsl2]
+# Cap the VM so Windows stays responsive; ~50-75% of physical RAM is a good
+# starting point. Uncomment and size for the machine.
+#memory=16GB
+#processors=8
+#swap=8GB
+
+# Mirrored networking: localhost works in both directions, VPN/Tailscale
+# friendly. Requires Windows 11 22H2+.
+networkingMode=mirrored
+dnsTunneling=true
+autoProxy=true
+
+[experimental]
+# Return freed memory to Windows instead of holding the high-water mark.
+autoMemoryReclaim=gradual
+# Let the VHD shrink when files are deleted.
+sparseVhd=true
