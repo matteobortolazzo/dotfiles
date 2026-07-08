@@ -52,8 +52,8 @@ cursor {
     xcursor-size 24
 }
 
-// Spawned at session start (replaces Hyprland exec-once)
-// noctalia is NOT spawned: dms is pulled in via niri.service Wants=dms.
+// Spawned at session start.
+// dms is NOT spawned here: it's pulled in via niri.service Wants=dms.
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "udiskie"
