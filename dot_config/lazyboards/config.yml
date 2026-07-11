@@ -26,7 +26,6 @@ columns:
       I: { name: Implement, type: shell, command: "agentwatch run implement {number}" }
 
   - name: In Review
-  - name: Implemented
 
 # Board-level actions (operate on the selected card / no card)
 actions:
