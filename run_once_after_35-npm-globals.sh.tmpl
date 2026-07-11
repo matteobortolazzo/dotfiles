@@ -24,7 +24,6 @@ if ! command -v npm >/dev/null; then
 fi
 
 packages=(
-  @anthropic-ai/claude-code
   playwright
 )
 
@@ -33,4 +32,10 @@ for pkg in "${packages[@]}"; do
     npm install -g "$pkg"
   fi
 done
+
+# Claude Code moved to the native installer (run_once_after_43) — drop the
+# old npm global so `claude` doesn't warn about multiple installations.
+if npm list -g @anthropic-ai/claude-code >/dev/null 2>&1; then
+  npm uninstall -g @anthropic-ai/claude-code
+fi
 {{ end -}}
