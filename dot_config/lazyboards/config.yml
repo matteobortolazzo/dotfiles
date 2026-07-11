@@ -1,36 +1,36 @@
 provider: github
-action_refresh_delay: 60
+session_max_length: 40        # match agentwatch's 40-char window-name cap (join key)
+action_refresh_delay: 5       # let the skill apply its label before the board re-reads
+working_label: "Working"      # spinner marker; card keeps its column while set
+
 columns:
   - name: New
-    cleanup: "~/.config/lazyboards/scripts/cleanup.sh {session}"
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
     actions:
-      R:
-        name: Refine
-        type: shell
-        command: "~/.config/lazyboards/scripts/refine.sh {number} {session}"
+      R: { name: Refine, type: shell, command: "agentwatch run refine {number}" }
+
   - name: Refined
-    cleanup: "~/.config/lazyboards/scripts/cleanup.sh {session}"
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
     actions:
-      I:
-        name: Implement
-        type: shell
-        command: "~/.config/lazyboards/scripts/implement.sh {number} {session} {tags}"
-      D:
-        name: Design
-        type: shell
-        command: "~/.config/lazyboards/scripts/design.sh {number} {session}"
+      D: { name: Design,    type: shell, command: "agentwatch run design {number}" }
+      I: { name: Implement, type: shell, command: "agentwatch run implement {number}" }
+
   - name: Designed
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    actions:
+      I: { name: Implement, type: shell, command: "agentwatch run implement {number}" }
+
+  - name: Planned
+    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
+    actions:
+      I: { name: Implement, type: shell, command: "agentwatch run implement {number}" }
+
+  - name: In Review
   - name: Implemented
+
+# Board-level actions (operate on the selected card / no card)
 actions:
-  C:
-    name: Claude Code
-    type: shell
-    command: "~/.config/lazyboards/scripts/claude.sh"
-  S:
-    name: Git Sync
-    type: shell
-    command: "~/.config/lazyboards/scripts/sync.sh"
-  P:
-    name: Git Pull
-    type: shell
-    command: "git pull"
+  A: { name: Annotate,    type: shell, command: "gh issue comment {number} --body {comment}" }
+  C: { name: Claude Code, type: shell, command: "tmux new-window claude" }
+  S: { name: Git Sync,    type: shell, command: "tmux new-window \"claude -- '/agentflow:sync'\"" }
+  P: { name: Git Pull,    type: shell, command: "git pull" }
