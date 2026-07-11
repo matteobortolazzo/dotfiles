@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+hotfix="$HOME/.local/share/dms-shell-hotfix/current"
+
+if command -v quickshell >/dev/null 2>&1 \
+    && quickshell --version 2>/dev/null | grep -q '^noctalia-qs ' \
+    && [ -d "$hotfix" ]; then
+    exec /usr/bin/dms -c "$hotfix" run --session
+fi
+
+if command -v quickshell >/dev/null 2>&1 \
+    && quickshell --version 2>/dev/null | grep -q '^noctalia-qs '; then
+    echo "dms-run-session: noctalia-qs detected but $hotfix is missing; falling back to packaged DMS" >&2
+fi
+
+exec /usr/bin/dms run --session
