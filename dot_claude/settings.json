@@ -26,15 +26,16 @@
     "typescript-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "ccflow@claude-tools": true,
-    "muxwatch@claude-tools": true,
+    "agentflow@agent-stack": true,
+    "agentwatch@agent-stack": true,
+    "sandbox@agent-stack": true,
     "resend@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "claude-tools": {
+    "agent-stack": {
       "source": {
         "source": "github",
-        "repo": "matteobortolazzo/claude-tools"
+        "repo": "matteobortolazzo/agent-stack"
       }
     }
   },

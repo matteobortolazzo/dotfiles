@@ -1,0 +1,10 @@
+{
+  "displayMirror": {
+    "enabled": true,
+    "autoRefresh": false
+  },
+  "agentwatch": {
+    "enabled": true,
+    "agentwatchPath": "agentwatch"
+  }
+}
