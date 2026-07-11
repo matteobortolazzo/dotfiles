@@ -2,9 +2,14 @@
 {{ if eq .chezmoi.os "linux" "darwin" -}}
 set -euo pipefail
 
-# claude lives in fnm's Node (run_once_after_35) — bring its shims onto PATH
-# for this non-interactive script, or the ccflow step silently never runs.
-command -v fnm >/dev/null && eval "$(fnm env)"
+# claude is the native build in ~/.local/bin — make sure it's on PATH for
+# this non-interactive script, or the ccflow step silently never runs.
+export PATH="$HOME/.local/bin:$PATH"
+
+# claude (native installer; replaces the old @anthropic-ai/claude-code npm global)
+if ! command -v claude >/dev/null; then
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
 
 # muxwatch
 if command -v go >/dev/null && ! command -v muxwatch >/dev/null && ! [ -x "$HOME/go/bin/muxwatch" ]; then
