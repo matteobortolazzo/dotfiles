@@ -1,10 +1,8 @@
 {
   "cleanupPeriodDays": 7,
-  "model": "claude-opus-4-8",
-  "showClearContextOnPlanAccept": true,
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "1",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-4-6"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-5"
   },
   "permissions": {
     "allow": [
@@ -12,6 +10,7 @@
     ],
     "defaultMode": "default"
   },
+  "model": "sonnet",
   "hooks": {
     "PreToolUse": []
   },
@@ -28,7 +27,7 @@
     "skill-creator@claude-plugins-official": true,
     "agentflow@agent-stack": true,
     "agentwatch@agent-stack": true,
-    "sandbox@agent-stack": true,
+    "agent-sandbox@agent-stack": true,
     "resend@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -63,6 +62,7 @@
     ]
   },
   "effortLevel": "high",
+  "showClearContextOnPlanAccept": true,
   "autoCompactEnabled": false,
   "skipAutoPermissionPrompt": true
 }
