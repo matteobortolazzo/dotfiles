@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # ca — coding-agent launcher for Claude Code and Codex.
 #
+# By default agents run inside the agent-sandbox container (via the
+# `agent-sand`/`codex-sand` launchers). Pass --no-sandbox to run on the host.
+#
 # Claude Code:
 #   ca       Sonnet (default)
 #   ca cs    Sonnet
@@ -23,7 +26,7 @@ readonly CLAUDE_SUBAGENT_MODEL=claude-sonnet-5
 
 usage() {
   cat <<'EOF'
-Usage: ca [selector] [arguments...]
+Usage: ca [--no-sandbox] [selector] [arguments...]
 
 Claude Code (default provider):
   ca, ca cs  Sonnet
@@ -38,40 +41,83 @@ Codex:
   ca xt      GPT-5.6 Terra
   ca xl      GPT-5.6 Luna
 
+Sandbox:
+  Agents run inside the agent-sandbox container by default.
+  --no-sandbox   Run the agent directly on the host instead.
+
 All remaining arguments are passed through. Use `--` to stop selector parsing.
 EOF
 }
 
+# Sandbox by default; --no-sandbox (or --host) drops to the host binaries.
+SANDBOX=true
+
 run_claude() {
   local model="$1"
   shift
+  if "$SANDBOX"; then
+    if ! command -v agent-sand &>/dev/null; then
+      echo "ca: agent-sand not found on PATH — install agent-sandbox or use --no-sandbox." >&2
+      exit 1
+    fi
+    exec agent-sand --model "$model" "$@"
+  fi
   CLAUDE_CODE_SUBAGENT_MODEL="$CLAUDE_SUBAGENT_MODEL" \
     exec claude --model "$model" "$@"
 }
 
 run_codex() {
+  local -a codex_cmd
+  if "$SANDBOX"; then
+    if ! command -v codex-sand &>/dev/null; then
+      echo "ca: codex-sand not found on PATH — install agent-sandbox or use --no-sandbox." >&2
+      exit 1
+    fi
+    codex_cmd=(codex-sand)
+  else
+    codex_cmd=(codex)
+  fi
   case "${1:-}" in
     s|sol)
       shift
-      exec codex --model gpt-5.6-sol "$@"
+      exec "${codex_cmd[@]}" --model gpt-5.6-sol "$@"
       ;;
     t|terra)
       shift
-      exec codex --model gpt-5.6-terra "$@"
+      exec "${codex_cmd[@]}" --model gpt-5.6-terra "$@"
       ;;
     l|luna)
       shift
-      exec codex --model gpt-5.6-luna "$@"
+      exec "${codex_cmd[@]}" --model gpt-5.6-luna "$@"
       ;;
     --)
       shift
-      exec codex "$@"
+      exec "${codex_cmd[@]}" "$@"
       ;;
     *)
-      exec codex "$@"
+      exec "${codex_cmd[@]}" "$@"
       ;;
   esac
 }
+
+# Pull the sandbox flags out of the argument list before selector parsing.
+# Stop consuming them once a literal `--` appears so a prompt can still contain
+# the word `--no-sandbox` verbatim.
+ARGS=()
+passthrough=false
+for arg in "$@"; do
+  if "$passthrough"; then
+    ARGS+=("$arg")
+    continue
+  fi
+  case "$arg" in
+    --) passthrough=true; ARGS+=("$arg") ;;
+    --no-sandbox|--host) SANDBOX=false ;;
+    --sandbox) SANDBOX=true ;;
+    *) ARGS+=("$arg") ;;
+  esac
+done
+set -- ${ARGS[@]+"${ARGS[@]}"}
 
 case "${1:-}" in
   '')
