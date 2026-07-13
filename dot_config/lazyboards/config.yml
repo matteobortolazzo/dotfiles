@@ -2,10 +2,11 @@ provider: github
 session_max_length: 40 # match agentwatch's 40-char window-name cap (join key)
 action_refresh_delay: 5 # let the skill apply its label before the board re-reads
 working_label: "Working" # spinner marker; card keeps its column while set
+agentwatch: true
+cleanup: "tmux kill-window -t ={session} 2>/dev/null || true"
 
 columns:
   - name: New
-    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
     actions:
       R:
         {
@@ -15,10 +16,13 @@ columns:
         }
 
   - name: Refined
-    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
     actions:
       D:
-        { name: Design, type: shell, command: "agentwatch run design {number}" }
+        {
+          name: Design,
+          type: shell,
+          command: "agentwatch run design {number} --no-sandbox -- {comment}",
+        }
       I:
         {
           name: Implement,
@@ -27,7 +31,6 @@ columns:
         }
 
   - name: Planned
-    cleanup: "tmux kill-window -t {session} 2>/dev/null || true"
     actions:
       I:
         {
@@ -47,4 +50,3 @@ actions:
       command: "gh issue comment {number} --body {comment}",
     }
   C: { name: Claude, type: shell, command: "tmux new-window agent-sand" }
-  P: { name: Pull, type: shell, command: "git pull --rebase" }
