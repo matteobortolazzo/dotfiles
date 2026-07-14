@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Screenshot
+Comment=Take an interactive screenshot (region/window/screen)
+Exec=niri msg action screenshot
+Icon=accessories-screenshot-tool
+Terminal=false
+Type=Application
+Categories=Utility;Graphics;
