@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Screenshot
 Comment=Take an interactive screenshot (region/window/screen)
-Exec=niri msg action screenshot
+Exec=sh -c 'dms ipc call spotlight close; sleep 0.2; dms ipc call niri screenshot'
 Icon=accessories-screenshot-tool
 Terminal=false
 Type=Application
