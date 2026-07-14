@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Screenshot Window
-Comment=Screenshot the focused window
+Comment=Screenshot the currently focused window (no picker — focus the window first)
 Exec=sh -c 'dms ipc call spotlight close; sleep 0.2; dms ipc call niri screenshotWindow'
 Icon=accessories-screenshot-tool
 Terminal=false
