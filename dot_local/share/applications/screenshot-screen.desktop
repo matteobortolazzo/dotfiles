@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Screenshot Screen
+Comment=Screenshot the focused screen
+Exec=sh -c 'dms ipc call spotlight close; sleep 0.2; dms ipc call niri screenshotScreen'
+Icon=accessories-screenshot-tool
+Terminal=false
+Type=Application
+Categories=Utility;Graphics;
