@@ -12,7 +12,7 @@ columns:
         {
           name: Refine,
           type: shell,
-          command: "agentwatch run refine {number} -- {comment}",
+          command: "agentwatch run refine {number} --model sonnet -- {comment}",
         }
 
   - name: Refined
@@ -21,13 +21,13 @@ columns:
         {
           name: Design,
           type: shell,
-          command: "agentwatch run design {number} --no-sandbox -- {comment}",
+          command: "agentwatch run design {number} --model sonnet --no-sandbox -- {comment}",
         }
       I:
         {
           name: Implement,
           type: shell,
-          command: "agentwatch run implement {number} -- {comment}",
+          command: "agentwatch run implement {number} --model sonnet -- {comment}",
         }
 
   - name: Planned
@@ -36,17 +36,16 @@ columns:
         {
           name: Implement,
           type: shell,
-          command: "agentwatch run implement {number} -- {comment}",
+          command: "agentwatch run implement {number} --model sonnet -- {comment}",
         }
 
   - name: In Review
 
 # Board-level actions (operate on the selected card / no card)
 actions:
-  A:
+  C:
     {
-      name: Annotate,
+      name: Claude,
       type: shell,
-      command: "gh issue comment {number} --body {comment}",
+      command: "tmux new-window agent-sand --model sonnet",
     }
-  C: { name: Claude, type: shell, command: "tmux new-window agent-sand" }
