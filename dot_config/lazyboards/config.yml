@@ -1,9 +1,9 @@
 provider: github
-session_max_length: 40 # match agentwatch's 40-char window-name cap (join key)
+session_max_length: 40 # match cenci's 40-char window-name cap (join key)
 action_refresh_delay: 5 # let the skill apply its label before the board re-reads
 working_label: "Working" # spinner marker; card keeps its column while set
-agentwatch: true
-cleanup: "agentwatch close {number}"
+cenci: true
+cleanup: "cenci close {number}"
 
 columns:
   - name: New
@@ -13,6 +13,12 @@ columns:
           name: Refine,
           type: shell,
           command: "cenci run refine {number} --model sonnet -- {comment}",
+        }
+      G:
+        {
+          name: Jump to agent,
+          type: shell,
+          command: 'tmux switch-client -t "={window}"',
         }
 
   - name: Refined
@@ -29,6 +35,12 @@ columns:
           type: shell,
           command: "cenci run implement {number} --model sonnet -- {comment}",
         }
+      G:
+        {
+          name: Jump to agent,
+          type: shell,
+          command: 'tmux switch-client -t "={window}"',
+        }
 
   - name: Planned
     actions:
@@ -37,6 +49,12 @@ columns:
           name: Implement,
           type: shell,
           command: "cenci run implement {number} --model sonnet -- {comment}",
+        }
+      G:
+        {
+          name: Jump to agent,
+          type: shell,
+          command: 'tmux switch-client -t "={window}"',
         }
 
   - name: In Review
