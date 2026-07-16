@@ -25,16 +25,16 @@
     "typescript-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "agentflow@agent-stack": true,
-    "agentwatch@agent-stack": true,
-    "agent-sandbox@agent-stack": true,
-    "resend@claude-plugins-official": true
+    "resend@claude-plugins-official": true,
+    "cenci@cenci": true,
+    "cenci-watch@cenci": true,
+    "cenci-sandbox@cenci": true
   },
   "extraKnownMarketplaces": {
-    "agent-stack": {
+    "cenci": {
       "source": {
         "source": "github",
-        "repo": "matteobortolazzo/agent-stack"
+        "repo": "matteobortolazzo/cenci"
       }
     }
   },

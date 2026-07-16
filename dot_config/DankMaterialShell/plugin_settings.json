@@ -6,5 +6,8 @@
   "agentwatch": {
     "enabled": true,
     "agentwatchPath": "agentwatch"
+  },
+  "cenci": {
+    "enabled": true
   }
 }
