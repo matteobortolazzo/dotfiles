@@ -24,6 +24,7 @@ lazygit
 man-db
 man-pages
 neovim
+opencode
 openssh
 pacman-contrib
 poppler

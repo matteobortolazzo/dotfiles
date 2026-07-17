@@ -16,6 +16,7 @@ brew "lazydocker"
 brew "lazygit"
 
 brew "neovim"
+brew "opencode"
 brew "p7zip"
 brew "poppler"
 brew "ripgrep"
