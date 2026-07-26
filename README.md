@@ -64,10 +64,36 @@ enables `nvidia-{suspend,resume,hibernate}.service`. The script is a no-op
 on hosts without `nvidia-suspend.service` installed. A reboot is required
 after first apply for the modprobe option to take effect.
 
+## Sysbox (nested Docker-in-Docker)
+
+[sysbox](https://github.com/nestybox/sysbox) is a container runtime that lets
+unprivileged containers run Docker, systemd, or Kubernetes inside themselves
+with real isolation (no `--privileged`). Arch-only (`main` profile); installed
+from the AUR since there's no official package.
+
+`run_once_after_25-sysbox.sh.tmpl` handles the parts the AUR package doesn't:
+
+- Enables `sysbox.service` — AUR packages don't auto-enable systemd units the
+  way sysbox's official `.deb` postinst does.
+- Registering `sysbox-runc` as a Docker runtime (`/etc/docker/daemon.json`
+  `runtimes.sysbox-runc`) isn't automated — do it once by hand, then
+  `sudo systemctl restart docker`.
+- Loads netfilter modules (`ip_tables`, `iptable_nat`, `ip6_tables`,
+  `ip6table_nat`, `nf_nat`) via `system/docker/modules-load-docker-iptables.conf`.
+  systemd >= 259 dropped automatic legacy-iptables module loading, so without
+  this, dockerd running *inside* a sysbox container fails to create its NAT
+  chain with `can't load module ip_tables ... Operation not permitted`
+  (containers can never load kernel modules themselves — it has to already be
+  loaded on the host).
+
+Verify with `docker run --runtime=sysbox-runc -it --hostname=syscont
+nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
+2>&1 &` followed by `docker run -it busybox`.
+
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/regreet, docker iptables modules); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` via sudo.
 - `docs/` — reference material not deployed anywhere (e.g. `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
