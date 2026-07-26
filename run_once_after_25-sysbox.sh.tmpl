@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+{{ if eq .profile "main" -}}
+set -euo pipefail
+
+# AUR packages don't auto-enable systemd services (unlike sysbox's .deb),
+# so enable it explicitly once installed.
+if systemctl list-unit-files sysbox.service >/dev/null 2>&1; then
+  sudo systemctl enable --now sysbox.service
+fi
+{{ end -}}
