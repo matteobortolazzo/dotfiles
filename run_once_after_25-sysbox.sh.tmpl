@@ -7,4 +7,16 @@ set -euo pipefail
 if systemctl list-unit-files sysbox.service >/dev/null 2>&1; then
   sudo systemctl enable --now sysbox.service
 fi
+
+# systemd >= 259 dropped automatic legacy-iptables module loading, so Docker's
+# NAT chain setup fails (surfaces inside sysbox-runc containers running
+# dockerd as "can't load module ip_tables ... Operation not permitted") unless
+# these are already loaded on the host. See system/docker/ for details.
+src="{{ .chezmoi.sourceDir }}/system/docker/modules-load-docker-iptables.conf"
+target=/etc/modules-load.d/docker-iptables.conf
+if ! [ -f "$target" ] || ! sudo cmp -s "$src" "$target"; then
+  sudo install -m 0644 -o root -g root "$src" "$target"
+  echo "installed $target"
+fi
+sudo modprobe ip_tables iptable_nat ip6_tables ip6table_nat nf_nat
 {{ end -}}
