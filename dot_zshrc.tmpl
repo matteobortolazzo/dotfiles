@@ -21,6 +21,9 @@ export DOTNET_ROOT="$HOME/.dotnet"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 {{ if eq .profile "wsl" -}}
 export BROWSER=wslview
+# Some tools call xdg-open directly instead of respecting $BROWSER; xdg-utils
+# isn't installed on WSL, so point it at wslview too.
+alias xdg-open=wslview
 # Windows PATH is trimmed via /etc/wsl.conf (appendWindowsPath=false) to keep
 # command lookup and completion fast; keep the essentials reachable for
 # interop (wslview, clip.exe, explorer.exe).
