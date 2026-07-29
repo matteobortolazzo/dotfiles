@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+{{ if eq .profile "main" -}}
+set -euo pipefail
+
+# Pen ships as a tarball from pen.dev — reuses ~/.config/scripts/install-pen.sh
+# which handles extraction, symlink, and desktop entry idempotently.
+
+[ -x "$HOME/.local/share/pen/pen" ] && exit 0
+
+installer="$HOME/.config/scripts/install-pen.sh"
+[ -x "$installer" ] || { echo "install-pen.sh not deployed yet — skipping"; exit 0; }
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+curl -fsSL -o "$tmp/pen.tar.gz" https://www.pen.dev/download/Pen-linux-x64.tar.gz
+"$installer" "$tmp/pen.tar.gz"
+{{ end -}}

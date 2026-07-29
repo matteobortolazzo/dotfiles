@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-INSTALL_DIR="$HOME/.local/share/pencil"
-SYMLINK="$HOME/.local/bin/pencil"
+INSTALL_DIR="$HOME/.local/share/pen"
+SYMLINK="$HOME/.local/bin/pen"
 
 if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <path-to-Pencil-linux-x64.tar>"
+    echo "Usage: $0 <path-to-Pen-linux-x64.tar>"
     exit 1
 fi
 
@@ -34,25 +34,25 @@ tar xf "$tarball" -C "$tmpdir"
 # Remove old installation and move new one in
 rm -rf "$INSTALL_DIR"
 mv "$tmpdir/$top_dir" "$INSTALL_DIR"
-chmod +x "$INSTALL_DIR/pencil" "$INSTALL_DIR/chrome-sandbox" "$INSTALL_DIR/chrome_crashpad_handler"
+chmod +x "$INSTALL_DIR/pen" "$INSTALL_DIR/chrome-sandbox" "$INSTALL_DIR/chrome_crashpad_handler"
 
 # Create symlink
 mkdir -p "$(dirname "$SYMLINK")"
 rm -rf "$SYMLINK"
-ln -s "$INSTALL_DIR/pencil" "$SYMLINK"
+ln -s "$INSTALL_DIR/pen" "$SYMLINK"
 
 # Install desktop entry
 mkdir -p "$HOME/.local/share/applications"
-cat > "$HOME/.local/share/applications/pencil.desktop" <<EOF
+cat > "$HOME/.local/share/applications/pen.desktop" <<EOF
 [Desktop Entry]
-Name=Pencil
+Name=Pen
 Comment=Design on canvas. Land in code.
-Exec=$INSTALL_DIR/pencil
+Exec=$INSTALL_DIR/pen
 Icon=$INSTALL_DIR/resources/app/icon.png
 Type=Application
 Categories=Development;Graphics;
-StartupWMClass=Pencil
+StartupWMClass=Pen
 EOF
 
 echo "Installed: $top_dir"
-echo "Binary:    $SYMLINK -> $INSTALL_DIR/pencil"
+echo "Binary:    $SYMLINK -> $INSTALL_DIR/pen"

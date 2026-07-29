@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Launch Pen with WSL-compatible rendering flags.
+# Pen must be running before starting a Claude Code session
+# for the MCP tools to connect.
+
+set -euo pipefail
+
+if pgrep -x pen &>/dev/null; then
+  echo "Pen is already running."
+  exit 0
+fi
+
+DISPLAY=:0 nohup pen \
+  --no-sandbox \
+  --use-gl=angle \
+  --use-angle=swiftshader-webgl \
+  "$@" &>/tmp/pen.log &
+
+echo "Pen started (pid $!)."
+echo "Log: /tmp/pen.log"

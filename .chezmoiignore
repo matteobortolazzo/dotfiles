@@ -12,5 +12,5 @@ system
 {{ end -}}
 
 {{ if ne .profile "wsl" -}}
-.config/scripts/pencil-wsl
+.config/scripts/pen-wsl
 {{ end -}}
