@@ -19,6 +19,7 @@ github-cli
 go
 golangci-lint
 htop
+jdk21-openjdk
 jq
 lazydocker
 lazygit
