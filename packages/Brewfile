@@ -1,6 +1,7 @@
 brew "bat"
 brew "chezmoi"
 brew "cmake"
+brew "cosign"
 brew "direnv"
 brew "fd"
 brew "ffmpeg"
