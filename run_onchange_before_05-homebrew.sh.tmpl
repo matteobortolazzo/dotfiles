@@ -7,6 +7,11 @@ set -euo pipefail
 # at runtime, so the hash below is embedded to make edits retrigger it.
 # brew bundle is idempotent (installed formulae/casks are skipped).
 #
+# --no-upgrade: only install what's missing, never upgrade what's already there.
+# Self-updating casks (docker-desktop) reinstall via an uninstall step that needs
+# sudo for /Library/PrivilegedHelperTools, which can't prompt from a chezmoi
+# script and aborts the whole apply. Upgrades stay a manual `brew upgrade`.
+#
 # Brewfile: {{ include "packages/Brewfile" | sha256sum }}
 
 if ! command -v brew >/dev/null; then
@@ -17,5 +22,5 @@ fi
 brewfile="{{ .chezmoi.sourceDir }}/packages/Brewfile"
 [ -f "$brewfile" ] || { echo "no $brewfile — skipping"; exit 0; }
 
-brew bundle --file="$brewfile"
+brew bundle --file="$brewfile" --no-upgrade
 {{ end -}}
