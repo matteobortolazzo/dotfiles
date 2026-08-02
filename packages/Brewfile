@@ -36,9 +36,6 @@ brew "fastfetch"
 
 cask "1password-cli"
 
-tap "joshmedeski/sesh"
-brew "joshmedeski/sesh/sesh"
-
 cask "docker-desktop"
 cask "ghostty"
 cask "font-jetbrains-mono-nerd-font"
