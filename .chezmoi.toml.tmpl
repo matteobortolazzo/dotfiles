@@ -1,7 +1,10 @@
+{{- /* profile = platform (packages, compositor, interop). org = ownership. Keep them orthogonal. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
+{{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
 
 [data]
   profile = {{ $profile | quote }}
+  org = {{ $org | quote }}
 
 [onepassword]
   mode = "account"
