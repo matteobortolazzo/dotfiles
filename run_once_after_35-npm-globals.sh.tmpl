@@ -25,6 +25,11 @@ fi
 
 packages=(
   playwright
+  # mermaid CLI — renders mermaid blocks to PNG for nvim's diagram.nvim.
+  # Ships its own Chromium via Puppeteer; if it hits "No usable sandbox!",
+  # set renderer_options.mermaid.cli_args = { "--no-sandbox" } in diagram.nvim
+  # (Arch alternative: the extra/mermaid-cli package, which uses system chromium).
+  @mermaid-js/mermaid-cli
 )
 
 for pkg in "${packages[@]}"; do
