@@ -43,12 +43,12 @@ return {
       "help",
       "yaml",
     }
+    -- Buffer-scoped only: fold options are window-local and live in
+    -- config/options.lua, so a second split of the same buffer still folds.
     vim.api.nvim_create_autocmd("FileType", {
       pattern = filetypes,
       callback = function()
         pcall(vim.treesitter.start)
-        vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-        vim.wo.foldmethod = "expr"
         vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end,
     })

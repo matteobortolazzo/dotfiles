@@ -18,8 +18,12 @@ return {
       end
 
       -- Navigation
-      map("n", "]h", gs.next_hunk, "Next hunk")
-      map("n", "[h", gs.prev_hunk, "Previous hunk")
+      map("n", "]h", function()
+        gs.nav_hunk("next")
+      end, "Next hunk")
+      map("n", "[h", function()
+        gs.nav_hunk("prev")
+      end, "Previous hunk")
 
       -- Actions
       map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")
@@ -30,8 +34,8 @@ return {
       map("v", "<leader>hr", function()
         gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
       end, "Reset hunk")
+      -- stage_hunk toggles (stage/unstage), so there is no separate undo map.
       map("n", "<leader>hS", gs.stage_buffer, "Stage buffer")
-      map("n", "<leader>hu", gs.undo_stage_hunk, "Undo stage hunk")
       map("n", "<leader>hR", gs.reset_buffer, "Reset buffer")
       map("n", "<leader>hp", gs.preview_hunk, "Preview hunk")
       map("n", "<leader>hb", function()
@@ -43,8 +47,8 @@ return {
       end, "Diff this ~")
 
       -- Toggle
-      map("n", "<leader>tb", gs.toggle_current_line_blame, "Toggle line blame")
-      map("n", "<leader>td", gs.toggle_deleted, "Toggle deleted")
+      map("n", "<leader>tb", "<cmd>Gitsigns toggle_current_line_blame<CR>", "Toggle line blame")
+      map("n", "<leader>td", "<cmd>Gitsigns toggle_deleted<CR>", "Toggle deleted")
 
       -- Text object
       map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "Select hunk")

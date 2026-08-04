@@ -1,14 +1,7 @@
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
--- Highlight on yank
-augroup("YankHighlight", { clear = true })
-autocmd("TextYankPost", {
-  group = "YankHighlight",
-  callback = function()
-    vim.highlight.on_yank({ higroup = "IncSearch", timeout = 200 })
-  end,
-})
+-- Highlight on yank is a Neovim 0.11+ default (nvim.hlyank) — no autocmd needed.
 
 -- Resize splits when window is resized
 augroup("ResizeSplits", { clear = true })

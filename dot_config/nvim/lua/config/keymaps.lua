@@ -31,8 +31,6 @@ map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center" })
 map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up and center" })
 
--- Diagnostic navigation
-map("n", "[d", vim.diagnostic.goto_prev, { desc = "Go to previous diagnostic" })
-map("n", "]d", vim.diagnostic.goto_next, { desc = "Go to next diagnostic" })
-map("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show diagnostic message" })
+-- Diagnostic navigation ([d / ]d are Neovim 0.11+ defaults)
+map("n", "<leader>d", vim.diagnostic.open_float, { desc = "Show diagnostic message" })
 map("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic list" })

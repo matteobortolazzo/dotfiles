@@ -22,8 +22,7 @@ opt.shiftwidth = 2
 opt.tabstop = 2
 opt.smartindent = true
 
--- UI
-opt.termguicolors = true
+-- UI (termguicolors is auto-detected since 0.10)
 opt.signcolumn = "yes"
 opt.cursorline = true
 opt.splitright = true
@@ -36,7 +35,10 @@ opt.timeoutlen = 300
 -- Undo
 opt.undofile = true
 
--- Folding (treesitter-based, configured per-filetype in treesitter plugin)
+-- Folding (treesitter-based; global so every window folds, not just the one
+-- that happened to trigger FileType. foldlevel keeps everything open on load.)
+opt.foldmethod = "expr"
+opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 opt.foldlevel = 99
 opt.foldlevelstart = 99
 opt.foldenable = true

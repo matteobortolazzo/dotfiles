@@ -42,33 +42,22 @@ return {
       "saghen/blink.cmp",
     },
     config = function()
-      -- LSP keymaps (set on attach)
+      -- LSP keymaps (set on attach). K, gra, gri, grr and grt are Neovim 0.11+
+      -- defaults with identical behaviour, so only the deviations live here.
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", {}),
         callback = function(ev)
           local opts = { buffer = ev.buf }
 
-          -- Go to mappings (matching IdeaVim)
+          -- Go to mappings — deliberately inverted from the defaults to match IdeaVim
           vim.keymap.set("n", "grD", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
           vim.keymap.set("n", "grd", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
-          vim.keymap.set("n", "gri", vim.lsp.buf.implementation, vim.tbl_extend("force", opts, { desc = "Go to implementation" }))
-          vim.keymap.set("n", "grr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "Find references" }))
-          vim.keymap.set("n", "grt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Go to type definition" }))
-
-          -- Code actions
-          vim.keymap.set({ "n", "v" }, "gra", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
 
           -- Rename
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
 
-          -- Hover and signature
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover documentation" }))
+          -- Signature help
           vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", opts, { desc = "Signature help" }))
-
-          -- Format
-          vim.keymap.set("n", "<leader>f", function()
-            vim.lsp.buf.format({ async = true })
-          end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
         end,
       })
 
@@ -117,20 +106,8 @@ return {
       vim.lsp.config("ts_ls", {})
       vim.lsp.config("yamlls", {})
 
-      -- Enable all configured servers
-      vim.lsp.enable({
-        "angularls",
-        "bashls",
-        "cssls",
-        "docker_language_server",
-        "jsonls",
-        "lua_ls",
-        "csharp_ls",
-        "pylsp",
-        "tailwindcss",
-        "ts_ls",
-        "yamlls",
-      })
+      -- Servers are enabled by mason-lspconfig's automatic_enable, driven by the
+      -- single ensure_installed list above — no second list to keep in sync.
     end,
   },
 }
