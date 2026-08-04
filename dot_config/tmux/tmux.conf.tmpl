@@ -8,8 +8,14 @@ set -s extended-keys on
 set -as terminal-features 'xterm*:extkeys'
 set -g default-terminal "tmux-256color"
 set -sg terminal-overrides ",*:RGB"
+{{ if ne .profile "wsl" -}}
+# Colored undercurl (SGR 4:x / 58). Declaring these makes tmux forward the
+# sequences to the outer terminal, so they must only be set where that
+# terminal actually parses them. Windows Terminal does not, and prints
+# ESC[58:2:r:g:b as literal text — hence the wsl profile is excluded.
 set -as terminal-overrides ",*:Smulx=\E[4::%p1%dm"
 set -as terminal-overrides ",*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m"
+{{ end -}}
 set -g escape-time 0  # disable delays on escape sequences
 set -g focus-events on
 set -g mouse on
