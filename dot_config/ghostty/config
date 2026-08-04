@@ -3,7 +3,7 @@
 # or https://ghostty.org/docs/config
 
 font-family = JetBrainsMono Nerd Font
-font-size = 14
+font-size = 11
 # Glassmorphic Dark Theme
 background = 1a1a1e
 foreground = e8e4df
