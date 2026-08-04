@@ -73,10 +73,12 @@ vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
   end,
 })
 
--- Markdown-only <leader>m group (registered with which-key in plugins/which-key.lua).
+-- <leader>m group (registered with which-key in plugins/which-key.lua).
+-- Diagram preview also applies to standalone .mmd/.mermaid files, where the
+-- whole buffer is the diagram (integration in plugins/image.lua).
 vim.api.nvim_create_autocmd("FileType", {
   group = group,
-  pattern = "markdown",
+  pattern = { "markdown", "mermaid" },
   callback = function(event)
     local opts = { buffer = event.buf, silent = true }
 
@@ -88,6 +90,15 @@ vim.api.nvim_create_autocmd("FileType", {
       end
       diagram.show_diagram_hover()
     end, vim.tbl_extend("force", opts, { desc = "Diagram under cursor" }))
+  end,
+})
+
+-- Tables, zen mode and the heading outline are markdown-only.
+vim.api.nvim_create_autocmd("FileType", {
+  group = group,
+  pattern = "markdown",
+  callback = function(event)
+    local opts = { buffer = event.buf, silent = true }
 
     vim.keymap.set("n", "<leader>mt", "<cmd>TableModeToggle<CR>", vim.tbl_extend("force", opts, { desc = "Toggle table mode" }))
     vim.keymap.set("n", "<leader>mz", "<cmd>ZenMode<CR>", vim.tbl_extend("force", opts, { desc = "Zen mode" }))
