@@ -1,5 +1,7 @@
 return {
   "folke/zen-mode.nvim",
+  -- cmd so <leader>mz (set in config/prose.lua) can trigger the load too.
+  cmd = "ZenMode",
   keys = {
     { "<leader>z", "<cmd>ZenMode<CR>", desc = "Zen mode" },
   },

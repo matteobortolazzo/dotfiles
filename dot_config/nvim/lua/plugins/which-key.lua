@@ -23,6 +23,7 @@ return {
       { "<leader>c", group = "code" },
       { "<leader>g", group = "git" },
       { "<leader>h", group = "hunk" },
+      { "<leader>m", group = "markdown" },
       { "<leader>s", group = "search" },
       { "<leader>t", group = "toggle" },
       { "gr", group = "goto" },
