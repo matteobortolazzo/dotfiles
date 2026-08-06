@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "gaming" false .) -}}
+set -euo pipefail
+
+# The gaming desktop doubles as the remote dev box, so sshd is gated on the
+# gaming role rather than on a role var of its own — split them the moment a
+# machine wants one without the other.
+#
+# Tailscale (run_once_after_23-tailscale.sh.tmpl) covers off-LAN access; this is
+# for plain `ssh desktop` + tmux on the local network.
+
+if ! systemctl list-unit-files sshd.service >/dev/null 2>&1; then
+  echo "sshd.service not installed — skipping (openssh is in arch-terminal.txt)"
+  exit 0
+fi
+
+sudo systemctl enable --now sshd.service
+
+# Only harden once a key is actually installed. Writing PasswordAuthentication
+# no with an empty authorized_keys locks out every remote login, and the whole
+# point of this box is that it is often headless.
+keys="$HOME/.ssh/authorized_keys"
+conf=/etc/ssh/sshd_config.d/10-hardening.conf
+
+if [ -s "$keys" ]; then
+  desired='PasswordAuthentication no
+PermitRootLogin no
+KbdInteractiveAuthentication no'
+  if ! [ -f "$conf" ] || [ "$(sudo cat "$conf")" != "$desired" ]; then
+    printf '%s\n' "$desired" | sudo install -Dm644 /dev/stdin "$conf"
+    sudo systemctl reload sshd.service
+    echo "wrote $conf — password auth disabled"
+  fi
+else
+  cat <<EOF
+
+  sshd is running with password auth still enabled: $keys is missing or empty.
+  From the laptop:
+      ssh-copy-id <this-host>
+  then re-run just this script to harden (same idiom as the greetd script):
+      chezmoi execute-template < "\$(chezmoi source-path)/run_once_after_27-sshd.sh.tmpl" | bash
+
+EOF
+fi
+{{ end -}}
