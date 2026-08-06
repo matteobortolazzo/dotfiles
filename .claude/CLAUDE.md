@@ -113,6 +113,8 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `environment.tmpl` (secrets via 1Password).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
 - **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/niri`, `.config/ghostty`).
+- **Data vars** — three orthogonal axes prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host, which is also the remote dev box). The gaming desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true`.
+- **New data vars must be read with `dig`**, not `.foo` — `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so machines whose config predates a prompt would otherwise fail to apply. Use `{{ if dig "gaming" false . }}`, matching `dot_config/environment.tmpl`.
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
 
@@ -123,8 +125,13 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | niri, DankMaterialShell, polkit-gnome | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
+| Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
+
+### Gaming / sim-rig host
+
+The desktop (`gaming = true`) runs two modes from the same greetd: niri for the desktop *and* for sim racing native-fullscreen on its attached monitor, and `gamescope-session-cachyos` for couch gaming streamed to the TV. Sims deliberately do **not** run under gamescope. See `docs/gaming.md` for the reasoning, the Fanatec/`hid-fanatecff` pitfalls, and the Sunshine capture constraints (niri is not wlroots-based, so KMS capture is the HDR-capable path).
 
 ## Key commands
 
