@@ -123,9 +123,26 @@ unavailable. The options are:
 
 Validate the network with Steam Remote Play + Steam Link first: Steam does its own
 capture and encode, so it sidesteps all of the above and needs zero config. Then
-move to Sunshine + Moonlight for 4K/HDR and non-Steam titles — NVENC AV1 on
-Blackwell makes that comfortable. Prefer an Android TV Moonlight client that
-decodes AV1 over a TV's built-in app.
+move to Sunshine + Moonlight for HDR and non-Steam titles.
+
+### Client: Philips 55OLED854/12 (2019)
+
+The TV runs Android TV, so Moonlight's native client installs on it directly — no
+extra hardware. Its specs bound what is worth configuring:
+
+- **Encode HEVC, not AV1.** Philips only added AV1 decode in its 2021 sets. The
+  5080 encodes AV1 well and it is the wrong choice here.
+- **4K60 ceiling, no VRR** — four HDMI 2.0b ports. Don't chase 120Hz.
+- **~33 ms panel lag in Game mode**, which is the dominant term in the whole
+  chain and is fixed. A faster streaming box cannot improve it; an external
+  client only helps if the 2019 MediaTek SoC turns out to stutter on
+  low-latency decode. Start at 1440p60 / ~40 Mbps and push up.
+- **Enable Game mode and ALLM** (supported on Philips' 2019 OLEDs) before
+  judging any of this.
+- **Check whether the ethernet port is 100 Mbit** — common on Philips sets of
+  this era, and it caps the usable bitrate.
+- HDR10 is supported, so HDR streaming works — via the KMS capture path above.
+- It is an OLED: don't leave a paused game or static HUD up for hours.
 
 DMS's idle lock will lock the box out from under a running stream. Wire an idle
 inhibitor into Sunshine's app prep commands — check the verb with
