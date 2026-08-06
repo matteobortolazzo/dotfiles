@@ -12,6 +12,9 @@ set -euo pipefail
 # arch-desktop.txt:  {{ include "packages/arch-desktop.txt" | sha256sum }}
 # arch-system.txt:   {{ include "packages/arch-system.txt" | sha256sum }}
 {{- end }}
+{{- if dig "gaming" false . }}
+# arch-gaming.txt:   {{ include "packages/arch-gaming.txt" | sha256sum }}
+{{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
 
@@ -24,6 +27,18 @@ pkg_desktop="$src/arch-desktop.txt"
 
 pkg_system="$src/arch-system.txt"
 [ -f "$pkg_system" ] && sudo pacman -S --needed --noconfirm - < "$pkg_system"
+{{ end -}}
+
+{{ if and (dig "gaming" false .) (eq .chezmoi.osRelease.id "cachyos") -}}
+# CachyOS-only, unlike the other lists: cachyos-gaming-meta,
+# gamescope-session-cachyos and linux-cachyos-headers live in the CachyOS repos
+# and would abort the whole transaction on stock Arch.
+#
+# lib32-nvidia-utils is listed explicitly even though steam only needs "a lib32
+# Vulkan driver": with --noconfirm pacman auto-picks the first provider, which
+# can be lib32-mesa. Naming it pins the NVIDIA one.
+pkg_gaming="$src/arch-gaming.txt"
+[ -f "$pkg_gaming" ] && sudo pacman -S --needed --noconfirm - < "$pkg_gaming"
 {{ end -}}
 
 {{ if eq .profile "wsl" -}}

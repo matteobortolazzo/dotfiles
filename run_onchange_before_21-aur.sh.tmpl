@@ -10,6 +10,9 @@ set -euo pipefail
 {{- if eq .profile "main" }}
 # arch-aur-desktop.txt:  {{ include "packages/arch-aur-desktop.txt" | sha256sum }}
 {{- end }}
+{{- if dig "gaming" false . }}
+# arch-aur-gaming.txt:   {{ include "packages/arch-aur-gaming.txt" | sha256sum }}
+{{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
 
@@ -18,6 +21,15 @@ pkg="$src/arch-aur-terminal.txt"
 
 {{ if eq .profile "main" -}}
 pkg="$src/arch-aur-desktop.txt"
+[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+{{ end -}}
+
+{{ if dig "gaming" false . -}}
+# hid-fanatecff-dkms builds the out-of-tree hid_fanatec module the Fanatec
+# wheelbase needs for force feedback. It rebuilds on every kernel bump, so
+# linux-cachyos-headers is pinned in arch-gaming.txt — without headers a routine
+# pacman -Syu leaves the module unbuilt and the wheel silently loses FFB.
+pkg="$src/arch-aur-gaming.txt"
 [ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
 {{ end -}}
 
