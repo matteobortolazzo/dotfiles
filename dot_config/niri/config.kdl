@@ -37,6 +37,46 @@ output "eDP-1" {
     scale 2.0
 }
 
+// Gaming / sim-rig desktop: single Samsung Odyssey 49" ultrawide (5120x1440,
+// 32:9). Output blocks for absent connectors are ignored, so this stays in the
+// shared config — but "DP-1" is a guess. Run `niri msg outputs` on the desktop
+// and correct it; niri also matches on "make model serial", which is more robust
+// than a connector name if you ever move the cable.
+//
+// mode without @refresh picks the highest refresh rate for the resolution, so
+// this tracks 240Hz without pinning an exact fractional value.
+//
+// VRR: Samsung's FreeSync panels work as G-Sync Compatible on NVIDIA under
+// Wayland. on-demand=true keeps it off for static desktop content (where it can
+// flicker) and on for fullscreen — which is where the sim runs, native and
+// unnested, so it also gets direct scanout.
+output "DP-1" {
+    mode "5120x1440"
+    position x=0 y=0
+    scale 1.0
+    variable-refresh-rate on-demand=true
+
+    // Per-output layout override (niri 25.11+): accepts every top-level layout
+    // option. The globals are tuned for a laptop — proportion 1.0 default and a
+    // 0.5 minimum preset mean a single terminal 5120px wide and nothing
+    // narrower than 2560px. On 32:9, thirds and quarters are the useful units.
+    layout {
+        default-column-width { proportion 0.333333; }
+
+        preset-column-widths {
+            proportion 0.25
+            proportion 0.333333
+            proportion 0.5
+            proportion 0.666667
+        }
+
+        // "always", unlike the global "on-overflow": at 5120px wide, columns
+        // never overflow, so on-overflow would pin the focused window to the far
+        // left edge of a 49" panel instead of in front of you.
+        center-focused-column "always"
+    }
+}
+
 // Hyprland env = lines (HYPRCURSOR_SIZE dropped — Hyprland-only)
 environment {
     LIBVA_DRIVER_NAME "nvidia"
