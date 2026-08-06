@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "gaming" false .) -}}
+set -euo pipefail
+
+# Non-package setup for the gaming / sim-rig host. Packages come from
+# arch-gaming.txt and arch-aur-gaming.txt; everything here is the glue that
+# those packages do NOT do for you, and that fails silently when missing.
+
+user="${USER:-$(id -un)}"
+
+add_group() {
+  if ! getent group "$1" >/dev/null 2>&1; then
+    echo "group $1 does not exist — skipping (is the package installed?)"
+    return 0
+  fi
+  if id -nG "$user" | tr ' ' '\n' | grep -qxF "$1"; then
+    return 0
+  fi
+  sudo usermod -aG "$1" "$user"
+  echo "added $user to group $1 — log out and back in for it to take effect"
+}
+
+# hid-fanatecff ships fanatec.rules, which grants wheelbase access to the
+# `games` group and nothing adds you to it. Without this the wheel enumerates
+# as a plain joystick with no force feedback and no error anywhere.
+add_group games
+
+# gamemode needs group membership for its renice path.
+add_group gamemode
+
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+# sched-ext: scx_lavd is the latency-oriented scheduler, which is what a sim rig
+# wants. scx_loader picks it up from CachyOS's default config.
+if systemctl list-unit-files scx_loader.service >/dev/null 2>&1; then
+  sudo systemctl enable --now scx_loader.service
+else
+  echo "scx_loader.service not installed — skipping sched-ext setup"
+fi
+
+# Sunshine: niri is not wlroots-based, so Sunshine's wlr-export-dmabuf capture
+# path is unavailable. KMS capture is the compositor-agnostic fallback and the
+# only path with end-to-end HDR — it needs CAP_SYS_ADMIN. The xdg-desktop-portal
+# route also works (xdg-desktop-portal-gnome is already in arch-desktop.txt) but
+# has no HDR.
+if command -v sunshine >/dev/null 2>&1; then
+  sudo setcap cap_sys_admin+p "$(readlink -f "$(command -v sunshine)")"
+  # enable, not --now: the unit only makes sense inside a graphical session.
+  systemctl --user enable sunshine.service || \
+    echo "could not enable sunshine.service — enable it from inside the niri session"
+else
+  echo "sunshine not installed — skipping capture capability setup"
+fi
+
+# DKMS is the fragile part of this host. Warn loudly rather than discovering a
+# dead wheel mid-session.
+if ! modinfo hid_fanatec >/dev/null 2>&1; then
+  cat <<'EOF'
+
+  WARNING: hid_fanatec is not built for the running kernel.
+  Force feedback will not work. Check:
+      dkms status
+      pacman -Q linux-cachyos-headers
+  If you run a non-default CachyOS kernel, swap linux-cachyos-headers in
+  packages/arch-gaming.txt for that kernel's headers package.
+
+EOF
+fi
+
+cat <<'EOF'
+
+  Fanatec ClubSport V2/V2.5 is EXPERIMENTAL in hid-fanatecff — validate it
+  before trusting the rig:
+    - Put the wheelbase in PC mode before plugging it in, or the driver
+      will not bind.
+    - Confirm the device:  ls /dev/input/by-id/ | grep -i fanatec
+    - Test force feedback: fftest /dev/input/event<N>
+    - Tune rotation / FFB gain / centering with `oversteer`.
+  Per-title in Steam, set Controller -> Steam Input to "Disabled" for sims,
+  or Steam remaps the wheel axes into a virtual gamepad.
+
+EOF
+{{ end -}}
