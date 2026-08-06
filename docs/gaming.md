@@ -144,6 +144,18 @@ extra hardware. Its specs bound what is worth configuring:
 - HDR10 is supported, so HDR streaming works — via the KMS capture path above.
 - It is an OLED: don't leave a paused game or static HUD up for hours.
 
+Rejected client options, so they don't get re-litigated:
+
+- **`moonlight-xbox` on the Xbox already at the TV.** The UWP port is actively
+  maintained, but it needs Developer Mode and sideloading via the Device Portal,
+  and Dev Mode cannot run retail games — every switch between streaming and
+  playing an Xbox game is a multi-minute reboot. It also does nothing for the
+  panel lag, which is the dominant term. Only worth it if the console gets
+  repurposed as a dedicated streaming box.
+- **A €50 Google TV Streamer / Onn 4K Pro** beats the Xbox route if the TV's own
+  SoC stutters: no reboots, no dev account, modern decoder. Still does not
+  improve latency.
+
 DMS's idle lock will lock the box out from under a running stream. Wire an idle
 inhibitor into Sunshine's app prep commands — check the verb with
 `dms ipc call idle`.
