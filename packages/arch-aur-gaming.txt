@@ -1,0 +1,3 @@
+hid-fanatecff-dkms
+oversteer
+sunshine

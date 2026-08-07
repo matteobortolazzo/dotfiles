@@ -1,3 +1,11 @@
+{{- if ne (dig "gaming" false .) true }}
+# Remote dev on the gaming / sim-rig desktop. Agent forwarding rather than a key
+# on that box: its 1Password agent socket needs an unlocked GUI, which an SSH
+# session doesn't have. Rename to match your Tailscale MagicDNS hostname.
+Host desktop
+    ForwardAgent yes
+
+{{ end -}}
 Host *
     AddKeysToAgent yes
 {{- if eq .chezmoi.os "darwin" }}

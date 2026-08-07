@@ -44,6 +44,37 @@ No need to install new packages by hand.
 One package name per line. Comments (`# …`) and blank lines are **not** supported
 by `pacman -S -` / `paru -S -`, so keep the files clean.
 
+## Gaming host
+
+`arch-gaming.txt` and `arch-aur-gaming.txt` are gated on the `gaming` data var
+(`dig "gaming" false .`, since `.chezmoi.toml.tmpl` only runs on `chezmoi init`),
+not on `profile` — the gaming desktop is the same platform as the laptop and stays
+`profile = "main"`.
+
+Two deliberate exceptions to the rules above:
+
+- **`arch-gaming.txt` is CachyOS-only.** `cachyos-gaming-meta`,
+  `gamescope-session-cachyos` and `linux-cachyos-headers` are not in stock Arch's
+  repos and would abort the whole transaction, so the pacman script guards this
+  list on `.chezmoi.osRelease.id == "cachyos"` specifically.
+- **`linux-cachyos-headers` is kept**, even though plain `linux-headers` is
+  stripped. It is not the same package and pulls no second kernel, and
+  `hid-fanatecff-dkms` needs it: without headers a routine `pacman -Syu` leaves
+  the module unbuilt and the Fanatec wheel silently loses force feedback. Running
+  a non-default CachyOS kernel means swapping this for that kernel's headers.
+- **`lib32-nvidia-utils` is named explicitly.** Steam only depends on "a lib32
+  Vulkan driver"; with `--noconfirm` pacman auto-picks the first provider, which
+  can be `lib32-mesa`.
+
+`nvidia-open-dkms` stays stripped as documented above — it comes from the CachyOS
+NVIDIA checkbox. Note that the RTX 50-series (Blackwell) has no proprietary
+kernel-module option at all, so the open modules are mandatory rather than a
+preference.
+
+Controller DKMS modules (`xpadneo`, `xone`) are deliberately absent: Xbox
+controllers over USB and DualSense work with the in-tree drivers. Add them only
+if you hit a specific wireless dongle that doesn't.
+
 ## Mac / WSL
 
 macOS installs from `Brewfile` (`run_once_before_05-homebrew.sh.tmpl`). The
