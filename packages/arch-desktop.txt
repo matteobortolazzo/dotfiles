@@ -3,6 +3,7 @@ cava
 cliphist
 dms-shell
 ghostty
+gnome-disk-utility
 gvfs
 imagemagick
 inter-font
