@@ -153,3 +153,13 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 
 If greetd fails on boot: switch to TTY2 (`Ctrl+Alt+F2`) and run
 `sudo systemctl disable --now greetd` to fall back to plain TTY login.
+
+If the login screen isn't regreet, a different display manager owns the seat:
+
+```bash
+readlink -f /etc/systemd/system/display-manager.service   # who holds the alias
+systemctl is-enabled sddm greetd
+```
+
+`chezmoi apply` disables whatever it finds there in favour of greetd, effective
+next reboot. It never stops the running one — that would kill the session mid-apply.

@@ -9,6 +9,10 @@ set -euo pipefail
 # Service is enabled but NOT started — starting it here would kill the TTY
 # running chezmoi apply. Reboot to activate.
 #
+# This script owns display-manager.service: any other display manager holding
+# that alias (SDDM, from a CachyOS desktop profile) is disabled in favour of
+# greetd. See the block at the bottom.
+#
 # Recovery: if greetd fails on boot, switch to TTY2 (Ctrl+Alt+F2) and run
 #   sudo systemctl disable --now greetd
 # to drop back to plain TTY login. getty@tty1 is intentionally not masked.
@@ -63,6 +67,34 @@ if [ -n "$wallpaper" ] && [ -f "$wallpaper" ]; then
     sudo install -d -o root -g root -m 0755 /var/lib/regreet
     sudo install -m 0644 -o root -g root "$wallpaper" "$target_bg"
     echo "installed $target_bg (from $wallpaper)"
+  fi
+fi
+
+# Another display manager may already own the login seat: CachyOS's installer
+# enables SDDM for every desktop profile it offers, niri included. sddm.service
+# and greetd.service both declare Alias=display-manager.service, so systemd
+# refuses to enable greetd while that alias points elsewhere ("File
+# /etc/systemd/system/display-manager.service already exists and is a symlink
+# to …/sddm.service") — and under set -e that aborts this script. run_once only
+# records state on success, so it would then re-fail on every single apply.
+#
+# Disable the incumbent, but never with --now: stopping a running DM would kill
+# the graphical session mid-apply. greetd is likewise only enabled here, so both
+# halves of the swap land on the next reboot.
+dm_alias=/etc/systemd/system/display-manager.service
+if [ -L "$dm_alias" ]; then
+  current_dm=$(basename "$(readlink "$dm_alias")")
+  if [ "$current_dm" != "greetd.service" ]; then
+    echo "display-manager.service points at $current_dm — disabling it in favour of greetd"
+    if ! sudo systemctl disable "$current_dm"; then
+      echo "could not disable $current_dm — leaving the login path untouched." >&2
+      echo "fix by hand: sudo systemctl disable $current_dm && sudo systemctl enable greetd" >&2
+      exit 1
+    fi
+    if systemctl is-active --quiet "$current_dm"; then
+      echo "$current_dm still runs the current session; greetd takes over after reboot"
+    fi
+    echo "note: $current_dm is only disabled, not uninstalled — see packages/README.md"
   fi
 fi
 
