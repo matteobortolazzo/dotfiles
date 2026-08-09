@@ -39,6 +39,44 @@ Commit the result. Because the `run_onchange_*` scripts embed each list's
 re-runs it on the next `chezmoi apply` — on both clean and existing machines.
 No need to install new packages by hand.
 
+**Vet what you fold in.** `-Qqen` means *explicitly installed*, not *chosen* —
+CachyOS's installer marks its whole profile bundle explicit, so a raw dump mixes
+your decisions with the installer's. Anything you don't recognise, check with
+`pacman -Qi <pkg>` / `pactree -r <pkg>` before adding it to a list.
+
+## Audit for untracked packages
+
+The lists are **additive only**: `pacman -S --needed` installs what's missing and
+never removes anything. A package the installer put on the machine but that no
+list mentions therefore stays forever, invisible to every apply — and can still
+win a dependency resolution.
+
+Both failure modes have already bitten:
+
+- **Captured** — `joyutils` came from the CachyOS installer's set, got folded into
+  `arch-gaming.txt` as if it were intent, and then conflicted with `linuxconsole`
+  on every apply.
+- **Untracked** — `noctalia-qs` was in no list at all, which is exactly why it
+  survived: it quietly satisfied `dms-shell`'s `quickshell` dependency, and
+  nothing in the apply chain had any reason to notice.
+
+List everything explicitly installed but untracked:
+
+```bash
+cd "$(chezmoi source-path)/packages"
+comm -13 \
+  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt | sort -u) \
+  <(pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$' | sort)
+```
+
+Swap in the `arch-aur-*.txt` lists and `pacman -Qqem` for the foreign side. Every
+line is either an installer leftover or something you added by hand and forgot to
+record — decide which, then track it or `pacman -Rns` it. `pactree -r <pkg>` first
+for anything that looks load-bearing.
+
+Worth running on each host separately: same installer, so the laptop and the
+desktop accumulate their own copies.
+
 ## Format
 
 One package name per line. Comments (`# …`) and blank lines are **not** supported

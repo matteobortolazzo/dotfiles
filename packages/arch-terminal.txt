@@ -30,8 +30,8 @@ opencode
 openssh
 pacman-contrib
 poppler
-scaleway-cli
 ripgrep
+scaleway-cli
 sudo
 television
 tmux
