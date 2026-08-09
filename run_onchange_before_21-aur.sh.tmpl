@@ -15,13 +15,37 @@ set -euo pipefail
 {{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
+failed=""
 
-pkg="$src/arch-aur-terminal.txt"
-[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+# AUR builds break far more often than repo installs — stale checksums after an
+# upstream re-release, an unimported PGP key, a download URL that moved. Under
+# --noconfirm every one of those becomes an abort rather than a prompt, and a
+# single list is one yay invocation, so one bad package used to take every
+# package after it down with it (apple-fonts blocking 1Password and Chrome).
+#
+# Batch first because it's much faster, then fall back to one-at-a-time so the
+# healthy packages still land and the report names exactly what needs a human.
+# Never fatal: cosmetic packages must not strand an unattended apply.
+install_list() {
+  file="$1"
+  [ -f "$file" ] && [ -s "$file" ] || return 0
+
+  if yay -S --needed --noconfirm - < "$file"; then
+    return 0
+  fi
+
+  echo "aur: batch install of $(basename "$file") failed — retrying individually" >&2
+  # `|| [ -n "$pkg" ]` so a list without a trailing newline keeps its last entry.
+  while read -r pkg || [ -n "$pkg" ]; do
+    [ -n "$pkg" ] || continue
+    yay -S --needed --noconfirm "$pkg" || failed="$failed $pkg"
+  done < "$file"
+}
+
+install_list "$src/arch-aur-terminal.txt"
 
 {{ if eq .profile "main" -}}
-pkg="$src/arch-aur-desktop.txt"
-[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+install_list "$src/arch-aur-desktop.txt"
 {{ end -}}
 
 {{ if dig "gaming" false . -}}
@@ -29,12 +53,19 @@ pkg="$src/arch-aur-desktop.txt"
 # wheelbase needs for force feedback. It rebuilds on every kernel bump, so
 # linux-cachyos-headers is pinned in arch-gaming.txt — without headers a routine
 # pacman -Syu leaves the module unbuilt and the wheel silently loses FFB.
-pkg="$src/arch-aur-gaming.txt"
-[ -f "$pkg" ] && [ -s "$pkg" ] && yay -S --needed --noconfirm - < "$pkg"
+install_list "$src/arch-aur-gaming.txt"
 {{ end -}}
 
 {{ if eq .profile "wsl" -}}
 # wslu provides wslview (used as $BROWSER in .zshrc)
-yay -S --needed --noconfirm wslu
+yay -S --needed --noconfirm wslu || failed="$failed wslu"
 {{ end -}}
+
+if [ -n "$failed" ]; then
+  echo "" >&2
+  echo "aur: these packages need manual attention:$failed" >&2
+  echo "aur: --noconfirm turns prompts into failures, so run 'yay -S <pkg>' by" >&2
+  echo "aur: hand to see the real question. Stale checksum after an upstream" >&2
+  echo "aur: re-release: --mflags --skipchecksums. Unknown key: gpg --recv-keys." >&2
+fi
 {{ end -}}

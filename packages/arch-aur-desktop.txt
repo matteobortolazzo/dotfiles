@@ -1,5 +1,4 @@
 1password
-apple-fonts
 google-chrome
 jetbrains-toolbox
 obsidian-bin
