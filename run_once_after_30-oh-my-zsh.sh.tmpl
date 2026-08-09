@@ -2,8 +2,17 @@
 {{ if eq .chezmoi.os "linux" "darwin" -}}
 set -euo pipefail
 
-[ -d "$HOME/.oh-my-zsh" ] && exit 0
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
 
-RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# CHSH=no above skips the installer's own (interactive) chsh prompt; set the
+# shell ourselves so it stays idempotent. Distros like CachyOS default fresh
+# accounts to fish, which silently drifts every shell config in this repo out
+# of effect until the login shell is fixed to zsh.
+current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+if [ "$current_shell" != "/bin/zsh" ]; then
+  sudo chsh -s /bin/zsh "$USER"
+fi
 {{ end -}}
