@@ -75,6 +75,11 @@ Controller DKMS modules (`xpadneo`, `xone`) are deliberately absent: Xbox
 controllers over USB and DualSense work with the in-tree drivers. Add them only
 if you hit a specific wireless dongle that doesn't.
 
+`joyutils` is deliberately absent too — it conflicts with `linuxconsole` (both
+ship `jstest` and `jscal`) and aborts the gaming transaction. `linuxconsole` is
+the one to keep: it is the superset, and its `fftest` is what the Fanatec
+force-feedback check in `docs/gaming.md` uses.
+
 ## Mac / WSL
 
 macOS installs from `Brewfile` (`run_once_before_05-homebrew.sh.tmpl`). The

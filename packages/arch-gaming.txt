@@ -2,7 +2,6 @@ cachyos-gaming-meta
 gamescope-session-cachyos
 lib32-nvidia-utils
 linux-cachyos-headers
-scx-scheds
-protontricks
-joyutils
 linuxconsole
+protontricks
+scx-scheds
