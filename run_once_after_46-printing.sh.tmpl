@@ -2,10 +2,17 @@
 {{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
 set -euo pipefail
 
-# Printing: CUPS daemon + Avahi/nss-mdns for driverless IPP (AirPrint) discovery.
-# Packages come from arch-system.txt (cups, cups-pdf, avahi, nss-mdns) and
-# arch-desktop.txt (system-config-printer GUI). Add a printer afterwards via
-# system-config-printer, the web UI at http://localhost:631, or `lpadmin`.
+# Printing + scanning: CUPS daemon + Avahi/nss-mdns for driverless IPP
+# (AirPrint) discovery over the network, ipp-usb for the same driverless path
+# over a USB cable, and hplip for HP devices that predate IPP Everywhere.
+# Packages come from arch-system.txt (cups, cups-pdf, avahi, nss-mdns, ipp-usb,
+# hplip, sane, sane-airscan) and arch-desktop.txt (system-config-printer,
+# simple-scan). Add a printer afterwards via system-config-printer, the web UI
+# at http://localhost:631, `lpadmin`, or `hp-setup -i` for HP over USB.
+#
+# ipp-usb has no enable step: its udev rule (ENV{SYSTEMD_WANTS}) starts the
+# service when a compatible printer is plugged in. A printer already connected
+# when ipp-usb was installed needs a replug or `sudo systemctl start ipp-usb`.
 
 if command -v cupsd >/dev/null 2>&1; then
   sudo systemctl enable --now cups.socket
@@ -30,4 +37,15 @@ if [ -f "$nsswitch" ] && ! grep -qE '^hosts:.*mdns' "$nsswitch"; then
   fi
   echo "added mdns_minimal to $nsswitch hosts line"
 fi
+
+# Direct device access: hplip's USB backend wants `lp`, and the sane-backends
+# udev rules tag some scanners GROUP="scanner" rather than relying on uaccess.
+# Idempotent; takes effect on the next login.
+me=$(id -un)
+for group in lp scanner; do
+  if getent group "$group" >/dev/null 2>&1 && ! id -nG "$me" | grep -qw "$group"; then
+    sudo usermod -aG "$group" "$me"
+    echo "added $me to the $group group — log out and back in for it to apply"
+  fi
+done
 {{ end -}}

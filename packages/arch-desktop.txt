@@ -21,6 +21,7 @@ polkit-gnome
 qt5-wayland
 qt6-multimedia-ffmpeg
 qt6-wayland
+simple-scan
 swayimg
 system-config-printer
 thunar
