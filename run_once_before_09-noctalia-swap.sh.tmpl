@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# One-time migration, ordered before 10-pacman so the README quick start
+# (`chezmoi init --apply`) stays a single unattended command on a machine that
+# already has noctalia-qs.
+#
+# noctalia-qs provides quickshell, which arch-desktop.txt now names explicitly
+# to pin the provider. Installing quickshell on top of it either prompts (if
+# the conflict is declared) or fails outright on /usr/bin/quickshell already
+# existing (if it is not) — the second case aborts the whole --noconfirm list
+# install regardless of confirmation. Removing noctalia-qs first avoids both.
+#
+# Fresh machines never enter the body: noctalia-qs isn't installed yet.
+# Delete this script once every machine has been migrated.
+
+command -v pacman >/dev/null 2>&1 || exit 0
+pacman -Qq noctalia-qs >/dev/null 2>&1 || exit 0
+
+# Refresh the db before asking whether quickshell exists — on a machine that
+# hasn't synced recently the answer would otherwise be stale. Nothing installs
+# from this state; the install below is a full -Syu, not a partial upgrade.
+sudo pacman -Sy --noconfirm >/dev/null
+
+if ! pacman -Si quickshell >/dev/null 2>&1; then
+  echo "quickshell not in any configured repo — keeping noctalia-qs so dms-shell" >&2
+  echo "keeps a working runtime. Move quickshell to arch-aur-desktop.txt if it" >&2
+  echo "only exists in the AUR, then re-run chezmoi apply." >&2
+  exit 0
+fi
+
+# -Rdd skips the dependency check: dms-shell requires quickshell, which only
+# noctalia-qs currently provides, so a plain -R refuses. The install restores
+# the dependency immediately — 10-pacman would too, but doing it here keeps
+# the unsatisfied window inside a single script.
+echo "swapping noctalia-qs -> quickshell"
+sudo pacman -Rdd --noconfirm noctalia-qs
+sudo pacman -Syu --needed --noconfirm quickshell
+
+# The patched DMS tree from run_after_48 exists only to work around
+# noctalia-qs; dms-run-session falls through to the packaged DMS without it.
+rm -rf "$HOME/.local/share/dms-shell-hotfix"
+
+# Best-effort: a live session keeps running the old binary until DMS restarts.
+# Absent on a fresh bootstrap, hence the guard.
+if systemctl --user list-unit-files dms.service >/dev/null 2>&1; then
+  systemctl --user restart dms.service || echo "dms restart failed — log out and back in"
+fi
+{{ end -}}

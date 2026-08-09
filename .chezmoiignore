@@ -1,6 +1,5 @@
 docs
 packages
-scripts
 system
 
 {{ if ne .profile "main" -}}
