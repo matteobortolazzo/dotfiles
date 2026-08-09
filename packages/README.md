@@ -51,7 +51,7 @@ never removes anything. A package the installer put on the machine but that no
 list mentions therefore stays forever, invisible to every apply — and can still
 win a dependency resolution.
 
-Both failure modes have already bitten:
+Both failure modes have already bitten — three times so far:
 
 - **Captured** — `joyutils` came from the CachyOS installer's set, got folded into
   `arch-gaming.txt` as if it were intent, and then conflicted with `linuxconsole`
@@ -59,6 +59,16 @@ Both failure modes have already bitten:
 - **Untracked** — `noctalia-qs` was in no list at all, which is exactly why it
   survived: it quietly satisfied `dms-shell`'s `quickshell` dependency, and
   nothing in the apply chain had any reason to notice.
+- **Untracked, and enabled** — `sddm` came with a CachyOS desktop profile, which
+  enables it as the display manager. It then held `display-manager.service`, the
+  alias greetd also wants, so `systemctl enable greetd` failed and took the whole
+  greetd script down with it on every apply.
+  `run_once_after_45-greetd.sh.tmpl` now disables an incumbent DM, but disabling
+  is not uninstalling — the package is still here, still untracked.
+
+The cheapest fix is upstream of all three: **install with no desktop environment**
+(see the main [README](../README.md#installer-choices-cachyos--arch)). The lists
+already cover the full graphical stack.
 
 List everything explicitly installed but untracked:
 

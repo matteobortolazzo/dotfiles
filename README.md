@@ -32,6 +32,14 @@ That single command installs chezmoi, clones this repo, prompts for the profile,
 
 Secrets are skipped on the first pass if the 1Password CLI isn't signed in yet (see below) — everything else completes.
 
+### Installer choices (CachyOS / Arch)
+
+**Pick no desktop environment.** Everything graphical comes from these dotfiles — niri, DMS, portals and fonts via `packages/arch-desktop.txt`, the greetd/regreet login via `arch-system.txt` and `system/greetd/`. A desktop profile from the installer (niri included) can only *add* packages no list tracks, and the lists are additive: `pacman -S --needed` never removes anything, so installer leftovers persist invisibly and can still win a dependency resolution. That has bitten three times now — `joyutils`, `noctalia-qs`, and SDDM.
+
+SDDM is the one that breaks the boot: CachyOS enables it for every desktop profile, so it holds `display-manager.service` before greetd is ever installed. `run_once_after_45-greetd.sh.tmpl` detects and disables an incumbent display manager, but it deliberately doesn't uninstall anything — run the audit in [`packages/README.md`](packages/README.md) after a profile install to find the rest of the residue.
+
+**Keep the NVIDIA driver checkbox** on machines that have one. It's independent of the desktop choice, and `nvidia-open-dkms` is deliberately stripped from the package lists precisely because it comes from there.
+
 ### 1Password (secrets + SSH agent)
 
 Secrets in `~/.config/environment` and the SSH agent come from 1Password. Until `op` is installed *and* signed in, `chezmoi apply` simply skips them; re-run apply afterwards to fill them in.
