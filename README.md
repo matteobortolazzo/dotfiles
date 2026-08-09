@@ -28,7 +28,7 @@ Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`.
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply matteobortolazzo
 ```
 
-That single command installs chezmoi, clones this repo, prompts for the profile, and applies. On Arch it installs all packages (pacman + AUR via yay), enables system services (NetworkManager, bluetooth, greetd, …), wires DMS to autostart with niri, and bootstraps the toolchain (oh-my-zsh, rustup, dotnet, fnm/node, tpm). **Reboot when it finishes** — greetd is enabled but deliberately not started mid-apply.
+That single command installs chezmoi, clones this repo, prompts for the profile, and applies. On Arch it installs all packages (pacman + AUR via yay), enables system services (NetworkManager, bluetooth, docker, greetd, …), wires DMS to autostart with niri, and bootstraps the toolchain (oh-my-zsh, rustup, dotnet, fnm/node, tpm). **Reboot when it finishes** — greetd is enabled but deliberately not started mid-apply.
 
 Secrets are skipped on the first pass if the 1Password CLI isn't signed in yet (see below) — everything else completes.
 
@@ -82,7 +82,7 @@ Two non-obvious ones:
 - **`35-npm-globals`** installs an fnm-managed Node first if the current one is `system` or absent. Without it npm resolves to the system (Homebrew) prefix, which can be foreign-owned — global installs then fail with `EACCES`.
 - **`50-jetbrains-wayland`** is a `run_after_` (every apply, not once): it appends `-Dawt.toolkit.name=WLToolkit` to each IDE's `*64.vmoptions` for native Wayland rendering, and new JetBrains IDEs only create that file after their first launch.
 
-Docker-in-Docker via sysbox has its own section below.
+Docker and sysbox (Docker-in-Docker) have their own sections below.
 
 ## Gaming / sim-rig host
 
@@ -123,6 +123,17 @@ apply: writes `/etc/modprobe.d/nvidia-power-management.conf` with
 enables `nvidia-{suspend,resume,hibernate}.service`. The script is a no-op
 on hosts without `nvidia-suspend.service` installed. A reboot is required
 after first apply for the modprobe option to take effect.
+
+## Docker
+
+Arch ships `docker` with its units disabled and the `docker` group empty, so a
+fresh machine has no `/var/run/docker.sock` and no unprivileged access to it —
+`docker ps` fails with `dial unix /var/run/docker.sock: no such file or
+directory`. `24-services` enables `docker.socket` (socket activation starts
+`dockerd` on the first client connection) and adds you to the `docker` group.
+Group membership only takes effect on the next login, so it comes for free with
+the post-install reboot; after a later apply, log out and back in (or `newgrp
+docker` for one shell). On WSL the same setup lives in `60-wsl` instead.
 
 ## Sysbox (nested Docker-in-Docker)
 

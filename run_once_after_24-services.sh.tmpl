@@ -17,4 +17,18 @@ enable_unit() {
 enable_unit NetworkManager.service
 enable_unit bluetooth.service
 enable_unit power-profiles-daemon.service
+
+# Docker ships its units disabled on Arch, so a fresh machine has no
+# /var/run/docker.sock at all. Enable the socket rather than the service:
+# socket activation starts dockerd on the first client connection. Sysbox (25)
+# assumes a working engine, so this has to land first.
+enable_unit docker.socket
+
+# Reaching /var/run/docker.sock without sudo needs the docker group; the package
+# creates it empty. Idempotent; takes effect on the next login.
+me=$(id -un)
+if getent group docker >/dev/null 2>&1 && ! id -nG "$me" | grep -qw docker; then
+  sudo usermod -aG docker "$me"
+  echo "added $me to the docker group — log out and back in for it to apply"
+fi
 {{ end -}}
