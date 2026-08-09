@@ -146,9 +146,12 @@ from the AUR since there's no official package.
 
 - Enables `sysbox.service` — AUR packages don't auto-enable systemd units the
   way sysbox's official `.deb` postinst does.
-- Registering `sysbox-runc` as a Docker runtime (`/etc/docker/daemon.json`
-  `runtimes.sysbox-runc`) isn't automated — do it once by hand, then
-  `sudo systemctl restart docker`.
+- Registers `sysbox-runc` as a Docker runtime by installing
+  `system/docker/daemon.json` to `/etc/docker/daemon.json` (and restarting a
+  running dockerd). The AUR package doesn't do this the way sysbox's `.deb`
+  postinst does, so without it `docker run --runtime=sysbox-runc` fails with
+  `unknown or invalid runtime name`. The script owns that file wholesale — put
+  any other daemon settings in `system/docker/daemon.json`, not in `/etc`.
 - Loads netfilter modules (`ip_tables`, `iptable_nat`, `ip6_tables`,
   `ip6table_nat`, `nf_nat`) via `system/docker/modules-load-docker-iptables.conf`.
   systemd >= 259 dropped automatic legacy-iptables module loading, so without
@@ -164,7 +167,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet, docker iptables modules); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` via sudo.
 - `docs/` — reference material not deployed anywhere (`gaming.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 

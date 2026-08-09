@@ -2,21 +2,42 @@
 {{ if eq .profile "main" -}}
 set -euo pipefail
 
+src_dir="{{ .chezmoi.sourceDir }}/system/docker"
+
+# system/ files live outside $HOME, so chezmoi can't manage them directly —
+# mirror them by hand. Returns 0 only when the target actually changed, so
+# callers can restart services conditionally.
+install_system_file() {
+  local src=$1 target=$2
+  if [ -f "$target" ] && sudo cmp -s "$src" "$target"; then
+    return 1
+  fi
+  sudo install -D -m 0644 -o root -g root "$src" "$target"
+  echo "installed $target"
+}
+
 # AUR packages don't auto-enable systemd services (unlike sysbox's .deb),
 # so enable it explicitly once installed.
 if systemctl list-unit-files sysbox.service >/dev/null 2>&1; then
   sudo systemctl enable --now sysbox.service
 fi
 
+# Docker only learns about sysbox-runc if it's registered as a runtime, and the
+# AUR package never touches /etc/docker the way sysbox's .deb postinst does —
+# without this, `docker run --runtime=sysbox-runc` fails with "unknown or
+# invalid runtime name". NOTE: this owns daemon.json wholesale; any other
+# daemon settings belong in system/docker/daemon.json, not in /etc by hand.
+if install_system_file "$src_dir/daemon.json" /etc/docker/daemon.json; then
+  # try-restart, so a socket-activated dockerd that isn't currently running
+  # stays down and just picks the new config up on the next connection.
+  sudo systemctl try-restart docker.service
+fi
+
 # systemd >= 259 dropped automatic legacy-iptables module loading, so Docker's
 # NAT chain setup fails (surfaces inside sysbox-runc containers running
 # dockerd as "can't load module ip_tables ... Operation not permitted") unless
 # these are already loaded on the host. See system/docker/ for details.
-src="{{ .chezmoi.sourceDir }}/system/docker/modules-load-docker-iptables.conf"
-target=/etc/modules-load.d/docker-iptables.conf
-if ! [ -f "$target" ] || ! sudo cmp -s "$src" "$target"; then
-  sudo install -m 0644 -o root -g root "$src" "$target"
-  echo "installed $target"
-fi
+install_system_file "$src_dir/modules-load-docker-iptables.conf" \
+  /etc/modules-load.d/docker-iptables.conf || true
 sudo modprobe ip_tables iptable_nat ip6_tables ip6table_nat nf_nat
 {{ end -}}
