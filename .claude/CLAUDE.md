@@ -113,7 +113,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `environment.tmpl` (secrets via 1Password).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
 - **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/niri`, `.config/ghostty`).
-- **Data vars** — three orthogonal axes prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host, which is also the remote dev box). The gaming desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true`.
+- **Data vars** — four orthogonal axes prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host), `dev` (role: remote dev box — inbound sshd + the ufw rule for it; defaults to the `gaming` answer). The desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true` and `dev = true`.
 - **New data vars must be read with `dig`**, not `.foo` — `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so machines whose config predates a prompt would otherwise fail to apply. Use `{{ if dig "gaming" false . }}`, matching `dot_config/environment.tmpl`.
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
@@ -126,6 +126,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
+| sshd + ufw rules (`27-sshd`, `28-firewall`) | `dev` only | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
 

@@ -1,17 +1,23 @@
-{{- /* profile = platform (packages, compositor, interop). org = ownership. gaming = role.
-       Keep them orthogonal: the gaming desktop is the same platform as the laptop
-       (CachyOS + niri + DMS + greetd), so it stays profile "main" and only adds the
-       gaming role on top. Templates read it with `dig "gaming" false .`, not `.gaming`,
-       because .chezmoi.toml.tmpl runs on `chezmoi init` only — machines whose config
-       predates this prompt must keep applying. */ -}}
+{{- /* profile = platform (packages, compositor, interop). org = ownership.
+       gaming and dev = roles. Keep them orthogonal: the gaming desktop is the
+       same platform as the laptop (CachyOS + niri + DMS + greetd), so it stays
+       profile "main" and only layers roles on top. `dev` defaults to the gaming
+       answer because that box was the first remote dev box, but they are now
+       independent — a headless dev box needs no Steam, and a couch-gaming host
+       needs no inbound sshd. Templates read the role vars with
+       `dig "dev" false .`, not `.dev`, because .chezmoi.toml.tmpl runs on
+       `chezmoi init` only — machines whose config predates a prompt must keep
+       applying. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
-{{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine, sshd)" false -}}
+{{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
+{{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
 
 [data]
   profile = {{ $profile | quote }}
   org = {{ $org | quote }}
   gaming = {{ $gaming }}
+  dev = {{ $dev }}
 
 [onepassword]
   mode = "account"

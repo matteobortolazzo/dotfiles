@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "gaming" false .) -}}
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "dev" false .) -}}
 set -euo pipefail
 
-# The gaming desktop doubles as the remote dev box, so sshd is gated on the
-# gaming role rather than on a role var of its own — split them the moment a
-# machine wants one without the other.
+# Gated on the `dev` role, not `gaming`: the desktop happens to be both, but
+# inbound sshd is what makes a box a remote dev target, and a couch-gaming host
+# has no business accepting logins.
 #
 # Tailscale (run_once_after_23-tailscale.sh.tmpl) covers off-LAN access; this is
-# for plain `ssh desktop` + tmux on the local network.
+# for plain `ssh desktop` + tmux on the local network. Opening the port in the
+# firewall is 28-firewall's job — sshd listening is not the same as reachable.
 
 if ! systemctl list-unit-files sshd.service >/dev/null 2>&1; then
   echo "sshd.service not installed — skipping (openssh is in arch-terminal.txt)"

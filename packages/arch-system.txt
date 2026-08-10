@@ -18,3 +18,4 @@ sane
 sane-airscan
 sof-firmware
 tailscale
+ufw

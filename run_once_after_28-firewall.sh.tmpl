@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "dev" false .) -}}
+set -euo pipefail
+
+# ufw ships (and CachyOS's installer leaves) a default-deny inbound policy with
+# an empty rule set. That state is silent by design: sshd binds 0.0.0.0:22 and
+# logs "Server listening", the port shows up in `ss -tlnp`, and every inbound
+# SYN is still dropped in netfilter before sshd ever sees it — the journal has
+# no connection line to hint at it. So the port has to be opened explicitly
+# alongside 27-sshd, or a dev box looks up and answers nothing.
+#
+# Rules are added *before* the enable, so this is safe to run over SSH.
+
+if ! command -v ufw >/dev/null 2>&1; then
+  echo "ufw not installed — skipping (it's in arch-system.txt)"
+  exit 0
+fi
+
+# `limit` = allow, but throttle a source to 6 connections/30s, which blunts
+# brute force without fail2ban. No interface is pinned: the laptop is wireless
+# and the desktop wired, and ufw rules are the same either way.
+sudo ufw limit 22/tcp comment 'ssh (rate-limited)'
+
+# Tailscale traffic is already authenticated by the tailnet, and the peer IPs
+# are not knowable up front — allow SSH on the interface rather than by source.
+# Kept to port 22: allowing the whole interface would expose every listener on
+# the box to the tailnet.
+sudo ufw allow in on tailscale0 to any port 22 proto tcp comment 'ssh over tailscale'
+
+{{ if dig "gaming" false . -}}
+# Moonlight -> Sunshine. Enabling a default-deny firewall without these silently
+# kills couch streaming: the TV client just fails to find the host. Ports are
+# Sunshine's defaults (base port 47989); change them here if the base moves.
+sudo ufw allow 47984:47990/tcp comment 'sunshine control + web ui'
+sudo ufw allow 48010/tcp comment 'sunshine rtsp'
+sudo ufw allow 47998:48000/udp comment 'sunshine video/audio/control'
+sudo ufw allow 48002/udp comment 'sunshine mic'
+sudo ufw allow 48010/udp comment 'sunshine rtsp'
+
+{{ end -}}
+if sudo ufw status | grep -q '^Status: active'; then
+  sudo ufw reload
+  echo "ufw already active — rules added and reloaded"
+else
+  sudo ufw --force enable
+  echo "ufw enabled with the rules above"
+fi
+
+sudo ufw status verbose
+{{ end -}}

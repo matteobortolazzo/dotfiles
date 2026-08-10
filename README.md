@@ -4,13 +4,14 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 
 ## Machine axes
 
-`chezmoi init` prompts once for three independent values, stored in `~/.config/chezmoi/chezmoi.toml`:
+`chezmoi init` prompts once for four independent values, stored in `~/.config/chezmoi/chezmoi.toml`:
 
 | Prompt | Axis | Values |
 |---|---|---|
 | `profile` | Platform — packages, compositor, interop | `main` / `wsl` / `mac` |
 | `org` | Work ownership; must match the 1Password item name in the Private vault | org name, blank for personal |
-| `gaming` | Role — gaming / sim-rig host, which doubles as the remote dev box | `true` / `false` |
+| `gaming` | Role — gaming / sim-rig host | `true` / `false` |
+| `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
 
 | Profile | What you get |
 |---|---|
@@ -18,9 +19,9 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `wsl` | Terminal stack + docker, WSL host tuning, Windows SSH-agent bridge |
 | `mac` | Terminal stack via Homebrew/Brewfile |
 
-They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with `gaming = true` layered on, not a profile of its own.
+They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
 
-Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`. `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so a machine whose config predates a prompt would otherwise fail every apply.
+Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`. `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so a machine whose config predates a prompt would otherwise fail every apply. The flip side: an existing machine is **not** re-prompted when a var is added, so `dig` returns the default and the new role is off until you run `chezmoi init` again (it keeps the existing answers and only asks the new question) or add the line to `~/.config/chezmoi/chezmoi.toml` by hand.
 
 ## Quick start (empty machine)
 
@@ -90,9 +91,25 @@ Docker and sysbox (Docker-in-Docker) have their own sections below.
 
 - `arch-gaming.txt` + `arch-aur-gaming.txt` — Steam, `gamescope-session-cachyos`, Sunshine, `hid-fanatecff-dkms`. **CachyOS-only**: several of these aren't in stock Arch's repos and would abort the whole transaction.
 - `26-gaming` — the glue the packages don't do and that fails *silently* when missing: `games` group (hid-fanatecff's udev rules grant wheelbase access to it, and nothing adds you — without it the wheel enumerates as a plain joystick with no force feedback and no error anywhere), `gamemode` group, udev reload, and `scx_loader` for the latency-oriented `scx_lavd` scheduler.
-- `27-sshd` — the desktop is also the remote dev box. Gated on `gaming` rather than a role var of its own; split them the moment a machine wants one without the other. Hardening (`PasswordAuthentication no`) only applies once an authorized key is actually present.
-
 Two sessions run from the same greetd: niri for the desktop *and* for sim racing native-fullscreen, `gamescope-session-cachyos` for couch gaming on the TV. Sims deliberately do not run under gamescope.
+
+Sunshine's ports are opened by `28-firewall` (below) — that script is gated on `dev`, so a gaming host that is *not* also a dev box never enables ufw and needs no rules.
+
+## Remote dev box
+
+`dev = true` (the desktop) turns the machine into an SSH target. Two scripts, and both are needed — either one alone leaves the box looking up and answering nothing:
+
+- `27-sshd` — enables `sshd.service`. Hardening (`PasswordAuthentication no`, `PermitRootLogin no`) is written to `/etc/ssh/sshd_config.d/10-hardening.conf` **only once `~/.ssh/authorized_keys` is non-empty**. Writing it against an empty key file would lock out every remote login on a box whose whole point is being headless. Until then the script prints the `ssh-copy-id` + re-run instructions.
+- `28-firewall` — opens port 22 in ufw (`limit`, so brute force is throttled without fail2ban), plus an interface rule for `tailscale0` and, on a `gaming` host, Sunshine's ports.
+
+The firewall half is the one that bites, because its failure mode is indistinguishable from a dead service. ufw's default inbound policy is `DROP`, and CachyOS's installer can leave ufw *enabled with an empty rule set* — at which point `systemctl status sshd` is green, `Server listening on 0.0.0.0 port 22` is in the journal, `ss -tlnp` shows the socket, and every inbound SYN is still dropped in netfilter before sshd sees it. There is no log line for a packet that never arrives, so the journal shows nothing at all. Diagnose it with:
+
+```bash
+sudo ufw status verbose     # "Status: active" + no 22/tcp rule == this bug
+journalctl -u sshd -n 20    # zero connection lines == packets aren't arriving
+```
+
+`28-firewall` adds its rules *before* enabling ufw, so it is safe to run over an existing SSH session.
 
 ## WSL notes
 
