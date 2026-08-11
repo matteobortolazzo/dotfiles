@@ -11,7 +11,12 @@ fi
 # shell ourselves so it stays idempotent. Distros like CachyOS default fresh
 # accounts to fish, which silently drifts every shell config in this repo out
 # of effect until the login shell is fixed to zsh.
-current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+# macOS has no getent; read the login shell from Directory Services instead.
+if command -v getent >/dev/null 2>&1; then
+  current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+else
+  current_shell="$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')"
+fi
 if [ "$current_shell" != "/bin/zsh" ]; then
   sudo chsh -s /bin/zsh "$USER"
 fi
