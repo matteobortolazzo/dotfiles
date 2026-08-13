@@ -9,6 +9,7 @@ system
 .config/xdg-desktop-portal
 .config/DankMaterialShell
 .config/environment.d
+.config/systemd/user/captive-portal.service
 {{ end -}}
 
 {{ if ne .profile "wsl" -}}

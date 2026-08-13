@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# Captive-portal login (hotel / airport / train wifi). Two halves, because the
+# two pieces live on opposite sides of $HOME:
+#
+#   detection — NetworkManager's connectivity check. System-level config, so it
+#     is mirrored from {{ .chezmoi.sourceDir }}/system/ into /etc via sudo, the
+#     same way 45-greetd handles greetd's configs.
+#   reaction  — captive-portal.service, a user unit running the watcher script.
+#     Pulled in by niri.service the way dms is (47-dms).
+#
+# Neither half is useful alone: NM would sit in the `portal` state with nothing
+# watching, or the watcher would wait on a state NM never reports.
+
+if ! command -v nmcli >/dev/null 2>&1; then
+  echo "NetworkManager not installed — skipping (run: sudo pacman -S networkmanager)"
+  exit 0
+fi
+
+# --- detection: connectivity check config ---------------------------------
+
+src="{{ .chezmoi.sourceDir }}/system/NetworkManager/20-connectivity.conf"
+conf=/etc/NetworkManager/conf.d/20-connectivity.conf
+
+if ! [ -f "$conf" ] || ! sudo cmp -s "$src" "$conf"; then
+  sudo install -d -o root -g root -m 0755 /etc/NetworkManager/conf.d
+  sudo install -m 0644 -o root -g root "$src" "$conf"
+  echo "installed $conf"
+
+  # Config-only change: NM re-reads conf.d on SIGHUP (ExecReload) without
+  # tearing down active links, so this is safe over the wifi it manages — and
+  # over SSH on the `dev` box.
+  sudo systemctl reload NetworkManager.service \
+    || echo "reload failed — the new config applies on the next NetworkManager restart"
+fi
+
+# --- reaction: in-session watcher ----------------------------------------
+
+# The unit was just written by this same apply, so the user manager has not seen
+# it yet.
+systemctl --user daemon-reload || true
+
+if systemctl --user list-unit-files captive-portal.service >/dev/null 2>&1; then
+  systemctl --user add-wants niri.service captive-portal.service \
+    || echo "add-wants failed — run manually: systemctl --user add-wants niri.service captive-portal.service"
+else
+  echo "captive-portal.service not found — run: systemctl --user add-wants niri.service captive-portal.service"
+fi
+{{ end -}}
