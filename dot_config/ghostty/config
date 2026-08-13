@@ -10,6 +10,7 @@ foreground = e8e4df
 cursor-color = c8a67e
 selection-background = 3a3a40
 selection-foreground = e8e4df
+macos-option-as-alt = true
 
 # ANSI normal
 palette = 0=#1a1a1e
