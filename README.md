@@ -116,6 +116,42 @@ journalctl -u sshd -n 20    # zero connection lines == packets aren't arriving
 - `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, Windows PATH trimmed for fast shells — `/mnt/c/Windows/System32` is re-added in `.zshrc` so `wslview`/`clip.exe` keep working), enables docker, and installs the SSH-agent bridge. Run `wsl --shutdown` from Windows once after the first apply.
 - Copy `docs/wslconfig.example` to `%USERPROFILE%\.wslconfig` on the Windows host for memory caps, mirrored networking, and `autoMemoryReclaim`.
 
+## Captive-portal wifi (hotel / airport / train)
+
+`main` profile, `run_once_after_29-captive-portal.sh.tmpl`. Joining a network that
+wants a click-through login used to leave you with a connected wifi icon and no
+working traffic, because nothing on niri reacts to that state — GNOME Shell has
+the handler built in, a bare compositor doesn't.
+
+Two halves, both needed:
+
+- **Detection** is NetworkManager's own connectivity check, pinned in
+  `/etc/NetworkManager/conf.d/20-connectivity.conf`. NM fetches a plain-HTTP URL
+  (`ping.archlinux.org/nm-check.txt`); a gateway that rewrites the reply moves NM
+  from `full` to `portal`. Plain HTTP is the requirement, not an oversight — an
+  intercepted HTTPS request can't be rewritten without a cert warning.
+- **Reaction** is `captive-portal.service`, a user unit pulled in by
+  `niri.service` (same wiring as dms). It runs
+  `~/.config/niri/scripts/captive-portal-watch.sh`, which uses `nmcli monitor`
+  as a wake-up, re-reads the state, and opens a **private** Zen window on each
+  transition *into* `portal` — private so the portal's cookies and redirect
+  junk stay out of the everyday profile, transition-only so a flapping link
+  can't reopen the browser on every check.
+
+The browser is pointed at `http://neverssl.com`, not at NM's check URL:
+`archlinux.org` is HSTS-preloaded, so a browser would silently upgrade it to
+HTTPS before the gateway ever saw the request. Override with
+`CAPTIVE_PORTAL_URL` if a specific network needs a different bait URL.
+
+For the gateway that passes NM's check but still gates real traffic, trigger it
+by hand:
+
+```bash
+~/.config/niri/scripts/captive-portal-watch.sh --now
+nmcli -t -f CONNECTIVITY general status   # what NM currently thinks
+journalctl --user -u captive-portal -f    # what the watcher saw
+```
+
 ## Printing & scanning
 
 `main` profile, `run_once_after_46-printing.sh.tmpl`. Aims at driverless first: CUPS plus Avahi/nss-mdns covers IPP Everywhere (AirPrint) over the network, `ipp-usb` gives the same driverless path over a USB cable, and `hplip` covers HP hardware predating IPP Everywhere. `sane` + `sane-airscan` + `simple-scan` pick up the scanner half of a multifunction.
@@ -184,7 +220,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules, NetworkManager connectivity check); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` via sudo.
 - `docs/` — reference material not deployed anywhere (`gaming.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 

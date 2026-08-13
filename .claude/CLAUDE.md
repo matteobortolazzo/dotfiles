@@ -31,6 +31,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | WM / compositor | niri | `~/.config/niri/` | Scrollable-tiling Wayland compositor, Linux-only; selected as the default greetd session. Config is `dot_config/niri/config.kdl` (KDL); hot-reloads on save. |
 | Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | DankMaterialShell (dms) | pulled in by `systemctl --user add-wants niri.service dms` | Quickshell+QML+Go single daemon; auto-started via niri's `Wants=dms`. IPC via `dms ipc call <module> <action>`. |
 | Auth agent | polkit-gnome | — | GUI auth dialogs; started via exec-once, Linux-only |
+| Captive-portal login | NetworkManager connectivity check + `captive-portal.service` | `system/NetworkManager/20-connectivity.conf` (mirrored to `/etc/NetworkManager/conf.d/` by `run_once_after_29-captive-portal.sh.tmpl`), `dot_config/niri/scripts/executable_captive-portal-watch.sh` | Linux-only, `main` profile. Opens a private Zen window when NM reports connectivity `portal`. Watcher is pulled in by `niri.service` via `Wants=`, like dms. |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
@@ -125,6 +126,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | niri, DankMaterialShell, polkit-gnome | ✓ | — | — |
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
+| Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
 | sshd + ufw rules (`27-sshd`, `28-firewall`) | `dev` only | — | — |
 
@@ -182,6 +184,8 @@ When editing configs, you're working with **source files** using chezmoi naming 
 10. **git** — Standard git config format. Cross-platform.
 11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
 12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`). They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start).
+
+13. **Captive portal** — same split as greetd: `system/NetworkManager/20-connectivity.conf` is outside `$HOME`, so `run_once_after_29-captive-portal.sh.tmpl` mirrors it into `/etc/NetworkManager/conf.d/` and reloads NM (SIGHUP, no link teardown). The watcher (`dot_config/niri/scripts/executable_captive-portal-watch.sh`) is a normal tracked file. Don't set `response=` in the connectivity stanza — with it unset NM checks for the `X-NetworkManager-Status: online` header instead, and a body string that doesn't match byte-for-byte reports a portal on every network. The browser URL must stay plain-HTTP *and* off the HSTS preload list.
 
 ## Workflow
 

@@ -1,0 +1,24 @@
+[Unit]
+Description=Open a browser when the wifi network requires a captive-portal login
+Documentation=man:NetworkManager.conf(5)
+
+# Pulled in by niri.service (Wants=), wired by run_once_after_29-captive-portal —
+# the same mechanism dms uses. Tying the lifetime to niri is the point: with no
+# graphical session there is nobody to show a browser to, and niri's systemd
+# integration is what puts WAYLAND_DISPLAY into the user manager's environment,
+# so starting before it would leave the browser with no display to open on.
+After=niri.service
+PartOf=niri.service
+
+[Service]
+Type=simple
+ExecStart=%h/.config/niri/scripts/captive-portal-watch.sh
+
+# `nmcli monitor` exits when NetworkManager restarts (an upgrade, a manual
+# restart). Without this the session would silently lose portal detection until
+# the next login.
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=niri.service
