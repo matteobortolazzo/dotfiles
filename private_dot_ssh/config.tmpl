@@ -11,9 +11,11 @@ Host *
 {{- if eq .chezmoi.os "darwin" }}
     IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 {{- else if eq .profile "wsl" }}
-    # Agent comes from wsl2-ssh-agent (SSH_AUTH_SOCK set in .zshrc), which
-    # bridges to the Windows OpenSSH agent pipe served by 1Password on
-    # Windows — the Linux 1Password socket doesn't exist inside WSL.
+    # No IdentityAgent: keys come from the plain OpenSSH agent that systemd
+    # socket-activates (SSH_AUTH_SOCK set in .zshrc). There's no 1Password
+    # socket to point at — the Linux app isn't installed, and the Windows
+    # agent is unreachable because /etc/wsl.conf disables automount, so
+    # /mnt/c is empty and no *.exe (including powershell.exe) can be run.
 {{- else }}
     IdentityAgent ~/.1password/agent.sock
 {{- end }}

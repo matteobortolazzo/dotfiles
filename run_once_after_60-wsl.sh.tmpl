@@ -5,9 +5,11 @@ set -euo pipefail
 # WSL host configuration. Pair with the Windows-side settings documented in
 # docs/wslconfig.example (memory cap, mirrored networking, autoMemoryReclaim).
 
-# /etc/wsl.conf — systemd so services (docker) work, trimmed Windows PATH so
-# zsh command lookup/completion stays fast. Interop itself stays on: wslview
-# and *.exe still work; .zshrc appends /mnt/c/Windows/System32 explicitly.
+# /etc/wsl.conf — systemd so services (docker) work, and no Windows filesystem:
+# automount off keeps the distro isolated from C:, appendWindowsPath off keeps
+# zsh command lookup/completion fast. The trade-off is that no *.exe is
+# reachable, so wslview/clip.exe/powershell.exe (and any agent bridge built on
+# them) are out — .zshrc and ~/.ssh/config are written for that.
 # Takes effect after `wsl --shutdown` from Windows.
 if ! [ -f /etc/wsl.conf ]; then
   sudo tee /etc/wsl.conf >/dev/null <<'EOF'
@@ -15,8 +17,10 @@ if ! [ -f /etc/wsl.conf ]; then
 systemd=true
 
 [interop]
-enabled=true
 appendWindowsPath=false
+
+[automount]
+enabled=false
 EOF
   echo "wrote /etc/wsl.conf — run 'wsl --shutdown' from Windows to apply"
 elif ! grep -q 'appendWindowsPath' /etc/wsl.conf; then
@@ -32,14 +36,11 @@ if command -v dockerd >/dev/null 2>&1; then
   sudo usermod -aG docker "$USER"
 fi
 
-# wsl2-ssh-agent — single static binary bridging SSH_AUTH_SOCK to the Windows
-# OpenSSH agent named pipe (1Password on Windows serves that pipe when its
-# SSH agent is enabled). Wired up in .zshrc; ~/.ssh/config intentionally has
-# no IdentityAgent on this profile.
-if ! [ -x "$HOME/.local/bin/wsl2-ssh-agent" ]; then
-  mkdir -p "$HOME/.local/bin"
-  curl -fsSL -o "$HOME/.local/bin/wsl2-ssh-agent" \
-    https://github.com/mame/wsl2-ssh-agent/releases/latest/download/wsl2-ssh-agent
-  chmod +x "$HOME/.local/bin/wsl2-ssh-agent"
-fi
+# SSH agent, Linux-side. With automount off there is no path to the Windows
+# 1Password agent (that bridge needs powershell.exe under /mnt/c), so this
+# profile uses plain ssh-agent. The socket unit starts it on first connect;
+# .zshrc points SSH_AUTH_SOCK at $XDG_RUNTIME_DIR/ssh-agent.socket, which is
+# exactly what the packaged unit expects.
+systemctl --user enable ssh-agent.socket 2>/dev/null \
+  || echo "systemd --user not up yet — enable ssh-agent.socket after wsl --shutdown"
 {{ end -}}

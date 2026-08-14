@@ -20,17 +20,16 @@ export VISUAL=nvim
 export DOTNET_ROOT="$HOME/.dotnet"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 {{ if eq .profile "wsl" -}}
-export BROWSER=wslview
-# Some tools call xdg-open directly instead of respecting $BROWSER; xdg-utils
-# isn't installed on WSL, so point it at wslview too.
-alias xdg-open=wslview
-# Windows PATH is trimmed via /etc/wsl.conf (appendWindowsPath=false) to keep
-# command lookup and completion fast; keep the essentials reachable for
-# interop (wslview, clip.exe, explorer.exe).
-export PATH="$PATH:/mnt/c/Windows/System32"
-# Bridge SSH_AUTH_SOCK to the Windows OpenSSH agent pipe (served by 1Password
-# on Windows). Installed by run_once_after_60-wsl.sh.
-command -v wsl2-ssh-agent >/dev/null && eval "$(wsl2-ssh-agent)"
+# This box is deliberately isolated from the Windows filesystem: /etc/wsl.conf
+# sets [automount] enabled=false, so /mnt/c is empty and no *.exe is reachable
+# (no wslview, no clip.exe, no powershell.exe — so no wsl2-ssh-agent bridge to
+# the Windows 1Password agent either). Everything below stays Linux-side.
+# Clipboard still works: WSLg gives nvim/tmux a Wayland display + wl-clipboard.
+#
+# SSH keys live in the plain OpenSSH agent, socket-activated by systemd
+# (ssh-agent.socket, enabled by run_once_after_60-wsl.sh). ~/.ssh/config has
+# AddKeysToAgent yes, so first use of a key loads it.
+export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent.socket"
 {{ end -}}
 export KUBECONFIG=~/.kube/config
 export ZSH="$HOME/.oh-my-zsh"

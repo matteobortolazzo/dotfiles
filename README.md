@@ -16,7 +16,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | Profile | What you get |
 |---|---|
 | `main` | Full Arch desktop: niri + DMS, greetd, GUI apps, system services |
-| `wsl` | Terminal stack + docker, WSL host tuning, Windows SSH-agent bridge |
+| `wsl` | Terminal stack + docker, WSL host tuning, no Windows interop |
 | `mac` | Terminal stack via Homebrew/Brewfile |
 
 They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
@@ -52,7 +52,7 @@ op signin
 
 Enable the SSH agent in the 1Password desktop app: **Settings → Developer → SSH Agent**.
 
-On **WSL**, 1Password runs on the Windows side: enable its SSH agent on Windows, and the dotfiles bridge to it automatically via `wsl2-ssh-agent` (installed by `run_once_after_60-wsl.sh`).
+On **WSL** there is no 1Password agent to talk to: the Linux app isn't installed, and the Windows one is out of reach because the distro runs with `[automount] enabled=false` (no `/mnt/c`, so no `powershell.exe` and no bridge). That profile uses the plain OpenSSH agent instead — `ssh-agent.socket` (enabled by `run_once_after_60-wsl.sh`) with `SSH_AUTH_SOCK` set in `.zshrc`, so `AddKeysToAgent yes` loads a key from `~/.ssh` on first use. Git over HTTPS is unaffected: it authenticates through `gh auth git-credential`.
 
 ## Day-to-day commands
 
@@ -113,7 +113,8 @@ journalctl -u sshd -n 20    # zero connection lines == packets aren't arriving
 
 ## WSL notes
 
-- `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, Windows PATH trimmed for fast shells — `/mnt/c/Windows/System32` is re-added in `.zshrc` so `wslview`/`clip.exe` keep working), enables docker, and installs the SSH-agent bridge. Run `wsl --shutdown` from Windows once after the first apply.
+- `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, `[automount] enabled=false`, Windows PATH trimmed for fast shells), enables docker, and enables `ssh-agent.socket`. Run `wsl --shutdown` from Windows once after the first apply.
+- **No Windows interop by design.** With automount off, `/mnt/c` is empty and no `*.exe` can be executed, so `wslview`/`$BROWSER`, `clip.exe`, and any 1Password-on-Windows SSH bridge are all unavailable — the configs don't reference them. Two things still work and are worth knowing: the clipboard, via WSLg's Wayland display plus `wl-clipboard` (installed by `10-pacman`), and Windows-side files, over the network path (`\\wsl$`) or `scp`. If you ever want `/mnt/c` back, drop the `[automount]` block from `/etc/wsl.conf`, `wsl --shutdown`, and revisit the WSL branches in `.zshrc` and `~/.ssh/config`.
 - Copy `docs/wslconfig.example` to `%USERPROFILE%\.wslconfig` on the Windows host for memory caps, mirrored networking, and `autoMemoryReclaim`.
 
 ## Captive-portal wifi (hotel / airport / train)

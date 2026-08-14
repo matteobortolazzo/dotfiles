@@ -56,10 +56,8 @@ install_list "$src/arch-aur-desktop.txt"
 install_list "$src/arch-aur-gaming.txt"
 {{ end -}}
 
-{{ if eq .profile "wsl" -}}
-# wslu provides wslview (used as $BROWSER in .zshrc)
-yay -S --needed --noconfirm wslu || failed="$failed wslu"
-{{ end -}}
+# No wslu on the wsl profile: /etc/wsl.conf disables automount, so wslview has
+# no Windows browser to hand a URL to. Tools that would open one print the URL.
 
 if [ -n "$failed" ]; then
   echo "" >&2
