@@ -1,8 +1,21 @@
-{{- if ne (dig "gaming" false .) true }}
-# Remote dev on the gaming / sim-rig desktop. Agent forwarding rather than a key
-# on that box: its 1Password agent socket needs an unlocked GUI, which an SSH
-# session doesn't have. Rename to match your Tailscale MagicDNS hostname.
-Host desktop
+{{- $devHost := dig "devHost" "" . -}}
+{{- if and $devHost (ne $devHost .chezmoi.hostname) }}
+# Remote dev on the desktop, over Tailscale — works from any network without
+# forwarding a port, since the tailnet is the perimeter. Agent forwarding rather
+# than a key on that box: its 1Password agent socket needs an unlocked GUI,
+# which an SSH session doesn't have.
+#
+# The host comes from the `devHost` data var, and the block is skipped when it
+# matches this machine's hostname — a box should never carry an alias pointing
+# at itself, and Tailscale derives the MagicDNS name from the system hostname,
+# so the comparison is exact.
+#
+# It's the short MagicDNS name, not the FQDN: every tailnet member gets the
+# tailnet suffix pushed as a DNS search domain, so the short name resolves on
+# its own and the tailnet ID stays out of a public repo. If a client has
+# MagicDNS off, set devHost to <host>.<tailnet>.ts.net instead.
+Host desktop {{ $devHost }}
+    HostName {{ $devHost }}
     ForwardAgent yes
 
 {{ end -}}

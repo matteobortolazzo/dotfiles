@@ -4,7 +4,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 
 ## Machine axes
 
-`chezmoi init` prompts once for four independent values, stored in `~/.config/chezmoi/chezmoi.toml`:
+`chezmoi init` prompts once for five values — four independent axes plus the dev box's hostname — stored in `~/.config/chezmoi/chezmoi.toml`:
 
 | Prompt | Axis | Values |
 |---|---|---|
@@ -12,6 +12,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `org` | Work ownership; must match the 1Password item name in the Private vault | org name, blank for personal |
 | `gaming` | Role — gaming / sim-rig host | `true` / `false` |
 | `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
+| `devHost` | The dev box's MagicDNS hostname, aliased as `ssh desktop` | hostname, blank for none |
 
 | Profile | What you get |
 |---|---|
@@ -110,6 +111,18 @@ journalctl -u sshd -n 20    # zero connection lines == packets aren't arriving
 ```
 
 `28-firewall` adds its rules *before* enabling ufw, so it is safe to run over an existing SSH session.
+
+### Reaching it from outside the LAN
+
+Over Tailscale, so nothing is forwarded on the router and the tailnet is the perimeter. From any device signed into the tailnet, anywhere:
+
+```bash
+ssh desktop        # alias from private_dot_ssh/config.tmpl
+```
+
+The target comes from the `devHost` data var rather than a hostname baked into the ssh config, and the block is skipped when `devHost` equals `.chezmoi.hostname` — no machine carries an alias pointing at itself, and Tailscale derives the MagicDNS name from the system hostname, so that comparison is exact. Renaming the desktop is a one-line config change on each client.
+
+`HostName` is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule is separate and rate-limited.
 
 ## WSL notes
 

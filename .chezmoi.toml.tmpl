@@ -4,7 +4,10 @@
        profile "main" and only layers roles on top. `dev` defaults to the gaming
        answer because that box was the first remote dev box, but they are now
        independent — a headless dev box needs no Steam, and a couch-gaming host
-       needs no inbound sshd. Templates read the role vars with
+       needs no inbound sshd. `devHost` is the other side of the same coin: the
+       box you reach, named once here instead of hardcoded in the ssh config, so
+       renaming the desktop is a one-line change and the alias is skipped on the
+       machine that matches it. Templates read the role vars with
        `dig "dev" false .`, not `.dev`, because .chezmoi.toml.tmpl runs on
        `chezmoi init` only — machines whose config predates a prompt must keep
        applying. */ -}}
@@ -12,12 +15,14 @@
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
 {{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
 {{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
+{{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, aliased as `ssh desktop` (blank for none)" "" -}}
 
 [data]
   profile = {{ $profile | quote }}
   org = {{ $org | quote }}
   gaming = {{ $gaming }}
   dev = {{ $dev }}
+  devHost = {{ $devHost | quote }}
 
 [onepassword]
   mode = "account"
