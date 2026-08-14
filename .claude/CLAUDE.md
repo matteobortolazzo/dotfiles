@@ -187,6 +187,8 @@ When editing configs, you're working with **source files** using chezmoi naming 
 
 13. **Captive portal** — same split as greetd: `system/NetworkManager/20-connectivity.conf` is outside `$HOME`, so `run_once_after_29-captive-portal.sh.tmpl` mirrors it into `/etc/NetworkManager/conf.d/` and reloads NM (SIGHUP, no link teardown). The watcher (`dot_config/niri/scripts/executable_captive-portal-watch.sh`) is a normal tracked file. Don't set `response=` in the connectivity stanza — with it unset NM checks for the `X-NetworkManager-Status: online` header instead, and a body string that doesn't match byte-for-byte reports a portal on every network. The browser URL must stay plain-HTTP *and* off the HSTS preload list.
 
+14. **NetworkManager drop-ins** — `system/NetworkManager/` holds one file per concern, numbered as it lands in `/etc/NetworkManager/conf.d/`, and each is installed by the script that owns the feature, not by one shared script: `10-dns-systemd-resolved.conf` by `23-tailscale` (MagicDNS needs resolved to own `/etc/resolv.conf`), `20-connectivity.conf` by `29-captive-portal`. They touch different sections (`[main]` vs `[connectivity]`), so NM merges them. Keep the directory spelled `NetworkManager` — a second `system/networkmanager/` is a distinct path on Linux and would silently collide on a case-insensitive checkout. Always `reload`, never `restart`, NetworkManager in these scripts: a restart drops every active link, and apply can be running over the SSH session it would kill.
+
 ## Workflow
 
 Since we're working directly in the chezmoi source directory:

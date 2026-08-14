@@ -77,7 +77,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `40-aspire` | Aspire CLI, standalone build | `~/.aspire/bin` |
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
-`main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`), `23-tailscale` (enables `tailscaled`).
+`main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`), `23-tailscale` (enables `tailscaled`, and fixes the NetworkManager/systemd-resolved wiring MagicDNS depends on — see below).
 
 Two non-obvious ones:
 
@@ -123,6 +123,16 @@ ssh desktop        # alias from private_dot_ssh/config.tmpl
 The target comes from the `devHost` data var rather than a hostname baked into the ssh config, and the block is skipped when `devHost` equals `.chezmoi.hostname` — no machine carries an alias pointing at itself, and Tailscale derives the MagicDNS name from the system hostname, so that comparison is exact. Renaming the desktop is a one-line config change on each client.
 
 `HostName` is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule is separate and rate-limited.
+
+MagicDNS is the fragile part, and it fails quietly. NetworkManager writes `/etc/resolv.conf` as a regular file by default, which is what makes `tailscale status` report *"systemd-resolved and NetworkManager are wired together incorrectly"*. Lookups usually still work — NM writes `nameserver 127.0.0.53`, which is resolved's stub — but NM owns that file and rewrites it on interface changes, so one reconnect can swap in the router's DNS and `*.ts.net` stops resolving with nothing in any log. `23-tailscale` installs `system/NetworkManager/10-dns-systemd-resolved.conf` (`dns=systemd-resolved` + `rc-manager=unmanaged`) and symlinks `/etc/resolv.conf` to resolved's stub. Check it with:
+
+```bash
+resolvectl status | head -3           # want "resolv.conf mode: stub", not "foreign"
+tailscale status                      # health warnings print after the peer list
+resolvectl query amd-desktop.<tailnet>.ts.net
+```
+
+Per-link scoping is the point: resolved sends `*.ts.net` to `100.100.100.100` on `tailscale0` and everything else to the LAN resolver. Flattening every interface into one `resolv.conf` loses that.
 
 ## WSL notes
 
@@ -234,7 +244,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules, NetworkManager connectivity check); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
 - `docs/` — reference material not deployed anywhere (`gaming.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 

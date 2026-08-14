@@ -5,4 +5,35 @@ set -euo pipefail
 if systemctl list-unit-files tailscaled.service >/dev/null 2>&1; then
   sudo systemctl enable --now tailscaled.service
 fi
+
+# MagicDNS needs systemd-resolved to own /etc/resolv.conf. See
+# system/NetworkManager/10-dns-systemd-resolved.conf for why the default NM
+# arrangement trips Tailscale's health check even while lookups still work.
+#
+# Guarded on resolved actually running: pointing resolv.conf at a stub nothing
+# serves would take out DNS entirely, and this script runs unattended.
+if systemctl is-active --quiet systemd-resolved.service \
+  && [ -f /run/systemd/resolve/stub-resolv.conf ]; then
+
+  src="{{ .chezmoi.sourceDir }}/system/NetworkManager/10-dns-systemd-resolved.conf"
+  target=/etc/NetworkManager/conf.d/10-dns-systemd-resolved.conf
+
+  if ! { [ -f "$target" ] && sudo cmp -s "$src" "$target"; }; then
+    sudo install -D -m 0644 -o root -g root "$src" "$target"
+    echo "installed $target"
+    # reload, not restart: restarting NM drops every active connection, and
+    # this script can be running over the very SSH session it would kill.
+    sudo systemctl reload NetworkManager.service
+  fi
+
+  # -h so an existing correct symlink is left alone; NM writes a regular file,
+  # which is exactly the state being replaced.
+  if [ ! -h /etc/resolv.conf ] \
+    || [ "$(readlink -f /etc/resolv.conf)" != /run/systemd/resolve/stub-resolv.conf ]; then
+    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+    echo "pointed /etc/resolv.conf at systemd-resolved's stub"
+  fi
+else
+  echo "systemd-resolved not active — leaving /etc/resolv.conf alone"
+fi
 {{ end -}}
