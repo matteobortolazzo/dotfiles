@@ -1,0 +1,11 @@
+# Local-only: no account, no sync, no network. See docs/atuin.md to turn sync on.
+auto_sync = false
+update_check = false   # otherwise pings api.atuin.sh hourly; pacman/brew own updates
+
+# Follows the zsh keymap that opened the search: Ctrl-R from vicmd starts in
+# vim-normal (j/k to move), from viins in vim-insert (type to search, Esc to normal).
+keymap_mode = "auto"
+keymap_cursor = { vim_insert = "blink-bar", vim_normal = "steady-block" }
+
+# Enter drops the command on the prompt to edit; a second Enter runs it.
+enter_accept = false

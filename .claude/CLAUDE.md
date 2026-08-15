@@ -38,6 +38,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Editor (IDE) | IdeaVim | `~/.ideavimrc` | Cross-platform, JetBrains plugin |
 | Multiplexer | tmux | `~/.config/tmux/tmux.conf` or `~/.tmux.conf` | Cross-platform |
 | Shell | zsh | `~/.zshrc` | Cross-platform, Oh My Zsh |
+| Shell history | atuin | `~/.config/atuin/config.toml` | Cross-platform; local-only (no account/sync/network), sync recipe in `docs/atuin.md` |
 | Git TUI | lazygit | `~/.config/lazygit/` | YAML config, cross-platform |
 | Syntax highlighting | bat | `~/.config/bat/` | Config + tmTheme, cross-platform |
 | System info | neofetch | `~/.config/neofetch/` | Shell-like config, cross-platform |
@@ -128,7 +129,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Package manager | pacman / yay (AUR) | brew | — |
 | Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
-| sshd + ufw rules (`27-sshd`, `28-firewall`) | `dev` only | — | — |
+| sshd + ufw rules (`27-sshd`, `28-firewall`), `arch-dev.txt` | `dev` only | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
 
@@ -176,7 +177,7 @@ When editing configs, you're working with **source files** using chezmoi naming 
 2. **DankMaterialShell** — Quickshell+QML+Go shell, auto-started by `niri.service` via `Wants=dms`. All shell features (panels, launcher, notifications, control center, lock, power menu, wallpaper, OSD) are reached via `dms ipc call <module> <action>` — never spawn its components directly from binds. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in the niri config is what makes the wallpaper visible in niri's overview. Plugins live in DMS's plugin system (Quickshell QML modules); registry at <https://danklinux.com/plugins>. DMS-owned runtime files (`~/.config/DankMaterialShell/settings.json`, `~/.config/niri/dms/outputs.kdl`) are tracked as chezmoi `create_` entries: seeded on a fresh machine, never overwritten by `chezmoi apply` — DMS rewrites them at runtime.
 3. **Neovim** — Lua config under `~/.config/nvim/`. Respect existing plugin manager and structure. Don't switch plugin managers without asking.
 4. **tmux** — Single config file. Prefer `~/.config/tmux/tmux.conf` (XDG) if already set up that way.
-5. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils.
+5. **zsh** — Oh My Zsh framework. Keep `.zshrc` lean. Shared aliases/functions should work on both GNU and BSD coreutils. **Keybindings must go through `zvm_after_init_commands`**, never `bindkey`/`eval` inline: `zsh-vi-mode` defers its own init to the first `precmd` and rebinds every keymap, silently wiping anything `.zshrc` bound (applies to atuin, fzf, television — see `docs/atuin.md`).
 6. **yazi** — TOML config. Cross-platform; only `theme.toml` currently tracked. Avoid Linux-only previewer commands without a macOS fallback.
 7. **Ghostty** — Plain config file. Cross-platform terminal emulator.
 8. **lazygit** — YAML config (`config.yml`). Cross-platform Git TUI.

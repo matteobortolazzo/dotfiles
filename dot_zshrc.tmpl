@@ -71,6 +71,17 @@ if command -v direnv &>/dev/null; then
   eval "$(direnv hook zsh)"
 fi
 
+# atuin — Ctrl-R history search. zsh-vi-mode defers its own init to the first
+# precmd and rebinds every keymap, wiping anything bound here; hand the eval to
+# its documented hook instead. Up arrow stays plain zsh, ? stays unbound.
+if command -v atuin >/dev/null; then
+  if (( ${+zvm_after_init_commands} )); then
+    zvm_after_init_commands+=('eval "$(atuin init zsh --disable-up-arrow --disable-ai)"')
+  else
+    eval "$(atuin init zsh --disable-up-arrow --disable-ai)"
+  fi
+fi
+
 # Load Angular CLI autocompletion.
 if command -v ng &>/dev/null; then
   source <(ng completion script)

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+command -v atuin >/dev/null || { echo "atuin not installed yet — skipping"; exit 0; }
+
+# One-time seed of the sqlite history DB from the existing plain histfile.
+# run_once is what stops a re-import from duplicating every entry.
+atuin import auto || echo "atuin import failed — run 'atuin import auto' by hand"
+{{ end -}}
