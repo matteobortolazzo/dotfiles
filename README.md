@@ -86,6 +86,10 @@ Two non-obvious ones:
 
 Docker and sysbox (Docker-in-Docker) have their own sections below.
 
+## Shell history
+
+`Ctrl-R` is [Atuin](https://atuin.sh/) on every profile: a sqlite-backed search TUI with vim keys, seeded from the old plain histfile by `36-atuin`. **Local only** — no account, no sync, no network (the sync server is a separate package that isn't installed). `↑` stays plain zsh recall. The binding is handed to `zsh-vi-mode`'s `zvm_after_init_commands` hook rather than bound inline, because that plugin re-inits at the first prompt and silently overwrites anything `.zshrc` bound. See [`docs/atuin.md`](docs/atuin.md) for that trap and for the self-hosted-sync recipe.
+
 ## Gaming / sim-rig host
 
 `gaming = true` (the desktop; see [`docs/gaming.md`](docs/gaming.md) for hardware, the two-session split, and the Fanatec/Sunshine pitfalls) adds:
@@ -102,6 +106,8 @@ Sunshine's ports are opened by `28-firewall` (below) — that script is gated on
 
 - `27-sshd` — enables `sshd.service`. Hardening (`PasswordAuthentication no`, `PermitRootLogin no`) is written to `/etc/ssh/sshd_config.d/10-hardening.conf` **only once `~/.ssh/authorized_keys` is non-empty**. Writing it against an empty key file would lock out every remote login on a box whose whole point is being headless. Until then the script prints the `ssh-copy-id` + re-run instructions.
 - `28-firewall` — opens port 22 in ufw (`limit`, so brute force is throttled without fail2ban), plus an interface rule for `tailscale0` and, on a `gaming` host, Sunshine's ports.
+
+It also pulls `packages/arch-dev.txt` — currently `bind-tools`, for `dig`/`host`/`nslookup`. Debugging a remote box is mostly DNS questions (is MagicDNS resolving, is systemd-resolved answering), and none of those tools are in `base`.
 
 The firewall half is the one that bites, because its failure mode is indistinguishable from a dead service. ufw's default inbound policy is `DROP`, and CachyOS's installer can leave ufw *enabled with an empty rule set* — at which point `systemctl status sshd` is green, `Server listening on 0.0.0.0 port 22` is in the journal, `ss -tlnp` shows the socket, and every inbound SYN is still dropped in netfilter before sshd sees it. There is no log line for a packet that never arrives, so the journal shows nothing at all. Diagnose it with:
 
@@ -245,7 +251,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
 - `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `wslconfig.example`).
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `atuin.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

@@ -1,4 +1,5 @@
 7zip
+atuin
 azure-cli
 base-devel
 bat
