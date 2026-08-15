@@ -15,6 +15,9 @@ set -euo pipefail
 {{- if dig "gaming" false . }}
 # arch-gaming.txt:   {{ include "packages/arch-gaming.txt" | sha256sum }}
 {{- end }}
+{{- if dig "dev" false . }}
+# arch-dev.txt:      {{ include "packages/arch-dev.txt" | sha256sum }}
+{{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
 
@@ -39,6 +42,13 @@ pkg_system="$src/arch-system.txt"
 # can be lib32-mesa. Naming it pins the NVIDIA one.
 pkg_gaming="$src/arch-gaming.txt"
 [ -f "$pkg_gaming" ] && sudo pacman -S --needed --noconfirm - < "$pkg_gaming"
+{{ end -}}
+
+{{ if dig "dev" false . -}}
+# Plain Arch repos, unlike arch-gaming.txt: safe on any profile, so this is
+# gated on the `dev` role alone rather than also on `profile == "main"`.
+pkg_dev="$src/arch-dev.txt"
+[ -f "$pkg_dev" ] && sudo pacman -S --needed --noconfirm - < "$pkg_dev"
 {{ end -}}
 
 {{ if eq .profile "wsl" -}}

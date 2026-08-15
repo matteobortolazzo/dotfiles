@@ -75,7 +75,7 @@ List everything explicitly installed but untracked:
 ```bash
 cd "$(chezmoi source-path)/packages"
 comm -13 \
-  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt | sort -u) \
+  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt arch-dev.txt | sort -u) \
   <(pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$' | sort)
 ```
 
@@ -127,6 +127,18 @@ if you hit a specific wireless dongle that doesn't.
 ship `jstest` and `jscal`) and aborts the gaming transaction. `linuxconsole` is
 the one to keep: it is the superset, and its `fftest` is what the Fanatec
 force-feedback check in `docs/gaming.md` uses.
+
+## Remote dev box
+
+`arch-dev.txt` is gated on the `dev` data var (`dig "dev" false .`), the same var
+that drives `27-sshd` and `28-firewall`. Unlike those two it is *not* also gated
+on `profile == "main"`: everything in it comes from the plain Arch repos and
+works on any profile, so a `wsl` box marked `dev = true` gets it too.
+
+It holds `bind-tools` — `dig`, `host`, `nslookup`. A remote dev box is where DNS
+questions actually get asked (is MagicDNS resolving, is systemd-resolved
+answering, does the alias point at this host), and none of those tools ship in
+`base`.
 
 ## Mac / WSL
 
