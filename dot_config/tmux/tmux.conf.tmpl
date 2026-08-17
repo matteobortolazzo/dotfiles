@@ -9,12 +9,18 @@ set -as terminal-features 'xterm*:extkeys'
 set -g default-terminal "tmux-256color"
 set -sg terminal-overrides ",*:RGB"
 {{ if ne .profile "wsl" -}}
-# Colored undercurl (SGR 4:x / 58). Declaring these makes tmux forward the
-# sequences to the outer terminal, so they must only be set where that
-# terminal actually parses them. Windows Terminal does not, and prints
-# ESC[58:2:r:g:b as literal text — hence the wsl profile is excluded.
-set -as terminal-overrides ",*:Smulx=\E[4::%p1%dm"
-set -as terminal-overrides ",*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m"
+# Colored undercurl (SGR 4:x / 58). Declaring this makes tmux forward the
+# sequences to the outer terminal, so it must only be set where that terminal
+# actually parses them. Windows Terminal does not, and prints ESC[58:2:r:g:b
+# as literal text — hence the wsl profile is excluded.
+#
+# Use the `usstyle` feature, not hand-written Smulx/Setulc terminal-overrides:
+# tmux's config lexer processes backslash escapes inside "double quotes" and
+# does not know `\E`, so it silently drops the backslash and the override ships
+# a literal `E`. tmux then writes `E[58::2::...m` into the pane as text every
+# time nvim colors an undercurl. The feature carries the same capabilities
+# (plus Setulc1 and ol) with no quoting hazard.
+set -as terminal-features ',*:usstyle'
 {{ end -}}
 set -g escape-time 0  # disable delays on escape sequences
 set -g focus-events on
