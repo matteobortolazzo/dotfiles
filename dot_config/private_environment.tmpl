@@ -7,13 +7,18 @@
 # OpenAI
 export OPENAI_API_KEY="{{ onepasswordRead "op://Private/OpenAI/ApiKey" }}"
 
-
 # Context7
 export CONTEXT7_API_KEY="{{ onepasswordRead "op://Private/Context7 API Key/credential" }}"
 
 # Resend
 export RESEND_API_KEY="{{ onepasswordRead "op://Private/Resend/ApiKey" }}"
 export RESEND_FROM_ADDRESS="{{ onepasswordRead "op://Private/Resend/FromAddress" }}"
+
+# Velka (prod)
+export CAPGO_TOKEN="{{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo App Developer Key" }}"
+export CAPGO_KEY_V2_COACH="{{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo Coach Private key" }}"
+export CAPGO_KEY_V2_CLIENT="{{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo Client Private Key" }}"
+export VELKA_APPINSIGHTS_CONNECTION_STRING="{{ onepasswordRead "op://Private/velka-prod/Azure/Application Insight Connection String" }}"
 {{- if $org }}
 
 # Azure DevOps ({{ $org }})

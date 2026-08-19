@@ -130,5 +130,5 @@ on the tailnet.
 **`~/.local/share/atuin/key` is a secret.** It's the encryption key for the synced
 history; without it a new machine can log in and see nothing decryptable, and anyone with
 it can read everything. Store it in 1Password and bootstrap it via
-`dot_config/environment.tmpl`'s `onepasswordRead` pattern (or copy it by hand). Never
+`dot_config/private_environment.tmpl`'s `onepasswordRead` pattern (or copy it by hand). Never
 commit it, and never let it land in this repo unencrypted.
