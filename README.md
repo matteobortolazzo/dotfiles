@@ -44,7 +44,7 @@ SDDM is the one that breaks the boot: CachyOS enables it for every desktop profi
 
 ### 1Password (secrets + SSH agent)
 
-Secrets in `~/.config/environment` and the SSH agent come from 1Password. Until `op` is installed *and* signed in, `chezmoi apply` simply skips them; re-run apply afterwards to fill them in.
+Secrets in `~/.config/environment` (mode `0600`) and the SSH agent come from 1Password. Until `op` is installed *and* signed in, `chezmoi apply` simply skips them; re-run apply afterwards to fill them in.
 
 ```bash
 # Arch (installed automatically by the package lists)  /  macOS: via Brewfile
