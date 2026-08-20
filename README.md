@@ -4,7 +4,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 
 ## Machine axes
 
-`chezmoi init` prompts once for five values — four independent axes plus the dev box's hostname — stored in `~/.config/chezmoi/chezmoi.toml`:
+`chezmoi init` prompts once for six values — four independent axes, a boot policy, and the dev box's hostname — stored in `~/.config/chezmoi/chezmoi.toml`:
 
 | Prompt | Axis | Values |
 |---|---|---|
@@ -12,6 +12,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `org` | Work ownership; must match the 1Password item name in the Private vault | org name, blank for personal |
 | `gaming` | Role — gaming / sim-rig host | `true` / `false` |
 | `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
+| `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
 | `devHost` | The dev box's MagicDNS hostname, aliased as `ssh desktop` | hostname, blank for none |
 
 | Profile | What you get |
@@ -21,6 +22,8 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `mac` | Terminal stack via Homebrew/Brewfile |
 
 They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
+
+`headless` is not a role but a boot policy, and it is deliberately not tied to `dev`: a laptop can be a dev box and still want its greeter on every boot. It only makes sense where the desktop is occasional rather than assumed.
 
 Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`. `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so a machine whose config predates a prompt would otherwise fail every apply. The flip side: an existing machine is **not** re-prompted when a var is added, so `dig` returns the default and the new role is off until you run `chezmoi init` again (it keeps the existing answers and only asks the new question) or add the line to `~/.config/chezmoi/chezmoi.toml` by hand.
 
@@ -140,6 +143,25 @@ resolvectl query amd-desktop.<tailnet>.ts.net
 
 Per-link scoping is the point: resolved sends `*.ts.net` to `100.100.100.100` on `tailscale0` and everything else to the LAN resolver. Flattening every interface into one `resolv.conf` loses that.
 
+### Headless boot
+
+`headless = true` adds a second limine entry, `CachyOS (headless)`, that boots the same kernel with `systemd.unit=multi-user.target` — TTY login, sshd, Tailscale and docker, but no greetd, no compositor and no GPU session. The normal `CachyOS` entry is untouched. See [`docs/headless.md`](docs/headless.md) for the reasoning, the kernel-update caveat, and recovery.
+
+Nothing is disabled or masked to achieve it: `greetd.service` stays enabled, and `graphical.target` — the thing that pulls it in — is simply never reached. That is why the graphical half stays byte-identical to the laptop's, and why a broken desktop is always one menu entry away from a working boot.
+
+The desktop is then started on demand:
+
+```bash
+desktop up niri         # autologin into niri, works over SSH
+desktop up gamescope    # autologin into the couch-gaming session
+desktop greeter         # regreet on the monitor; type the password at the desk
+desktop down            # back to a plain TTY
+```
+
+`desktop greeter` is plain `systemctl start greetd`, which is useless from an SSH shell because somebody has to type a password. `desktop up` runs `greetd-autologin@<session>.service` — the same greetd, against a config whose `[initial_session]` logs straight in. That is the path couch gaming needs: Sunshine has nothing to capture until somebody is logged in, and finding that out from the sofa is the classic failure. Logging out of an autologin session drops you at regreet, so the session picker is still reachable.
+
+`49-headless-boot` writes the limine entry (above the `comment: machine-id=` line, so `limine-entry-tool` does not eat it on the next kernel update), sets `default_entry` by name and `remember_last_entry: no`, and installs the autologin configs plus `system/greetd/greetd-autologin@.service`.
+
 ## WSL notes
 
 - `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, `[automount] enabled=false`, Windows PATH trimmed for fast shells), enables docker, and enables `ssh-agent.socket`. Run `wsl --shutdown` from Windows once after the first apply.
@@ -250,8 +272,8 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `atuin.md`, `wslconfig.example`).
+- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

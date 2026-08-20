@@ -1,0 +1,90 @@
+#!/bin/sh
+# Bring the graphical session up and down on a box that boots headless.
+# See docs/headless.md; the units and greetd configs come from
+# run_once_after_49-headless-boot.sh.tmpl.
+set -eu
+
+self=${0##*/}
+
+# Sessions are whatever autologin configs the setup script installed.
+sessions() {
+    found=0
+    for conf in /etc/greetd/autologin-*.toml; do
+        [ -e "$conf" ] || break
+        name=${conf#/etc/greetd/autologin-}
+        echo "${name%.toml}"
+        found=1
+    done
+    [ "$found" = 1 ] || return 1
+}
+
+# Every one of these owns vt1 and they Conflicts= each other, so starting one
+# stops the others. `down` still stops them explicitly: it is normally run over
+# SSH, where "did it really let go of the TTY" is not something you can see.
+units() {
+    echo greetd.service
+    sessions 2>/dev/null | while read -r name; do
+        echo "greetd-autologin@$name.service"
+    done
+}
+
+usage() {
+    available=$(sessions 2>/dev/null) || available=""
+    if [ -n "$available" ]; then
+        available=$(echo "$available" | sed 's/^/  /')
+    else
+        available="  none — this machine is not set up for headless boot"
+    fi
+    cat <<EOF
+usage: $self <command>
+
+  up [session]   autologin straight into a session (default: niri).
+                 Works over SSH — the one couch gaming needs, since Sunshine
+                 has nothing to capture until somebody is logged in.
+  greeter        start regreet on the monitor instead; type the password at
+                 the keyboard and pick the session there.
+  down           stop whatever is running and hand vt1 back to getty.
+  status         what owns vt1 right now, plus the logind sessions.
+
+Sessions available (/etc/greetd/autologin-<name>.toml):
+$available
+EOF
+}
+
+case "${1-}" in
+    up)
+        session=${2-niri}
+        if [ ! -e "/etc/greetd/autologin-$session.toml" ]; then
+            echo "$self: no autologin config for '$session'. Available:" >&2
+            sessions | sed 's/^/  /' >&2 || echo "  none" >&2
+            exit 1
+        fi
+        sudo systemctl start "greetd-autologin@$session.service"
+        echo "$self: $session session starting on vt1"
+        ;;
+    greeter)
+        sudo systemctl start greetd.service
+        echo "$self: regreet starting on vt1"
+        ;;
+    down)
+        units | while read -r unit; do
+            sudo systemctl stop "$unit" 2>/dev/null || true
+        done
+        echo "$self: vt1 released, back to a plain TTY"
+        ;;
+    status)
+        units | while read -r unit; do
+            printf '%-40s %s\n' "$unit" "$(systemctl is-active "$unit" || true)"
+        done
+        echo
+        loginctl list-sessions
+        ;;
+    -h | --help | help | "")
+        usage
+        ;;
+    *)
+        echo "$self: unknown command '$1'" >&2
+        usage >&2
+        exit 1
+        ;;
+esac
