@@ -85,6 +85,27 @@ What you save is the compositor, DMS, the portals and everything else
 change. Squeezing out the last few watts means a boot entry with no NVIDIA driver
 at all, and that trades away the on-demand desktop.
 
+## Applying dotfiles over SSH
+
+`chezmoi apply` completes over SSH, but it does **not** refresh
+`~/.config/environment`. The secrets template reads every value through
+`onepasswordRead`, and `.chezmoi.toml.tmpl` pins `[onepassword] mode = "account"`,
+which authenticates against an unlocked 1Password **desktop app** in the caller's
+session. There is no such app on the other end of an SSH connection, so `op` sits
+on an authorization prompt nobody can answer and fails after 60s.
+
+`.chezmoiignore` probes that path (`op vault list`, bounded by `timeout 5`, the
+same client-init the template uses) and ignores the target when it fails, so the
+existing file is left untouched and everything after it — including the
+`run_once_after_*` scripts — still runs. A warning says so on stderr. Naming the
+file explicitly (`chezmoi apply ~/.config/environment`) reports `not managed`,
+which is the same answer.
+
+Secrets refresh on the next `chezmoi apply` from a local session at the desk. A
+service account (`OP_SERVICE_ACCOUNT_TOKEN` with `[onepassword] mode = "service"`)
+would make them resolve headlessly too, at the cost of a long-lived vault token
+sitting on the box; that trade was deliberately declined.
+
 ## Kernel updates
 
 The entry is written **above** the `comment: machine-id=…` line, because that
