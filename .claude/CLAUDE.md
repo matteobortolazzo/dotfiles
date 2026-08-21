@@ -21,6 +21,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | `private_` prefix | File with restricted permissions |
 | `executable_` prefix | File with +x permission |
 | `exact_` prefix | Directory managed exactly (extra files removed) |
+| `modify_` prefix | Script that rewrites the target: current contents on stdin, new contents on stdout |
 | `.tmpl` suffix | Template processed by chezmoi |
 
 ## Stack
@@ -118,6 +119,11 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 - **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/niri`, `.config/ghostty`).
 - **Data vars** — four orthogonal axes, a boot policy, and a hostname, prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host), `dev` (role: remote dev box — inbound sshd + the ufw rule for it; defaults to the `gaming` answer), `headless` (boot policy, not a role: adds a second limine entry booting to `multi-user.target`; deliberately not tied to `dev`, since a laptop dev box still wants its greeter), `devHost` (the dev box's MagicDNS hostname, aliased as `ssh desktop`; never hardcode a hostname in a config — `private_dot_ssh/config.tmpl` reads this var and skips the alias when it equals `.chezmoi.hostname`). The desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true`, `dev = true` and `headless = true`.
 - **New data vars must be read with `dig`**, not `.foo` — `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so machines whose config predates a prompt would otherwise fail to apply. Use `{{ if dig "gaming" false . }}`, matching `dot_config/private_environment.tmpl`.
+- **Files the app rewrites at runtime** — three escape hatches, in order of preference:
+  - **`modify_`** when you want to manage *some* keys and let the app own the rest. The source file is a script; chezmoi pipes the current target in on stdin and takes stdout as the new target. Used by `dot_claude/modify_settings.json`, which `jq`-merges a managed block over whatever Claude Code last wrote. Objects merge, **arrays replace**; the merge cannot *delete* a key, so retiring one means adding its path to that script's `RETIRED` list for a release. Emit canonical output (`jq -S`) or every runtime write shows up as a diff.
+  - **`create_`** when the file is purely app-owned and only needs seeding on a fresh machine (`dot_config/DankMaterialShell/create_settings.json`, `dot_config/niri/dms/create_outputs.kdl`). Note the cost: later changes never propagate to machines that already have the file.
+  - A plain managed file only when the app never writes back. Otherwise `chezmoi apply` silently clobbers runtime state and `chezmoi status` stays dirty forever.
+- **Machine- or repo-specific state stays out of the source.** This repo is **public**. `modify_`'s merge is what makes that practical: `~/.claude/settings.json` keeps its machine-local `autoMode.environment` (a trust-boundary map of a *private* work repo — internal domains, CI secret names, absolute paths) while git only ever carries the managed keys. Per-project settings belong in that project's `.claude/settings.local.json`, which is gitignored.
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
 
