@@ -16,3 +16,19 @@ system
 {{ if ne .profile "wsl" -}}
 .config/scripts/pen-wsl
 {{ end -}}
+
+{{/* Probe live `op` auth the same way onepasswordRead does (client init + desktop-app
+     handshake). Bounded: with no reachable app `op` sits on an authorization prompt for
+     60s before failing, which would stall every source-state read over SSH. `timeout` is
+     GNU-only, so fall back to a bare call where it is missing (macOS without coreutils).
+     `|| echo no` is load-bearing: `output` aborts the template on a non-zero exit. */ -}}
+{{ $opProbe := "if command -v timeout >/dev/null 2>&1; then timeout 5 op vault list; else op vault list; fi >/dev/null 2>&1 && echo yes || echo no" -}}
+{{ $opAuth := eq (trim (output "sh" "-c" $opProbe)) "yes" -}}
+{{ if not $opAuth -}}
+{{ if lookPath "op" -}}
+{{ warnf "1Password cannot authenticate right now (no unlocked desktop app — normal over SSH): leaving ~/.config/environment untouched. Re-run `chezmoi apply` from a local session to refresh secrets." -}}
+{{ else -}}
+{{ warnf "1Password CLI not installed: skipping ~/.config/environment. Install `op`, sign in, then re-run `chezmoi apply`." -}}
+{{ end -}}
+.config/environment
+{{ end -}}
