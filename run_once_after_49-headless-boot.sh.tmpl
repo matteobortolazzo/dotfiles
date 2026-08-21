@@ -1,0 +1,244 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "headless" false .) -}}
+set -euo pipefail
+
+# Headless boot for a box that is a dev target first and a desktop second.
+#
+# Two limine entries off the same kernel:
+#   CachyOS (headless)  -> systemd.unit=multi-user.target: TTY login, sshd,
+#                          Tailscale, docker. graphical.target is never reached,
+#                          so greetd never starts and nothing binds the GPU.
+#   CachyOS             -> untouched, exactly as the laptop boots.
+# Nothing is disabled or masked: the graphical path stays byte-identical, the
+# headless one simply never reaches the target that pulls greetd in.
+#
+# The desktop is then brought up on demand (see docs/headless.md):
+#   sudo systemctl start greetd             # regreet on the monitor, at the desk
+#   desktop up niri | desktop up gamescope  # autologin, works over SSH
+#
+# Why not `systemctl set-default multi-user.target`: that is one global switch
+# you flip from a shell and reboot to use. This box has two genuinely different
+# jobs (dev target / sim rig + couch gaming) and the choice belongs at the boot
+# menu, where it is also recoverable when the desktop half breaks.
+#
+# Re-run after editing this file (run_once only fires on first apply):
+#   chezmoi execute-template < "$(chezmoi source-path)/run_once_after_49-headless-boot.sh.tmpl" | bash
+
+esp=/boot
+enroll=""
+if [ -r /etc/default/limine ]; then
+  value=$(grep -m1 '^[[:space:]]*ESP_PATH=' /etc/default/limine | cut -d= -f2- | tr -d '"' || true)
+  [ -n "$value" ] && esp="$value"
+  enroll=$(grep -m1 '^[[:space:]]*ENABLE_ENROLL_LIMINE_CONFIG=' /etc/default/limine | cut -d= -f2- | tr -d '"' || true)
+fi
+conf="$esp/limine.conf"
+
+if ! command -v limine >/dev/null 2>&1 || ! sudo test -f "$conf"; then
+  echo "limine not in use ($conf missing) — skipping the headless boot entry."
+  echo "On another bootloader, add 'systemd.unit=multi-user.target' to a second entry by hand."
+  exit 0
+fi
+
+entry_name="CachyOS (headless)"
+begin="# >>> chezmoi: headless boot entry >>>"
+end="# <<< chezmoi: headless boot entry <<<"
+
+# Mirror the managed entry's own paths and cmdline rather than re-deriving them
+# from /etc/default/limine: root=UUID, rootflags and the machine-id directory all
+# have to match exactly, and the generated entry is the only place they are known
+# to be correct. The kernel paths are version-independent
+# (boot():/<machine-id>/<kernel-id>/vmlinuz), so this entry survives kernel
+# updates; only the BLAKE2 '#<hash>' suffix changes, which is why it is stripped —
+# a stale hash is a boot failure, and verification still covers the managed entry.
+first_field() {
+  sudo awk -v field="$1" '
+    /^comment: machine-id=/ { seen = 1; next }
+    seen && $0 ~ "^[[:space:]]*" field ":" {
+      sub("^[[:space:]]*" field ":[[:space:]]*", "")
+      print
+      exit
+    }
+  ' "$conf"
+}
+
+kernel_path=$(first_field path)
+initrd_path=$(first_field module_path)
+base_cmdline=$(first_field cmdline)
+kernel_path=${kernel_path%%#*}
+initrd_path=${initrd_path%%#*}
+
+if [ -z "$kernel_path" ] || [ -z "$initrd_path" ] || [ -z "$base_cmdline" ]; then
+  echo "could not read path/module_path/cmdline from the managed entry in $conf" >&2
+  echo "(expected a 'comment: machine-id=...' block written by limine-entry-tool)" >&2
+  exit 1
+fi
+
+# quiet and splash go: on a box you reach over SSH the console exists to tell you
+# why the boot failed, and plymouth is a graphical stack this entry exists to avoid.
+headless_cmdline=""
+for token in $base_cmdline; do
+  case "$token" in
+    quiet | splash | systemd.unit=*) continue ;;
+  esac
+  headless_cmdline="${headless_cmdline:+$headless_cmdline }$token"
+done
+headless_cmdline="$headless_cmdline systemd.unit=multi-user.target"
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+cat > "$work/block" <<BLOCK
+$begin
+# Managed by chezmoi (run_once_after_49-headless-boot.sh.tmpl) — edit it there.
+/$entry_name
+  comment: Boots to multi-user.target: no greetd, no compositor, no GPU session.
+  comment: Bring the desktop up on demand: 'desktop up niri' or 'desktop up gamescope'.
+  protocol: linux
+  module_path: $initrd_path
+  path: $kernel_path
+  cmdline: $headless_cmdline
+$end
+
+BLOCK
+
+# Drop any previous copy, then re-insert immediately ABOVE the machine-id comment.
+# Above, not below: limine-entry-tool finds the block it owns by that comment and
+# rewrites what follows it, so anything inserted between the two would be lost on
+# the next kernel update. Placing it first also pins it at a stable position while
+# limine-snapper-sync keeps adding snapshot sub-entries below.
+#
+# The strip swallows the blank line that follows the block as well as the block
+# itself — the block re-inserts its own trailing blank, so without that this is
+# not idempotent and every re-run pushes the file one line further apart.
+sudo cat "$conf" | awk -v b="$begin" -v e="$end" '
+  $0 == b { skip = 1; next }
+  skip == 1 {
+    if ($0 == e) skip = 2
+    next
+  }
+  skip == 2 {
+    skip = 0
+    if ($0 == "") next
+  }
+  { print }
+' > "$work/stripped"
+
+awk -v block="$work/block" '
+  !inserted && /^comment: machine-id=/ {
+    while ((getline line < block) > 0) print line
+    close(block)
+    inserted = 1
+  }
+  { print }
+  END {
+    if (!inserted) exit 1
+  }
+' "$work/stripped" > "$work/new" || {
+  echo "no 'comment: machine-id=' line in $conf — refusing to guess where the entry goes" >&2
+  exit 1
+}
+
+# default_entry by name, not index: indices shift every time limine-snapper-sync
+# adds a snapshot, and it is ambiguous whether directories are counted.
+# remember_last_entry would otherwise silently make the box graphical-by-default
+# again after one gaming session — the point of this setup is that it always
+# comes back headless unless you say otherwise at the menu.
+set_global() {
+  if grep -q "^$1:" "$work/new"; then
+    sed -i "s|^$1:.*|$1: $2|" "$work/new"
+  else
+    sed -i "1i $1: $2" "$work/new"
+  fi
+}
+set_global default_entry "$entry_name"
+set_global remember_last_entry no
+
+if sudo cmp -s "$work/new" "$conf"; then
+  echo "limine: headless entry already current"
+else
+  sudo cp "$conf" "$conf.chezmoi.bak"
+  sudo cp "$work/new" "$conf"
+  echo "limine: wrote '$entry_name' to $conf (previous file: $conf.chezmoi.bak)"
+  if [ "$enroll" = "yes" ] && command -v limine-enroll-config >/dev/null 2>&1; then
+    sudo limine-enroll-config
+  fi
+fi
+
+# --- on-demand sessions ---------------------------------------------------
+#
+# greetd.service alone covers the desk (regreet, type a password). It cannot
+# start a session over SSH, which is what couch gaming needs. greetd's
+# [initial_session] is exactly that hook, so each session gets an autologin
+# config plus a greetd-autologin@<session> instance to run it.
+
+if ! command -v greetd >/dev/null 2>&1; then
+  echo "greetd not installed — skipping the on-demand session units"
+  echo "(the headless entry still works; install greetd cage greetd-regreet for the desktop half)"
+  exit 0
+fi
+
+user="${USER:-$(id -un)}"
+
+install_if_changed() {
+  if ! sudo test -f "$2" || ! sudo cmp -s "$1" "$2"; then
+    sudo install -Dm0644 -o root -g root "$1" "$2"
+    echo "installed $2"
+    return 0
+  fi
+  return 1
+}
+
+write_autologin() {
+  local session="$1" session_command="$2"
+  if ! command -v "${session_command%% *}" >/dev/null 2>&1; then
+    echo "'${session_command%% *}' not found — skipping /etc/greetd/autologin-$session.toml"
+    return 0
+  fi
+  cat > "$work/autologin-$session.toml" <<TOML
+# Autologin variant of /etc/greetd/config.toml, started on demand by
+# greetd-autologin@$session.service. Generated by chezmoi's 49-headless-boot
+# script — edit that, not this file.
+#
+# [initial_session] runs once, on greetd start, with no prompt: that is what
+# makes 'desktop up $session' work from an SSH shell. When the session exits,
+# greetd falls back to [default_session] below, so logging out at the desk
+# still gets you regreet and the session picker.
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "env WLR_NO_HARDWARE_CURSORS=1 cage -s -m last -- regreet"
+user = "greeter"
+
+[initial_session]
+command = "$session_command"
+user = "$user"
+TOML
+  install_if_changed "$work/autologin-$session.toml" "/etc/greetd/autologin-$session.toml" || true
+}
+
+write_autologin niri niri-session
+{{ if dig "gaming" false . -}}
+write_autologin gamescope start-gamescope-session
+{{ end -}}
+
+if install_if_changed "{{ .chezmoi.sourceDir }}/system/greetd/greetd-autologin@.service" \
+    /etc/systemd/system/greetd-autologin@.service; then
+  sudo systemctl daemon-reload
+fi
+
+cat <<DONE
+
+  Headless boot is set up. At the next reboot limine defaults to
+  '$entry_name'; pick 'CachyOS' within the 5s timeout for the normal
+  graphical boot.
+
+  From a headless boot:
+    desktop up niri         start a niri session (works over SSH)
+    desktop up gamescope    start the couch-gaming session
+    desktop greeter         show regreet on the monitor instead
+    desktop down            back to a plain TTY
+
+DONE
+{{ end -}}

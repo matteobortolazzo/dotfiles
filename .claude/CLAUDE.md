@@ -27,6 +27,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
+| Bootloader | limine (+ `limine-entry-tool`, `limine-snapper-sync`) | `/etc/default/limine`, `/boot/limine.conf` | Linux-only, system-level. On a `headless` host, `run_once_after_49-headless-boot.sh.tmpl` adds a second entry booting to `multi-user.target`. See `docs/headless.md`. |
 | Display manager / greeter | greetd + regreet (via cage) | `/etc/greetd/{config,regreet}.{toml,css}` (mirrored from `system/greetd/` by `run_once_after_45-greetd.sh.tmpl`) | Linux-only, system-level. Themed via custom `regreet.css` (Glassmorphic Dark). |
 | WM / compositor | niri | `~/.config/niri/` | Scrollable-tiling Wayland compositor, Linux-only; selected as the default greetd session. Config is `dot_config/niri/config.kdl` (KDL); hot-reloads on save. |
 | Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | DankMaterialShell (dms) | pulled in by `systemctl --user add-wants niri.service dms` | Quickshell+QML+Go single daemon; auto-started via niri's `Wants=dms`. IPC via `dms ipc call <module> <action>`. |
@@ -115,7 +116,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 - **Templates** (`.tmpl` suffix) — use for any file that differs between Linux and macOS. Currently used for `private_environment.tmpl` (secrets via 1Password, rendered `0600`).
 - **OS branching** — use `{{ if eq .chezmoi.os "linux" }}` / `{{ if eq .chezmoi.os "darwin" }}`.
 - **`.chezmoiignore`** — gates Linux-only config paths behind `{{ if ne .profile "main" }}` (`.config/niri`, `.config/ghostty`).
-- **Data vars** — four orthogonal axes plus a hostname, prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host), `dev` (role: remote dev box — inbound sshd + the ufw rule for it; defaults to the `gaming` answer), `devHost` (the dev box's MagicDNS hostname, aliased as `ssh desktop`; never hardcode a hostname in a config — `private_dot_ssh/config.tmpl` reads this var and skips the alias when it equals `.chezmoi.hostname`). The desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true` and `dev = true`.
+- **Data vars** — four orthogonal axes, a boot policy, and a hostname, prompted by `.chezmoi.toml.tmpl`: `profile` (platform: `main`/`wsl`/`mac`), `org` (work ownership), `gaming` (role: gaming/sim-rig host), `dev` (role: remote dev box — inbound sshd + the ufw rule for it; defaults to the `gaming` answer), `headless` (boot policy, not a role: adds a second limine entry booting to `multi-user.target`; deliberately not tied to `dev`, since a laptop dev box still wants its greeter), `devHost` (the dev box's MagicDNS hostname, aliased as `ssh desktop`; never hardcode a hostname in a config — `private_dot_ssh/config.tmpl` reads this var and skips the alias when it equals `.chezmoi.hostname`). The desktop is `profile = "main"` — same platform as the laptop — plus `gaming = true`, `dev = true` and `headless = true`.
 - **New data vars must be read with `dig`**, not `.foo` — `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so machines whose config predates a prompt would otherwise fail to apply. Use `{{ if dig "gaming" false . }}`, matching `dot_config/private_environment.tmpl`.
 - **Secrets** — never commit plaintext. Use chezmoi's password-manager integration or `age` encryption.
 - After any change: `chezmoi diff` → review → `chezmoi apply`.
@@ -130,12 +131,17 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
 | sshd + ufw rules (`27-sshd`, `28-firewall`), `arch-dev.txt` | `dev` only | — | — |
+| Headless boot entry + on-demand session (`49-headless-boot`) | `headless` only | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
 
 ### Gaming / sim-rig host
 
 The desktop (`gaming = true`) runs two modes from the same greetd: niri for the desktop *and* for sim racing native-fullscreen on its attached monitor, and `gamescope-session-cachyos` for couch gaming streamed to the TV. Sims deliberately do **not** run under gamescope. See `docs/gaming.md` for the reasoning, the Fanatec/`hid-fanatecff` pitfalls, and the Sunshine capture constraints (niri is not wlroots-based, so KMS capture is the HDR-capable path).
+
+### Headless boot
+
+The desktop is also `headless = true`: limine carries a second entry, `CachyOS (headless)`, that boots the same kernel with `systemd.unit=multi-user.target`, so the box comes up as an SSH target with no greetd, no compositor and no GPU session. Nothing is disabled to achieve it — `graphical.target` is simply never reached. The desktop is started on demand with `desktop up niri` / `desktop up gamescope` (autologin via `greetd-autologin@.service`, works over SSH) or `desktop greeter` (regreet at the desk). See `docs/headless.md`.
 
 ## Key commands
 
@@ -164,6 +170,13 @@ dms ipc call powermenu toggle                  # Power menu
 dms ipc call settings toggle                   # In-app settings GUI
 dms ipc call wallpaper next                    # Cycle wallpaper
 
+# On-demand desktop (headless hosts; see docs/headless.md)
+desktop up niri                                # autologin session, works over SSH
+desktop up gamescope                           # couch-gaming session
+desktop greeter                                # regreet on the monitor instead
+desktop down                                   # back to a plain TTY
+desktop status                                 # what owns vt1
+
 # direnv
 direnv allow                      # Trust .envrc in current directory
 direnv edit .                     # Create/edit .envrc and auto-allow
@@ -189,6 +202,8 @@ When editing configs, you're working with **source files** using chezmoi naming 
 13. **Captive portal** — same split as greetd: `system/NetworkManager/20-connectivity.conf` is outside `$HOME`, so `run_once_after_29-captive-portal.sh.tmpl` mirrors it into `/etc/NetworkManager/conf.d/` and reloads NM (SIGHUP, no link teardown). The watcher (`dot_config/niri/scripts/executable_captive-portal-watch.sh`) is a normal tracked file. Don't set `response=` in the connectivity stanza — with it unset NM checks for the `X-NetworkManager-Status: online` header instead, and a body string that doesn't match byte-for-byte reports a portal on every network. The browser URL must stay plain-HTTP *and* off the HSTS preload list.
 
 14. **NetworkManager drop-ins** — `system/NetworkManager/` holds one file per concern, numbered as it lands in `/etc/NetworkManager/conf.d/`, and each is installed by the script that owns the feature, not by one shared script: `10-dns-systemd-resolved.conf` by `23-tailscale` (MagicDNS needs resolved to own `/etc/resolv.conf`), `20-connectivity.conf` by `29-captive-portal`. They touch different sections (`[main]` vs `[connectivity]`), so NM merges them. Keep the directory spelled `NetworkManager` — a second `system/networkmanager/` is a distinct path on Linux and would silently collide on a case-insensitive checkout. Always `reload`, never `restart`, NetworkManager in these scripts: a restart drops every active link, and apply can be running over the SSH session it would kill.
+
+15. **Headless boot / limine** — `run_once_after_49-headless-boot.sh.tmpl` owns the `CachyOS (headless)` entry in `/boot/limine.conf` and the `greetd-autologin@.service` + `/etc/greetd/autologin-*.toml` pair. The entry must stay **above** the `comment: machine-id=` line: `limine-entry-tool` finds the block it owns by that comment and rewrites everything after it, so anything inserted between them is lost on the next kernel update. Never write the BLAKE2 `#<hash>` suffix into that entry — it changes on every kernel rebuild and a stale hash is a boot failure. `run_once` will not re-fire after an edit; re-run it the same way as the greetd script (`chezmoi execute-template < ... | bash`).
 
 ## Workflow
 

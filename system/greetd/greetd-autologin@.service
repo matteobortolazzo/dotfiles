@@ -1,0 +1,43 @@
+# On-demand autologin greetd, for a box that boots headless
+# (systemd.unit=multi-user.target, see run_once_after_49-headless-boot.sh.tmpl).
+#
+# greetd.service is the interactive path: it shows regreet and you type a
+# password at the keyboard. That is useless over SSH, and starting a session
+# over SSH is exactly what couch gaming needs — Sunshine has nothing to capture
+# until somebody is logged in, and "nobody is logged in" is the classic way
+# streaming fails once you are already on the sofa.
+#
+# Each instance runs greetd against /etc/greetd/autologin-%i.toml, whose
+# [initial_session] logs straight into that session. greetd falls back to the
+# regreet [default_session] when the session exits, so logging out of niri at
+# the desk still gets you the picker (that is how you reach gamescope from a
+# session started as niri, and vice versa).
+#
+#   systemctl start greetd-autologin@niri        # or: desktop up niri
+#   systemctl start greetd-autologin@gamescope   # or: desktop up gamescope
+#
+# Deliberately no Alias=display-manager.service: greetd.service owns that alias,
+# and two units claiming it cannot both be enabled. This unit is never enabled —
+# it is started by hand, which is the whole point.
+
+[Unit]
+Description=greetd autologin session (%I)
+Documentation=man:greetd(5)
+After=systemd-user-sessions.service
+After=getty@tty1.service
+# vt 1 has exactly one owner: whichever of these is running, the others stop.
+Conflicts=getty@tty1.service greetd.service
+ConditionPathExists=/etc/greetd/autologin-%i.toml
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/greetd --config /etc/greetd/autologin-%i.toml
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+TimeoutStopSec=30s
+KeyringMode=shared
+# Upstream greetd.service uses Restart=always because it is the login path and
+# must always come back. This one is on-demand: if the session cannot start
+# (bad GPU state, missing session binary), respawning it forever on a headless
+# box just floods the journal and holds vt1 away from getty. Fail and stay down.
+Restart=no
