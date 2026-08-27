@@ -34,6 +34,28 @@ export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent.socket"
 export KUBECONFIG=~/.kube/config
 export ZSH="$HOME/.oh-my-zsh"
 
+# Android SDK — Android Studio is installed through JetBrains Toolbox, which
+# only drops a launcher script in Toolbox/scripts: it exports no ANDROID_HOME
+# and puts no adb/fastboot on PATH the way a distro android-sdk package would.
+for _android_sdk in "$HOME/Android/Sdk" "$HOME/Library/Android/sdk"; do
+    [ -d "$_android_sdk" ] || continue
+    export ANDROID_HOME="$_android_sdk"
+    export ANDROID_SDK_ROOT="$_android_sdk"   # deprecated, still read by Gradle/AGP
+    for _android_bin in platform-tools emulator cmdline-tools/latest/bin; do
+        [ -d "$ANDROID_HOME/$_android_bin" ] && export PATH="$ANDROID_HOME/$_android_bin:$PATH"
+    done
+    break
+done
+unset _android_sdk _android_bin
+
+# `npx cap open android` only probes distro install paths (/opt/android-studio,
+# /usr/local/android-studio, ~/.local/share/applications); point it at Toolbox.
+for _studio in "$HOME/.local/share/JetBrains/Toolbox/scripts/studio" \
+               "$HOME/Library/Application Support/JetBrains/Toolbox/scripts/studio"; do
+    [ -x "$_studio" ] && export CAPACITOR_ANDROID_STUDIO_PATH="$_studio" && break
+done
+unset _studio
+
 # fnm (curl-installer puts the binary in ~/.local/share/fnm; pacman/brew put
 # it on PATH already — eval works either way)
 FNM_PATH="$HOME/.local/share/fnm"
