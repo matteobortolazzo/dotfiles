@@ -30,9 +30,7 @@ MANAGED=$(cat <<'JSON'
   "model": "opus",
   "effortLevel": "medium",
   "permissions": {
-    "allow": [
-      "mcp__pencil"
-    ],
+    "allow": [],
     "defaultMode": "auto",
     "deny": [
       "Bash(gh api * --method DELETE*)",
