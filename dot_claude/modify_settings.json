@@ -292,7 +292,8 @@ MANAGED=$(cat <<'JSON'
     ]
   },
   "showClearContextOnPlanAccept": true,
-  "autoCompactEnabled": false
+  "autoCompactEnabled": false,
+  "remoteControlAtStartup": false
 }
 JSON
 )
