@@ -57,10 +57,12 @@ done
 unset _studio
 
 # fnm (curl-installer puts the binary in ~/.local/share/fnm; pacman/brew put
-# it on PATH already — eval works either way)
+# it on PATH already — eval works either way). --use-on-cd switches on
+# .nvmrc/.node-version; fnm needs a `default` alias (`fnm default <ver>`) or
+# it links no version at all and PATH silently falls through to a system node.
 FNM_PATH="$HOME/.local/share/fnm"
 [ -d "$FNM_PATH" ] && export PATH="$FNM_PATH:$PATH"
-command -v fnm >/dev/null && eval "$(fnm env)"
+command -v fnm >/dev/null && eval "$(fnm env --use-on-cd --shell zsh)"
 
 # Custom environment variables
 if [ -f ~/.config/environment ]; then
