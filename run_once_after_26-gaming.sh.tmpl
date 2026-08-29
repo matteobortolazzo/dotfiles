@@ -46,9 +46,18 @@ fi
 # has no HDR.
 if command -v sunshine >/dev/null 2>&1; then
   sudo setcap cap_sys_admin+p "$(readlink -f "$(command -v sunshine)")"
-  # enable, not --now: the unit only makes sense inside a graphical session.
-  systemctl --user enable sunshine.service || \
-    echo "could not enable sunshine.service — enable it from inside the niri session"
+  # The unit is app-dev.lizardbyte.app.Sunshine.service; `sunshine.service` is
+  # only an [Install] Alias, so it does not resolve until the real unit has
+  # been enabled once — enabling by the alias name fails with "not-found" on a
+  # fresh machine.
+  #
+  # enable, not --now: it is WantedBy=graphical-session.target, and starting it
+  # from here (a tty or an SSH apply) gives it no WAYLAND_DISPLAY and no
+  # output. Sunshine then exits its encoder probe with "Unable to find display
+  # or encoder during startup" and sits there broken until it is restarted
+  # inside a session. Let graphical-session.target pull it in instead.
+  systemctl --user enable app-dev.lizardbyte.app.Sunshine.service || \
+    echo "could not enable Sunshine — enable it from inside the niri session"
 else
   echo "sunshine not installed — skipping capture capability setup"
 fi
