@@ -21,7 +21,9 @@ set -uo pipefail
 
 # The mode to stream in. Must be one of the modes `niri msg outputs` lists for
 # $output, verbatim — niri rejects anything else and leaves the current mode
-# alone.
+# alone. Set it empty (or "off") to leave the output alone entirely and let
+# Sunshine scale the native mode instead — which is the right setting once a
+# 16:9 dummy plug makes the switch unnecessary.
 output="${SUNSHINE_STREAM_OUTPUT:-DP-1}"
 stream_mode="${SUNSHINE_STREAM_MODE:-2560x1440@119.998}"
 state_file="${XDG_RUNTIME_DIR:-/tmp}/sunshine-stream-prep.mode"
@@ -58,7 +60,7 @@ case "${1:-}" in
       dms ipc call inhibit reason "Sunshine streaming" >/dev/null 2>&1
       dms ipc call inhibit enable >/dev/null 2>&1
     fi
-    if have_niri; then
+    if have_niri && [[ -n "$stream_mode" && "$stream_mode" != "off" ]]; then
       mode="$(current_mode)" || mode=""
       if [[ -n "$mode" && "$mode" != "$stream_mode" ]]; then
         printf '%s\n' "$mode" >"$state_file"
