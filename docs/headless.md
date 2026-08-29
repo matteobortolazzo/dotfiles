@@ -133,10 +133,19 @@ cat /proc/cmdline   # headless boot must contain systemd.unit=multi-user.target
 
 So the hook re-asserts both the entry and the `/+…` OS entry name line after
 every regeneration. It only ever *adds* that line back, never rewrites an
-existing one, since a dual-boot file may carry several and none of them are
-ours. The name it restores follows `limine-entry-tool`'s own precedence
-(`TARGET_OS_NAME`, else `PRETTY_NAME`, else `NAME`), so the tool adopts the line
-rather than creating a second OS entry.
+existing one, since a file may carry several `/+…` entries and none of them are
+ours — `FIND_BOOTLOADERS=yes` alone contributes `/+Other systems and
+bootloaders`. For the same reason the name is derived, not copied from whatever
+`/+…` line happens to come first: it follows `limine-entry-tool`'s own
+precedence (`TARGET_OS_NAME`, else `PRETTY_NAME`, else `NAME`), so the tool
+adopts the line rather than creating a second OS entry.
+
+If two identical `/+…` lines survive, the hook says so on every run and leaves
+them alone. That means an earlier regeneration stranded an old OS entry further
+down the file — typically with stale BLAKE2 hashes that fail verification if
+booted. Deleting it is a manual call: nothing in the hook can tell a stranded
+block apart from a deliberate second entry, and guessing wrong costs a boot
+option.
 
 It sorts before `90-limine-enroll-config` so that, on a machine with
 `ENABLE_ENROLL_LIMINE_CONFIG=yes`, the enrolled config hash covers the repaired
