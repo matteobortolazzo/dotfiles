@@ -108,22 +108,60 @@ sitting on the box; that trade was deliberately declined.
 
 ## Kernel updates
 
-The entry is written **above** the `comment: machine-id=…` line, because that
-comment is how `limine-entry-tool` finds the block it owns and rewrites — anything
-between the comment and the generated entries is lost on the next kernel update.
-The paths it uses (`boot():/<machine-id>/linux-cachyos/{vmlinuz,initramfs}`) are
-version-independent, so the entry survives kernel bumps on its own. The BLAKE2
+The entry is written by a `limine-entry-tool` post hook,
+`system/limine/85-headless-entry`, installed to
+`/etc/boot/hooks/post.d/85-headless-entry`. It runs after every kernel update,
+`limine-update` and `mkinitcpio` run, and idempotently from `chezmoi apply`.
+
+The hook exists because a one-shot write does not survive. Global options must
+precede every entry in `limine.conf`, so a hand-written entry has nowhere to go
+except immediately above the `comment: machine-id=…` marker — and that is
+exactly where `limine-entry-tool` looks for the OS entry it owns. On the next
+regeneration it adopts `/CachyOS (headless)` as its own name line, drops its
+`/+CachyOS` line as redundant, and the generated `//linux-cachyos` entries
+reparent under ours.
+
+That failure is silent and nasty: the headless entry becomes a *directory* whose
+first child is the normal graphical entry. The menu still shows
+`CachyOS (headless)`, the `cmdline:` in the file still reads
+`systemd.unit=multi-user.target`, and selecting it boots the graphical cmdline
+with greetd and all. `cat /proc/cmdline` is the only thing that tells you:
+
+```bash
+cat /proc/cmdline   # headless boot must contain systemd.unit=multi-user.target
+```
+
+So the hook re-asserts both the entry and the `/+…` OS entry name line after
+every regeneration. It only ever *adds* that line back, never rewrites an
+existing one, since a dual-boot file may carry several and none of them are
+ours. The name it restores follows `limine-entry-tool`'s own precedence
+(`TARGET_OS_NAME`, else `PRETTY_NAME`, else `NAME`), so the tool adopts the line
+rather than creating a second OS entry.
+
+It sorts before `90-limine-enroll-config` so that, on a machine with
+`ENABLE_ENROLL_LIMINE_CONFIG=yes`, the enrolled config hash covers the repaired
+file rather than the broken one.
+
+The kernel paths (`boot():/<machine-id>/linux-cachyos/{vmlinuz,initramfs}`) are
+version-independent, so the entry itself survives kernel bumps. The BLAKE2
 `#<hash>` suffix is deliberately stripped: it changes with every rebuild, and a
 stale hash is a boot failure. Verification still covers the generated entries.
 
-After a kernel update or a `limine-update`, confirm the entry is still there:
+After a kernel update or a `limine-update`, confirm the structure is still sane:
 
 ```bash
-sudo grep -A3 'headless boot entry' /boot/limine.conf
+sudo grep -n -A3 'headless boot entry' /boot/limine.conf
+sudo grep -n '^/+' /boot/limine.conf     # must be exactly one, under the marker
 ```
 
-If it is gone, re-run just this script (`run_once` will not fire again on its
-own, same idiom as the greetd script):
+If the entry or that `/+…` line is gone, run the hook by hand:
+
+```bash
+sudo /etc/boot/hooks/post.d/85-headless-entry
+```
+
+If the hook itself is missing, re-run the installer (`run_once` will not fire
+again on its own, same idiom as the greetd script):
 
 ```bash
 chezmoi execute-template < "$(chezmoi source-path)/run_once_after_49-headless-boot.sh.tmpl" | bash
@@ -136,6 +174,10 @@ write, alongside limine's own `limine.conf.old`.
 
 - **Headless entry does not boot** — pick `CachyOS` at the menu (5 s timeout) and
   you are back to exactly the old behaviour.
+- **Headless entry boots straight into the greeter** — it has been reparented
+  into a directory. Check `cat /proc/cmdline` for `systemd.unit=multi-user.target`
+  and `sudo grep '^/+' /boot/limine.conf` for the missing OS entry line, then run
+  `sudo /etc/boot/hooks/post.d/85-headless-entry`.
 - **Graphical entry does not boot** — pick `CachyOS (headless)`, SSH in, and
   debug with `journalctl -b -u greetd`. This is the case the two-entry split buys
   you, and the reason greetd is never masked.
