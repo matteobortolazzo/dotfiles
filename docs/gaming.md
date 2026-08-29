@@ -158,9 +158,9 @@ once one is running. A healthy startup logs `Found H.264/HEVC/AV1 encoder:
 - **Holds off DMS's idle lock**, which would otherwise lock the box out from
   under a running stream. `dms ipc call inhibit enable` takes no argument — the
   reason is a separate `inhibit reason <text>` call.
-- **Switches DP-1 to a 16:9 mode** for the duration of the stream (default
-  `2560x1440@119.998`, override with `SUNSHINE_STREAM_MODE`), then restores
-  whatever mode was in effect. See the aspect-ratio note below.
+- **Optionally switches DP-1 to a 16:9 mode** for the duration of the stream,
+  then restores whatever mode was in effect. **Off by default**
+  (`SUNSHINE_STREAM_MODE=off`) — see below.
 
 It always exits 0. Prep commands run without a shell, so there is no `|| true`
 to lean on and a non-zero exit aborts the stream before it starts. Under
@@ -185,6 +185,17 @@ ones — so the desk panel can simply be dropped to 1440p16:9 while streaming,
 which is also the bitrate/latency starting point recommended below. That is
 what the prep hook does, and it is why the niri session is usable for couch
 streaming at all.
+
+**The mode switch breaks XWayland games, which is why it defaults to off.** niri
+changes the Wayland output mode, but `xwayland-satellite` does not propagate it
+to the X screen: `xrandr` keeps reporting `Screen 0: current 5120 x 1440` while
+`niri msg outputs` says 2560x1440. A Proton title then renders 5120 wide into an
+output displaying 2560 of it, and exactly half the game is visible — measured on
+Spec Ops: The Line. Native Wayland clients follow the mode correctly, so the
+switch is opt-in via `SUNSHINE_STREAM_MODE` rather than removed.
+
+That leaves the **16:9 dummy plug as the real fix**: a genuine 16:9 output means
+no mode switching, so nothing to propagate and nothing to desynchronise.
 
 The `gamescope-session` route sidesteps the question differently: gamescope
 drives the output itself and the game never sees the ultrawide. Note that

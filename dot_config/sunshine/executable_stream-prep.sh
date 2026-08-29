@@ -7,11 +7,16 @@
 #   1. Hold off DMS's idle lock. Otherwise the session locks out from under a
 #      running game and the only way back is to walk to the desk — the exact
 #      thing couch streaming exists to avoid.
-#   2. Drop DP-1 from its native 32:9 mode to a 16:9 one for the duration of
-#      the stream. Sunshine captures the output as-is, so a 5120x1440 grab
-#      arrives at a 16:9 TV as a thin letterboxed strip with most of the panel
-#      wasted. The Odyssey exposes true 16:9 modes (2560x1440@120,
-#      1920x1080@120), and 1440p60 is where docs/gaming.md says to start.
+#   2. Optionally drop DP-1 to a 16:9 mode for the duration of the stream, so a
+#      5120x1440 grab does not arrive at a 16:9 TV as a thin letterboxed strip.
+#
+#      OFF BY DEFAULT, because it breaks every XWayland game: niri changes the
+#      Wayland output mode but xwayland-satellite does not propagate it, so
+#      `xrandr` keeps reporting the old 5120x1440 screen. A Proton game then
+#      renders 5120 wide into an output showing 2560 of it and you see exactly
+#      half the game. Set SUNSHINE_STREAM_MODE to a mode string to opt in for
+#      native-Wayland-only use; the real fix for the aspect ratio is a 16:9
+#      dummy plug (see docs/gaming.md).
 #
 # Always exits 0. Prep commands are run by Sunshine without a shell, so there
 # is no `|| true` to lean on, and a non-zero exit aborts the stream before it
@@ -25,7 +30,7 @@ set -uo pipefail
 # Sunshine scale the native mode instead — which is the right setting once a
 # 16:9 dummy plug makes the switch unnecessary.
 output="${SUNSHINE_STREAM_OUTPUT:-DP-1}"
-stream_mode="${SUNSHINE_STREAM_MODE:-2560x1440@119.998}"
+stream_mode="${SUNSHINE_STREAM_MODE:-off}"
 state_file="${XDG_RUNTIME_DIR:-/tmp}/sunshine-stream-prep.mode"
 
 have_niri() {
