@@ -243,8 +243,13 @@ extra hardware. Its specs bound what is worth configuring:
   low-latency decode. Start at 1440p60 / ~40 Mbps and push up.
 - **Enable Game mode and ALLM** (supported on Philips' 2019 OLEDs) before
   judging any of this.
-- **Check whether the ethernet port is 100 Mbit** — common on Philips sets of
-  this era, and it caps the usable bitrate.
+- **The ethernet port is 100 Mbit** — confirmed, not just suspected: fast.com on
+  the TV tops out at ~90 Mbps against a gigabit line, and the desktop's `eno1`
+  negotiates 1000. It does not affect the 1440p60 / ~40 Mbps target (Moonlight
+  traffic is LAN-only and that leaves 2x headroom), but it rules out 4K60 HDR,
+  which wants 80-150 Mbps and would sit on the ceiling. Judge it by Moonlight's
+  performance overlay — achieved bitrate at target with no drops — rather than
+  by the port speed.
 - HDR10 is supported, so HDR streaming works — via the KMS capture path above.
 - It is an OLED: don't leave a paused game or static HUD up for hours.
 
@@ -257,8 +262,9 @@ Rejected client options, so they don't get re-litigated:
   panel lag, which is the dominant term. Only worth it if the console gets
   repurposed as a dedicated streaming box.
 - **A €50 Google TV Streamer / Onn 4K Pro** beats the Xbox route if the TV's own
-  SoC stutters: no reboots, no dev account, modern decoder. Still does not
-  improve latency.
+  SoC stutters: no reboots, no dev account, modern decoder. It is also the only
+  way to lift the 100 Mbit bitrate ceiling, so it becomes the answer if 4K60 HDR
+  is ever wanted. Still does not improve latency — the panel lag is the panel's.
 
 ## Remote dev
 
