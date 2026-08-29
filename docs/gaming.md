@@ -201,15 +201,12 @@ virtual outputs (there is no `niri msg` verb for one, and the output docs only
 describe matching *connected* monitors), and embedded gamescope likewise drives
 a real DRM connector. Sunshine needs a connector reporting `connected`.
 
-Whether this panel drops off when powered down is a per-monitor question. Check
-it with the monitor off, over SSH:
-
-```bash
-cat /sys/class/drm/card1-DP-1/status
-```
-
-`connected` means the link survives standby and nothing more is needed.
-`disconnected` means niri has no output at all and Sunshine has nothing to grab.
+**This panel drops off when powered down** — measured, with the monitor off and
+`cat /sys/class/drm/card1-DP-1/status` over SSH reporting `disconnected`. So
+niri has no output at all and Sunshine has nothing to grab: couch streaming with
+the Odyssey switched off requires a plug, not a setting. (The same check is how
+to re-test if the monitor or cable is ever swapped; `connected` there would mean
+the link survives standby and none of this is needed.)
 
 **The software workarounds do not apply to this box.** `drm.edid_firmware=` and
 `video=DP-1:e` are core-DRM helpers; the proprietary NVIDIA driver does not
