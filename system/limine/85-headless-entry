@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+# Installed to /etc/boot/hooks/post.d/85-headless-entry by
+# run_once_after_49-headless-boot.sh.tmpl — edit it in the chezmoi source, not
+# here. Runs as root, after every limine-entry-tool run (kernel updates,
+# limine-update, mkinitcpio), and idempotently from `chezmoi apply`.
+#
+# Writes the 'CachyOS (headless)' entry into limine.conf and repairs the OS
+# entry's own name line.
+#
+# Why a hook and not a one-shot write: limine-entry-tool identifies the OS entry
+# it owns by the '/+<name>' line adjacent to 'comment: machine-id=…'. Globals
+# must precede every entry in limine.conf, so a hand-written entry has nowhere
+# to live except immediately above that marker — where the tool mistakes it for
+# the OS entry name, drops its own '/+CachyOS' line as redundant, and reparents
+# the generated kernel entries under ours. The headless entry then becomes a
+# *directory* whose first child is the normal graphical entry: selecting it at
+# the menu boots the graphical cmdline, greetd starts, and the entry looks
+# perfectly correct in the file the whole time.
+#
+# Placement is therefore unavoidable and the damage has to be repaired after the
+# fact, on every regeneration. Sorted before 90-limine-enroll-config so an
+# enrolled config hash covers the repaired file, not the broken one.
+#
+# Hook exit codes: >=100 aborts limine-entry-tool, 1..99 is a warning. Nothing
+# here is worth failing a kernel update over, so every giving-up path exits 0
+# after saying why.
+
+set -euo pipefail
+
+esp=/boot
+enroll=""
+if [ -r /etc/default/limine ]; then
+	value=$(grep -m1 '^[[:space:]]*ESP_PATH=' /etc/default/limine | cut -d= -f2- | tr -d '"' || true)
+	[ -n "$value" ] && esp="$value"
+	enroll=$(grep -m1 '^[[:space:]]*ENABLE_ENROLL_LIMINE_CONFIG=' /etc/default/limine | cut -d= -f2- | tr -d '"' || true)
+fi
+conf="$esp/limine.conf"
+
+if [ ! -f "$conf" ]; then
+	echo "85-headless-entry: $conf missing — nothing to do"
+	exit 0
+fi
+
+entry_name="CachyOS (headless)"
+begin="# >>> chezmoi: headless boot entry >>>"
+end="# <<< chezmoi: headless boot entry <<<"
+marker="comment: machine-id="
+
+if ! grep -q "^$marker" "$conf"; then
+	echo "85-headless-entry: no '$marker' line in $conf — refusing to guess where the entry goes" >&2
+	exit 0
+fi
+
+# Mirror the generated entry's own paths and cmdline rather than re-deriving them
+# from /etc/default/limine: root=UUID, rootflags and the machine-id directory all
+# have to match exactly, and the generated entry is the only place they are known
+# to be correct. The kernel paths are version-independent
+# (boot():/<machine-id>/<kernel-id>/vmlinuz), so this entry survives kernel
+# updates; only the BLAKE2 '#<hash>' suffix changes, which is why it is stripped —
+# a stale hash is a boot failure. Verification still covers the generated entries.
+first_field() {
+	awk -v field="$1" '
+		/^comment: machine-id=/ { seen = 1; next }
+		seen && $0 ~ "^[[:space:]]*" field ":" {
+			sub("^[[:space:]]*" field ":[[:space:]]*", "")
+			print
+			exit
+		}
+	' "$conf"
+}
+
+kernel_path=$(first_field path)
+initrd_path=$(first_field module_path)
+base_cmdline=$(first_field cmdline)
+kernel_path=${kernel_path%%#*}
+initrd_path=${initrd_path%%#*}
+
+if [ -z "$kernel_path" ] || [ -z "$initrd_path" ] || [ -z "$base_cmdline" ]; then
+	echo "85-headless-entry: could not read path/module_path/cmdline from the generated entry in $conf" >&2
+	exit 0
+fi
+
+# The OS entry's own name line. Reuse whatever limine-entry-tool last wrote so a
+# renamed OS entry is preserved; fall back to os-release only on a file where the
+# line has already been eaten and there is nothing left to copy.
+os_line=$(grep -m1 '^/+' "$conf" || true)
+if [ -z "$os_line" ]; then
+	# Same precedence limine-entry-tool uses to name a fresh OS entry
+	# (README, "OS Entry Targeting"): TARGET_OS_NAME, else PRETTY_NAME,
+	# else NAME. A mismatch here would make the tool add a *second* OS
+	# entry rather than adopt this one.
+	os_name=$(grep -m1 '^[[:space:]]*TARGET_OS_NAME=' /etc/default/limine 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+	[ -n "$os_name" ] || os_name=$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Linux}}")
+	os_line="/+$os_name"
+	echo "85-headless-entry: no '/+…' OS entry line in $conf — restoring '$os_line'"
+fi
+
+# quiet and splash go: on a box you reach over SSH the console exists to tell you
+# why the boot failed, and plymouth is a graphical stack this entry exists to avoid.
+headless_cmdline=""
+for token in $base_cmdline; do
+	case "$token" in
+	quiet | splash | systemd.unit=*) continue ;;
+	esac
+	headless_cmdline="${headless_cmdline:+$headless_cmdline }$token"
+done
+headless_cmdline="$headless_cmdline systemd.unit=multi-user.target"
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+cat >"$work/block" <<BLOCK
+$begin
+# Managed by chezmoi (system/limine/85-headless-entry) — edit it there.
+/$entry_name
+  comment: Boots to multi-user.target: no greetd, no compositor, no GPU session.
+  comment: Bring the desktop up on demand: 'desktop up niri' or 'desktop up gamescope'.
+  protocol: linux
+  module_path: $initrd_path
+  path: $kernel_path
+  cmdline: $headless_cmdline
+$end
+
+BLOCK
+
+# Drop any previous copy of the block. The strip swallows the blank line that
+# follows the block as well as the block itself — the block re-inserts its own
+# trailing blank, so without that this is not idempotent and every run pushes the
+# file one line further apart.
+awk -v b="$begin" -v e="$end" '
+	$0 == b { skip = 1; next }
+	skip == 1 {
+		if ($0 == e) skip = 2
+		next
+	}
+	skip == 2 {
+		skip = 0
+		if ($0 == "") next
+	}
+	{ print }
+' "$conf" >"$work/stripped"
+
+# Re-insert the block above the marker, and restore the OS entry name line
+# directly below it when limine-entry-tool has eaten it. That one line is the
+# whole repair: with it present the generated '//<kernel-id>' entries nest under
+# the OS entry where they belong, and the headless entry stays a leaf that
+# actually boots the cmdline written above. Only ever *added*, never rewritten —
+# a dual-boot file may carry several '/+…' entries and none of them are ours.
+awk -v block="$work/block" -v os_line="$os_line" '
+	!inserted && /^comment: machine-id=/ {
+		while ((getline line < block) > 0) print line
+		close(block)
+		print
+		if ((getline nxt) > 0) {
+			if (nxt !~ /^\/\+/) print os_line
+			print nxt
+		} else {
+			print os_line
+		}
+		inserted = 1
+		next
+	}
+	{ print }
+	END {
+		if (!inserted) exit 1
+	}
+' "$work/stripped" >"$work/new" || {
+	echo "85-headless-entry: failed to place the entry in $conf" >&2
+	exit 0
+}
+
+# default_entry by name, not index: indices shift every time limine-snapper-sync
+# adds a snapshot, and it is ambiguous whether directories are counted. limine
+# accepts an entry path here (see CONFIG.md); this name needs no escaping.
+# remember_last_entry would otherwise silently make the box graphical-by-default
+# again after one gaming session — the point of this setup is that it always
+# comes back headless unless you say otherwise at the menu.
+set_global() {
+	if grep -q "^$1:" "$work/new"; then
+		sed -i "s|^$1:.*|$1: $2|" "$work/new"
+	else
+		sed -i "1i $1: $2" "$work/new"
+	fi
+}
+set_global default_entry "$entry_name"
+set_global remember_last_entry no
+
+if cmp -s "$work/new" "$conf"; then
+	echo "85-headless-entry: '$entry_name' already current in $conf"
+	exit 0
+fi
+
+cp "$conf" "$conf.chezmoi.bak"
+cp "$work/new" "$conf"
+echo "85-headless-entry: wrote '$entry_name' to $conf (previous file: $conf.chezmoi.bak)"
+
+if [ "$enroll" = "yes" ] && command -v limine-enroll-config >/dev/null 2>&1; then
+	limine-enroll-config
+fi
