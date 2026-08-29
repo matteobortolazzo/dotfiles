@@ -391,6 +391,17 @@ window-rule {
     open-floating true
 }
 
+// Steam Big Picture is the couch-gaming entry point: Sunshine's "Steam Big
+// Picture" app launches it and Moonlight streams the whole output, so a BPM
+// window tiled next to a browser is what lands on the TV. Nothing fullscreens
+// it on its own — Steam asks for a normal toplevel and niri tiles it like any
+// other. Match on the title as well as the app-id, or this also swallows the
+// Steam library window, which shares app-id "steam" and is wanted tiled.
+window-rule {
+    match app-id=r#"^steam$"# title=r#"^Steam Big Picture Mode$"#
+    open-fullscreen true
+}
+
 // Terminal transparency is handled by Ghostty's own `background-opacity`
 // (only fades the bg, keeps text fully opaque). niri's `opacity` would
 // dim glyphs too — avoid it for terminals.
