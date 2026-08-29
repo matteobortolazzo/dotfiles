@@ -13,6 +13,10 @@ system
 .local/bin/desktop
 {{ end -}}
 
+{{ if not (dig "gaming" false .) -}}
+.config/sunshine
+{{ end -}}
+
 {{ if ne .profile "wsl" -}}
 .config/scripts/pen-wsl
 {{ end -}}

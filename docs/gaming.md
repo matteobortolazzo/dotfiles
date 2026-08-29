@@ -105,12 +105,12 @@ installed for per-prefix fixes.
 
 ## Streaming to the TV
 
-**The ultrawide makes desktop capture the wrong approach.** Capturing a 5120x1440
-output and sending it to a 16:9 TV letterboxes into a thin horizontal strip with
-most of the panel wasted. Couch mode therefore has to be the
-`gamescope-session-cachyos` session with gamescope set to the TV's resolution
-(`-W 3840 -H 2160`), not Sunshine pointed at the niri desktop. This is the main
-reason the two sessions stay separate rather than one session serving both.
+**The ultrawide makes naive desktop capture the wrong approach.** Capturing a
+5120x1440 output and sending it to a 16:9 TV letterboxes into a thin horizontal
+strip with most of the panel wasted — see the 32:9/16:9 section below for the
+two ways out (drop the output to a 16:9 mode for the stream, or run
+`gamescope-session-cachyos`, which drives the output itself). Either way the two
+sessions stay separate rather than one serving both.
 
 niri is not wlroots-based, so Sunshine's `wlr-export-dmabuf` capture path is
 unavailable. The options are:
@@ -121,9 +121,113 @@ unavailable. The options are:
 - **xdg-desktop-portal ScreenCast** — works (`xdg-desktop-portal-gnome` is
   already in `arch-desktop.txt`), no HDR.
 
-Validate the network with Steam Remote Play + Steam Link first: Steam does its own
-capture and encode, so it sidesteps all of the above and needs zero config. Then
-move to Sunshine + Moonlight for HDR and non-Steam titles.
+In practice Sunshine picks a third one: niri does implement
+`zwlr_screencopy_manager_v1` even though it is not wlroots-based, so the log
+reports `[wlgrab] Selected monitor ... DP-1`. That path works and needs no
+capability, but it captures the 32:9 output as-is — fine for a desk test, still
+the wrong shape for the TV.
+
+### Enabling it
+
+The systemd user unit is **`app-dev.lizardbyte.app.Sunshine.service`**.
+`sunshine.service` is only an `[Install] Alias`, so it does not resolve until
+the real unit has been enabled once — `systemctl --user enable sunshine.service`
+fails with `not-found` on a fresh machine.
+
+It is `WantedBy=graphical-session.target`, and that is the only correct way to
+start it. Starting it by hand from a tty or over SSH gives it no
+`WAYLAND_DISPLAY` and no output; the encoder probe then walks nvenc → vulkan →
+vaapi → software, fails all four, and ends at:
+
+```
+Fatal: Unable to find display or encoder during startup.
+Fatal: Please check that a display is connected and powered on.
+```
+
+That message is about the *session*, not the hardware — the fix is to bring up
+a session (`desktop up niri` / `desktop up gamescope`) and let the target pull
+Sunshine in, or `systemctl --user restart app-dev.lizardbyte.app.Sunshine.service`
+once one is running. A healthy startup logs `Found H.264/HEVC/AV1 encoder:
+*_nvenc` and the monitor name.
+
+### The prep hook
+
+`dot_config/sunshine/stream-prep.sh` is wired into Sunshine's
+`global_prep_cmd` (`do` = `on`, `undo` = `off`) and does two things:
+
+- **Holds off DMS's idle lock**, which would otherwise lock the box out from
+  under a running stream. `dms ipc call inhibit enable` takes no argument — the
+  reason is a separate `inhibit reason <text>` call.
+- **Switches DP-1 to a 16:9 mode** for the duration of the stream (default
+  `2560x1440@119.998`, override with `SUNSHINE_STREAM_MODE`), then restores
+  whatever mode was in effect. See the aspect-ratio note below.
+
+It always exits 0. Prep commands run without a shell, so there is no `|| true`
+to lean on and a non-zero exit aborts the stream before it starts. Under
+`gamescope-session` neither `dms` nor `niri` is running and both steps no-op.
+
+`niri msg output DP-1 mode auto` is **not** a way to restore the desk mode: it
+selects the connector's *preferred* mode, which on this panel is 3840x1080, not
+the 5120x1440 that `config.kdl` sets. The hook records the outgoing mode to
+`$XDG_RUNTIME_DIR/sunshine-stream-prep.mode` and plays it back verbatim.
+
+`sunshine.conf` is rewritten wholesale by the web UI, so it is tracked as
+`dot_config/sunshine/modify_sunshine.conf`: it re-asserts the one
+`global_prep_cmd` line and passes every other key through untouched.
+
+### 32:9 desk, 16:9 TV
+
+Sunshine captures the output as it is, so streaming the native 5120x1440 mode
+lands on the TV as a thin letterboxed strip with most of the frame wasted. The
+Odyssey does expose true 16:9 modes — `niri msg outputs` lists
+`2560x1440@120`, `1920x1080@120` and `1920x1080@60` alongside the ultrawide
+ones — so the desk panel can simply be dropped to 1440p16:9 while streaming,
+which is also the bitrate/latency starting point recommended below. That is
+what the prep hook does, and it is why the niri session is usable for couch
+streaming at all.
+
+The `gamescope-session` route sidesteps the question differently: gamescope
+drives the output itself and the game never sees the ultrawide. Note that
+`gamescope-session-cachyos`'s launcher (`/usr/lib/steamos/gamescope-session`)
+exposes no `-W`/`-H` knob — it takes the output's mode — so "gamescope set to
+`-W 3840 -H 2160`" means patching the launcher, not setting an env var.
+
+### Monitorless: it needs a dummy plug, not a config option
+
+Streaming from the couch with the Odyssey switched off does **not** work by
+config alone. Login is not the obstacle — `desktop up niri` autologins over SSH
+with no greeter — the display is: niri 26.04 has no headless backend and no
+virtual outputs (there is no `niri msg` verb for one, and the output docs only
+describe matching *connected* monitors), and embedded gamescope likewise drives
+a real DRM connector. Sunshine needs a connector reporting `connected`.
+
+Whether this panel drops off when powered down is a per-monitor question. Check
+it with the monitor off, over SSH:
+
+```bash
+cat /sys/class/drm/card1-DP-1/status
+```
+
+`connected` means the link survives standby and nothing more is needed.
+`disconnected` means niri has no output at all and Sunshine has nothing to grab.
+
+**The software workarounds do not apply to this box.** `drm.edid_firmware=` and
+`video=DP-1:e` are core-DRM helpers; the proprietary NVIDIA driver does not
+honour them, and `modinfo nvidia` exposes no EDID-override parameter (only
+`NVreg_*` registry dwords, none of which take an EDID). Every write-up of those
+tricks is for amdgpu/i915/nouveau. So the options are to leave the monitor
+powered on, or a hardware EDID dummy plug — DP-2, DP-3 and HDMI-A-1 are free.
+
+A **16:9** dummy plug is worth preferring: it makes the connector permanently
+present *and* removes the aspect-ratio problem at the source, which retires the
+mode-switch half of `stream-prep.sh` (give it its own `output` block in
+`config.kdl` and point Sunshine's `output_name` at it).
+
+**Steam Remote Play avoids all of it**: Steam captures the game, not the
+output, and renders at whatever the Steam Link client asks for. For Steam
+titles it is both the easiest and the best-looking answer, and it is the right
+way to validate the network first — zero config, its own capture and encode.
+Sunshine earns its place on non-Steam titles and HDR.
 
 ### Client: Philips 55OLED854/12 (2019)
 
@@ -155,10 +259,6 @@ Rejected client options, so they don't get re-litigated:
 - **A €50 Google TV Streamer / Onn 4K Pro** beats the Xbox route if the TV's own
   SoC stutters: no reboots, no dev account, modern decoder. Still does not
   improve latency.
-
-DMS's idle lock will lock the box out from under a running stream. Wire an idle
-inhibitor into Sunshine's app prep commands — check the verb with
-`dms ipc call idle`.
 
 ## Remote dev
 
