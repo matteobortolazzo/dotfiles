@@ -80,20 +80,18 @@ if [ -z "$kernel_path" ] || [ -z "$initrd_path" ] || [ -z "$base_cmdline" ]; the
 	exit 0
 fi
 
-# The OS entry's own name line. Reuse whatever limine-entry-tool last wrote so a
-# renamed OS entry is preserved; fall back to os-release only on a file where the
-# line has already been eaten and there is nothing left to copy.
-os_line=$(grep -m1 '^/+' "$conf" || true)
-if [ -z "$os_line" ]; then
-	# Same precedence limine-entry-tool uses to name a fresh OS entry
-	# (README, "OS Entry Targeting"): TARGET_OS_NAME, else PRETTY_NAME,
-	# else NAME. A mismatch here would make the tool add a *second* OS
-	# entry rather than adopt this one.
-	os_name=$(grep -m1 '^[[:space:]]*TARGET_OS_NAME=' /etc/default/limine 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
-	[ -n "$os_name" ] || os_name=$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Linux}}")
-	os_line="/+$os_name"
-	echo "85-headless-entry: no '/+…' OS entry line in $conf — restoring '$os_line'"
-fi
+# The OS entry's own name line, derived the same way limine-entry-tool names a
+# fresh one (README, "OS Entry Targeting"): TARGET_OS_NAME, else PRETTY_NAME,
+# else NAME. A mismatch here would make the tool add a *second* OS entry rather
+# than adopt this line.
+#
+# Deliberately NOT copied from the first '/+…' line in the file. limine.conf can
+# carry several — FIND_BOOTLOADERS adds '/+Other systems and bootloaders', and a
+# previous regeneration can strand an old OS entry further down — and copying an
+# arbitrary one restores the wrong name directly under our marker.
+os_name=$(grep -m1 '^[[:space:]]*TARGET_OS_NAME=' /etc/default/limine 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+[ -n "$os_name" ] || os_name=$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Linux}}")
+os_line="/+$os_name"
 
 # quiet and splash go: on a box you reach over SSH the console exists to tell you
 # why the boot failed, and plymouth is a graphical stack this entry exists to avoid.
@@ -184,6 +182,18 @@ set_global() {
 }
 set_global default_entry "$entry_name"
 set_global remember_last_entry no
+
+# A second copy of the OS entry means an earlier regeneration stranded one —
+# usually with stale BLAKE2 hashes that will fail verification if booted. Warn on
+# every run, before the no-change exit, rather than deleting it: nothing here can
+# tell a stranded block apart from a deliberate second entry, and guessing wrong
+# costs a boot option.
+duplicates=$(grep -c -x -F "$os_line" "$work/new" || true)
+if [ "${duplicates:-0}" -gt 1 ]; then
+	echo "85-headless-entry: $duplicates '$os_line' entries in $conf — one is likely" >&2
+	echo "  stranded by an earlier regeneration; delete the stale block by hand. Lines:" >&2
+	grep -n -x -F "$os_line" "$work/new" >&2
+fi
 
 if cmp -s "$work/new" "$conf"; then
 	echo "85-headless-entry: '$entry_name' already current in $conf"
