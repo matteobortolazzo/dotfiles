@@ -10,10 +10,15 @@
 #
 # Rules:
 #   - MANAGED  keys are forced on every machine (objects merge, arrays replace).
-#              cenci is pinned `false` here rather than omitted: a plugin manifest's
-#              defaultEnabled defaults to true, so deleting the entry would leave it on.
-#              Re-enable it at project scope, in that project's .claude/settings.local.json,
-#              which wins (resolution order: managed -> user -> project -> local).
+#              cenci is pinned `true` here rather than omitted: a plugin manifest's
+#              defaultEnabled defaults to true, so the entry is belt-and-braces, and an
+#              explicit value is what a runtime /plugin toggle gets reverted to on the
+#              next apply. It was pinned `false` from ad6ac21 until this change, on the
+#              plan of re-enabling per project in .claude/settings.local.json -- but that
+#              per-project override was never written anywhere, so cenci-watch reported no
+#              sessions in every repo, including cenci itself. Watch is fleet-wide by
+#              design; turn a plugin off per project instead, which wins
+#              (resolution order: managed -> user -> project -> local).
 #   - RETIRED  keys are deleted once, then stay gone unless something rewrites them.
 #   - Anything else on disk is preserved untouched. That is deliberate: it is how
 #     machine-local, repo-specific state (autoMode.environment, skipAutoPermissionPrompt)
@@ -256,9 +261,9 @@ MANAGED=$(cat <<'JSON'
     "frontend-design@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "resend@claude-plugins-official": true,
-    "cenci@cenci": false,
-    "cenci-watch@cenci": false,
-    "cenci-sandbox@cenci": false
+    "cenci@cenci": true,
+    "cenci-watch@cenci": true,
+    "cenci-sandbox@cenci": true
   },
   "extraKnownMarketplaces": {
     "cenci": {
