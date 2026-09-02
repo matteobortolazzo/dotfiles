@@ -9,17 +9,26 @@ set -euo pipefail
 # no connection line to hint at it. So the port has to be opened explicitly
 # alongside 27-sshd, or a dev box looks up and answers nothing.
 #
-# Rules are added *before* the enable, so this is safe to run over SSH.
+# Rules are added *before* the enable, so this is safe to run over SSH. On
+# re-runs, new scoped rules are added *before* the old unscoped ones are
+# deleted for the same reason.
+#
+# Everything is scoped to the LAN subnet or the tailscale interface. This box
+# sits behind NAT, so unscoped rules were never remotely reachable — but
+# Docker-published ports have already shown that "behind NAT" is the only line
+# of defense a blanket allow leaves, and Sunshine's 47990 is an admin web UI
+# that can run arbitrary commands. Scoping costs nothing.
 
 if ! command -v ufw >/dev/null 2>&1; then
   echo "ufw not installed — skipping (it's in arch-system.txt)"
   exit 0
 fi
 
+lan="192.168.1.0/24"
+
 # `limit` = allow, but throttle a source to 6 connections/30s, which blunts
-# brute force without fail2ban. No interface is pinned: the laptop is wireless
-# and the desktop wired, and ufw rules are the same either way.
-sudo ufw limit 22/tcp comment 'ssh (rate-limited)'
+# brute force without fail2ban.
+sudo ufw limit from "$lan" to any port 22 proto tcp comment 'ssh (lan, rate-limited)'
 
 # Tailscale traffic is already authenticated by the tailnet, and the peer IPs
 # are not knowable up front — allow SSH on the interface rather than by source.
@@ -28,16 +37,27 @@ sudo ufw limit 22/tcp comment 'ssh (rate-limited)'
 sudo ufw allow in on tailscale0 to any port 22 proto tcp comment 'ssh over tailscale'
 
 {{ if dig "gaming" false . -}}
-# Moonlight -> Sunshine. Enabling a default-deny firewall without these silently
-# kills couch streaming: the TV client just fails to find the host. Ports are
-# Sunshine's defaults (base port 47989); change them here if the base moves.
-sudo ufw allow 47984:47990/tcp comment 'sunshine control + web ui'
-sudo ufw allow 48010/tcp comment 'sunshine rtsp'
-sudo ufw allow 47998:48000/udp comment 'sunshine video/audio/control'
-sudo ufw allow 48002/udp comment 'sunshine mic'
-sudo ufw allow 48010/udp comment 'sunshine rtsp'
+# Moonlight -> Sunshine, LAN clients only (the TV). Enabling a default-deny
+# firewall without these silently kills couch streaming: the client just fails
+# to find the host. Ports are Sunshine's defaults (base port 47989); change
+# them here if the base moves. 47990 is the admin web UI — LAN-scoped on
+# purpose, and Sunshine's own origin_web_ui_allowed=lan backs it up.
+sudo ufw allow from "$lan" to any port 47984:47990 proto tcp comment 'sunshine control + web ui (lan)'
+sudo ufw allow from "$lan" to any port 48010 proto tcp comment 'sunshine rtsp (lan)'
+sudo ufw allow from "$lan" to any port 47998:48000 proto udp comment 'sunshine video/audio/control (lan)'
+sudo ufw allow from "$lan" to any port 48002 proto udp comment 'sunshine mic (lan)'
+sudo ufw allow from "$lan" to any port 48010 proto udp comment 'sunshine rtsp (lan)'
 
 {{ end -}}
+# Migration: drop the pre-scoping blanket rules if a previous run added them.
+# `ufw delete` on a rule that doesn't exist just says so and exits 0.
+sudo ufw delete limit 22/tcp >/dev/null 2>&1 || true
+sudo ufw delete allow 47984:47990/tcp >/dev/null 2>&1 || true
+sudo ufw delete allow 48010/tcp >/dev/null 2>&1 || true
+sudo ufw delete allow 47998:48000/udp >/dev/null 2>&1 || true
+sudo ufw delete allow 48002/udp >/dev/null 2>&1 || true
+sudo ufw delete allow 48010/udp >/dev/null 2>&1 || true
+
 if sudo ufw status | grep -q '^Status: active'; then
   sudo ufw reload
   echo "ufw already active — rules added and reloaded"
