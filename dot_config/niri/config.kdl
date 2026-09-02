@@ -77,6 +77,18 @@ output "DP-1" {
     }
 }
 
+// Desktop's 16:9 UGREEN dummy plug: the dedicated Sunshine streaming output
+// (see docs/gaming.md "Monitorless"). Its EDID prefers 3840x2160@60 but lists
+// 16:10 traps (2560x1600, 2880x1800) right behind it, so pin the mode. 1440p60
+// is the only 1440p mode it offers and matches the TV link budget (4K60 TV on
+// a 100 Mbit port) without Sunshine downscaling 4K every frame. The EDID
+// carries no serial, so the connector name is the reliable match here.
+output "DP-2" {
+    mode "2560x1440"
+    position x=5120 y=0
+    scale 1.0
+}
+
 // Hyprland env = lines (HYPRCURSOR_SIZE dropped — Hyprland-only)
 environment {
     LIBVA_DRIVER_NAME "nvidia"
@@ -400,6 +412,11 @@ window-rule {
 window-rule {
     match app-id=r#"^steam$"# title=r#"^Steam Big Picture Mode$"#
     open-fullscreen true
+    // BPM only ever runs streamed — pin it to the dummy plug so it can't land
+    // on the desk monitor. Ignored on machines where DP-2 is absent, and
+    // stream-prep.sh disables DP-1 during streams anyway; this is the seatbelt
+    // for BPM launched while both outputs are live.
+    open-on-output "DP-2"
 }
 
 // Steam games are separate toplevels from Big Picture, so the rule above does
