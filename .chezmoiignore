@@ -15,6 +15,7 @@ system
 
 {{ if not (dig "gaming" false .) -}}
 .config/sunshine
+.config/systemd/user/gamescope-session.service.d
 {{ end -}}
 
 {{ if ne .profile "wsl" -}}

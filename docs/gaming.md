@@ -107,10 +107,10 @@ installed for per-prefix fixes.
 
 **The ultrawide makes naive desktop capture the wrong approach.** Capturing a
 5120x1440 output and sending it to a 16:9 TV letterboxes into a thin horizontal
-strip with most of the panel wasted — see the 32:9/16:9 section below for the
-two ways out (drop the output to a 16:9 mode for the stream, or run
-`gamescope-session-cachyos`, which drives the output itself). Either way the two
-sessions stay separate rather than one serving both.
+strip with most of the panel wasted. The fix is the **16:9 dummy plug on DP-2**
+(a UGREEN EDID dongle, pinned to 2560x1440@60 in `config.kdl`): streams capture
+that output, and the prep hook turns the desk panel off for the duration — see
+the sections below.
 
 niri is not wlroots-based, so Sunshine's `wlr-export-dmabuf` capture path is
 unavailable. The options are:
@@ -158,50 +158,51 @@ once one is running. A healthy startup logs `Found H.264/HEVC/AV1 encoder:
 - **Holds off DMS's idle lock**, which would otherwise lock the box out from
   under a running stream. `dms ipc call inhibit enable` takes no argument — the
   reason is a separate `inhibit reason <text>` call.
-- **Optionally switches DP-1 to a 16:9 mode** for the duration of the stream,
-  then restores whatever mode was in effect. **Off by default**
-  (`SUNSHINE_STREAM_MODE=off`) — see below.
+- **Turns the desk monitor (DP-1) off** for the duration of the stream, so the
+  dummy plug (DP-2) is the only output: Sunshine's monitor pick (index 0 in the
+  wlgrab list) and Steam's window placement then have exactly one possible
+  answer. Only done when DP-2 is actually present — with the dummy unplugged,
+  turning DP-1 off would leave the session with zero outputs. The
+  `$XDG_RUNTIME_DIR/sunshine-stream-prep.desk-off` marker records that the hook
+  (not the user) turned it off, so `off` only re-enables what `on` disabled.
+  Overridable via `SUNSHINE_STREAM_OUTPUT` / `SUNSHINE_DESK_OUTPUT`.
 
 It always exits 0. Prep commands run without a shell, so there is no `|| true`
 to lean on and a non-zero exit aborts the stream before it starts. Under
 `gamescope-session` neither `dms` nor `niri` is running and both steps no-op.
 
-`niri msg output DP-1 mode auto` is **not** a way to restore the desk mode: it
-selects the connector's *preferred* mode, which on this panel is 3840x1080, not
-the 5120x1440 that `config.kdl` sets. The hook records the outgoing mode to
-`$XDG_RUNTIME_DIR/sunshine-stream-prep.mode` and plays it back verbatim.
-
 `sunshine.conf` is rewritten wholesale by the web UI, so it is tracked as
 `dot_config/sunshine/modify_sunshine.conf`: it re-asserts the one
 `global_prep_cmd` line and passes every other key through untouched.
 
-### 32:9 desk, 16:9 TV
+### 32:9 desk, 16:9 TV: the dummy plug
 
-Sunshine captures the output as it is, so streaming the native 5120x1440 mode
-lands on the TV as a thin letterboxed strip with most of the frame wasted. The
-Odyssey does expose true 16:9 modes — `niri msg outputs` lists
-`2560x1440@120`, `1920x1080@120` and `1920x1080@60` alongside the ultrawide
-ones — so the desk panel can simply be dropped to 1440p16:9 while streaming,
-which is also the bitrate/latency starting point recommended below. That is
-what the prep hook does, and it is why the niri session is usable for couch
-streaming at all.
+The answer to "capture a 32:9 output for a 16:9 TV" is **don't** — capture the
+16:9 dummy plug on DP-2 instead. `config.kdl` pins it to 2560x1440@60 (its
+EDID prefers 3840x2160@60 with 16:10 modes right behind it, so an explicit
+mode matters), the prep hook turns DP-1 off during streams, and the BPM
+window rule opens Big Picture on DP-2. 1440p60 is deliberate: the TV is 4K60
+with no VRR on a 100 Mbit port, so 4K capture would only buy per-frame
+downscaling in the encoder.
 
-**The mode switch breaks XWayland games, which is why it defaults to off.** niri
-changes the Wayland output mode, but `xwayland-satellite` does not propagate it
-to the X screen: `xrandr` keeps reporting `Screen 0: current 5120 x 1440` while
-`niri msg outputs` says 2560x1440. A Proton title then renders 5120 wide into an
-output displaying 2560 of it, and exactly half the game is visible — measured on
-Spec Ops: The Line. Native Wayland clients follow the mode correctly, so the
-switch is opt-in via `SUNSHINE_STREAM_MODE` rather than removed.
-
-That leaves the **16:9 dummy plug as the real fix**: a genuine 16:9 output means
-no mode switching, so nothing to propagate and nothing to desynchronise.
+An earlier iteration instead switched DP-1 itself to a 16:9 mode for the
+stream. **That breaks every XWayland game**: niri changes the Wayland output
+mode, but `xwayland-satellite` does not propagate it to the X screen —
+`xrandr` keeps reporting `Screen 0: current 5120 x 1440` while `niri msg
+outputs` says 2560x1440, so a Proton title renders 5120 wide into an output
+displaying 2560 of it and exactly half the game is visible (measured on Spec
+Ops: The Line). The dummy plug is a permanently-16:9 output: nothing switches,
+so nothing desynchronises. The mode-switch code was removed from
+`stream-prep.sh` when the plug went in (git history has it).
 
 The `gamescope-session` route sidesteps the question differently: gamescope
-drives the output itself and the game never sees the ultrawide. Note that
-`gamescope-session-cachyos`'s launcher (`/usr/lib/steamos/gamescope-session`)
-exposes no `-W`/`-H` knob — it takes the output's mode — so "gamescope set to
-`-W 3840 -H 2160`" means patching the launcher, not setting an env var.
+drives the output itself and the game never sees the ultrawide. A user-unit
+drop-in (`gamescope-session.service.d/override.conf`) sets
+`OUTPUT_CONNECTOR=DP-2` so it deterministically grabs the dummy — the
+launcher's default is `*,eDP-1`, i.e. first-enumerated connector on this box.
+Note that `gamescope-session-cachyos`'s launcher
+(`/usr/lib/steamos/gamescope-session`) exposes no `-W`/`-H` knob — it takes
+the output's preferred mode, so on the dummy it runs 3840x2160@60.
 
 ### Monitorless: it needs a dummy plug, not a config option
 
@@ -226,10 +227,13 @@ honour them, and `modinfo nvidia` exposes no EDID-override parameter (only
 tricks is for amdgpu/i915/nouveau. So the options are to leave the monitor
 powered on, or a hardware EDID dummy plug — DP-2, DP-3 and HDMI-A-1 are free.
 
-A **16:9** dummy plug is worth preferring: it makes the connector permanently
-present *and* removes the aspect-ratio problem at the source, which retires the
-mode-switch half of `stream-prep.sh` (give it its own `output` block in
-`config.kdl` and point Sunshine's `output_name` at it).
+That plug is now installed: a UGREEN 4K EDID dongle on **DP-2**, with its own
+`output` block in `config.kdl` (2560x1440@60 — its EDID advertises no serial,
+so the connector name is the match). It makes the connector permanently
+present *and* removes the aspect-ratio problem at the source, which is what
+retired the mode-switch half of `stream-prep.sh`. Sunshine needs no
+`output_name`: the prep hook turns DP-1 off before capture starts, so the
+dummy is monitor 0 by elimination.
 
 **Steam Remote Play avoids all of it**: Steam captures the game, not the
 output, and renders at whatever the Steam Link client asks for. For Steam
