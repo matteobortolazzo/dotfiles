@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+{{ if eq .profile "main" -}}
+set -euo pipefail
+
+# systemd-resolved hardening drop-ins (currently just LLMNR=no — see the
+# comment in the conf file). Mirrors system/resolved/ into
+# /etc/systemd/resolved.conf.d/, same pattern as 23-tailscale's NM drop-in.
+
+if ! systemctl is-active --quiet systemd-resolved.service; then
+  echo "systemd-resolved not active — skipping resolved drop-ins"
+  exit 0
+fi
+
+changed=0
+for src in {{ .chezmoi.sourceDir }}/system/resolved/*.conf; do
+  target="/etc/systemd/resolved.conf.d/$(basename "$src")"
+  if ! { [ -f "$target" ] && sudo cmp -s "$src" "$target"; }; then
+    sudo install -D -m 0644 -o root -g root "$src" "$target"
+    echo "installed $target"
+    changed=1
+  fi
+done
+
+# restart, not reload: resolved re-reads LLMNR= only on start. The blip is a
+# few ms of cached-DNS answers; nothing like NM's link teardown.
+if [ "$changed" -eq 1 ]; then
+  sudo systemctl restart systemd-resolved.service
+fi
+{{ end -}}
