@@ -32,7 +32,7 @@ set -euo pipefail
 MANAGED=$(cat <<'JSON'
 {
   "cleanupPeriodDays": 7,
-  "model": "opus",
+  "model": "fable",
   "effortLevel": "medium",
   "permissions": {
     "allow": [],
