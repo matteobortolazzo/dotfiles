@@ -65,8 +65,8 @@ The `else` branch matters on a machine where `run_once_after_31-zsh-plugins.sh.t
 hasn't cloned `zsh-vi-mode` yet — without it the append would land in an array nothing
 ever evaluates and `Ctrl-R` would do nothing.
 
-This applies to **any** keybinding added to `.zshrc` later (fzf key-bindings, television,
-…), not just Atuin.
+This applies to **any** keybinding added to `.zshrc` later (fzf key-bindings, …), not
+just Atuin.
 
 Check the binding at an interactive prompt — never from a startup script, since it only
 lands after the first `precmd`:

@@ -1,4 +1,3 @@
 1password-cli
-sesh-bin
 sysbox-ce-bin
 yay-bin

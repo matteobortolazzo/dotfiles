@@ -3,6 +3,7 @@ atuin
 azure-cli
 base-devel
 bat
+btop
 chezmoi
 cmake
 cosign
@@ -34,7 +35,6 @@ poppler
 ripgrep
 scaleway-cli
 sudo
-television
 tmux
 tree
 tree-sitter-cli

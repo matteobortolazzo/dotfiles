@@ -1,7 +1,5 @@
 1password
-google-chrome
 jetbrains-toolbox
-obsidian-bin
 ttf-jost
 ttf-ms-fonts
 zen-browser-bin
