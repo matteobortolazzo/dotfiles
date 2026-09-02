@@ -38,6 +38,21 @@ install_if_changed "$src/greetd/config.toml"   /etc/greetd/config.toml
 install_if_changed "$src/greetd/regreet.toml"  /etc/greetd/regreet.toml
 install_if_changed "$src/greetd/regreet.css"   /etc/greetd/regreet.css
 
+# gnome-keyring: unlock the "login" keyring with the greeter password, so
+# libsecret consumers (JetBrains IDEs, anything on org.freedesktop.secrets) can
+# store credentials without a second password. Both lines are `optional`: an
+# autologin session (greetd-autologin@, no password) just leaves the keyring
+# locked — apps then get a one-time unlock prompt — instead of failing login.
+# /etc/pam.d/greetd is pacman-owned; an append survives updates as a .pacnew.
+pam_file=/etc/pam.d/greetd
+if [ -f "$pam_file" ] && ! sudo grep -q pam_gnome_keyring "$pam_file"; then
+  printf '%s\n' \
+    'auth       optional  pam_gnome_keyring.so' \
+    'session    optional  pam_gnome_keyring.so auto_start' \
+    | sudo tee -a "$pam_file" >/dev/null
+  echo "wired pam_gnome_keyring into $pam_file"
+fi
+
 # regreet panics if its cache dir is missing or unwritable by the greeter user.
 if ! [ -d /var/cache/regreet ]; then
   sudo install -d -o greeter -g greeter -m 0755 /var/cache/regreet
