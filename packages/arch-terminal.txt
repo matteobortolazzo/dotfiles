@@ -33,7 +33,6 @@ openssh
 pacman-contrib
 poppler
 ripgrep
-scaleway-cli
 sudo
 tmux
 tree
