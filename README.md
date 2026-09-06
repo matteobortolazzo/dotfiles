@@ -130,6 +130,8 @@ journalctl -u sshd -n 20    # zero connection lines == packets aren't arriving
 
 `28-firewall` adds its rules *before* enabling ufw, so it is safe to run over an existing SSH session.
 
+The second trap is the mirror image: `ENABLED=yes` in `/etc/ufw/ufw.conf` is *not* `ufw.service`. Arch's `ufw enable` flips that flag and loads the chains for the current boot only, so a box enabled once comes back from a reboot with the config claiming the firewall is on and netfilter empty. ufw's own `is_enabled()` reads the config, not the kernel, so in that split state every `ufw allow` takes the reload path, fails to flush chains that don't exist, and aborts with a bare `ERROR: problem running` — which is why `28-firewall` reconciles the state before adding rules and runs `systemctl enable ufw` at the end.
+
 ### Reaching it from outside the LAN
 
 Over Tailscale, so nothing is forwarded on the router and the tailnet is the perimeter. From any device signed into the tailnet, anywhere:

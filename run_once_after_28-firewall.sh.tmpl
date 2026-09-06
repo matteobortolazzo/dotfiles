@@ -24,6 +24,25 @@ if ! command -v ufw >/dev/null 2>&1; then
   exit 0
 fi
 
+# `ENABLED=yes` in /etc/ufw/ufw.conf is not the systemd unit. Arch's package
+# ships ufw.service disabled and `ufw enable` never enables it — it flips that
+# flag and loads the chains for the current boot only. So a box enabled once
+# comes back from a reboot with ENABLED=yes and nothing in netfilter, and in
+# that split state every `ufw allow` below fails: ufw's is_enabled() reads the
+# config rather than the kernel, so adding a rule takes the "reload the running
+# firewall" path, tries to flush ufw-user-* chains that don't exist, and dies
+# with a bare `ERROR: problem running`.
+#
+# Reconcile before touching any rule, and only when the config already claims
+# enabled — on a fresh box ENABLED=no and we fall through to the enable at the
+# bottom, after the ssh rules are in place. Here the rules file is already
+# populated (that is what ENABLED=yes implies), so loading it is safe over SSH.
+if grep -q '^ENABLED=yes' /etc/ufw/ufw.conf && \
+   ! sudo ufw status | grep -q '^Status: active'; then
+  echo "ufw enabled in config but not loaded — reloading it first"
+  sudo ufw --force enable
+fi
+
 lan="192.168.1.0/24"
 
 # Plain `allow`, deliberately not `limit`. ufw's limiter counts packets that
@@ -97,6 +116,11 @@ else
   sudo ufw --force enable
   echo "ufw enabled with the rules above"
 fi
+
+# `ufw enable` only loads the rules for this boot; the unit is what brings them
+# back after a reboot. Enabling it is what keeps the reconcile above from being
+# needed every time.
+sudo systemctl enable ufw
 
 sudo ufw status verbose
 {{ end -}}
