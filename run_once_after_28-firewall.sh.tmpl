@@ -26,9 +26,20 @@ fi
 
 lan="192.168.1.0/24"
 
-# `limit` = allow, but throttle a source to 6 connections/30s, which blunts
-# brute force without fail2ban.
-sudo ufw limit from "$lan" to any port 22 proto tcp comment 'ssh (lan, rate-limited)'
+# Plain `allow`, deliberately not `limit`. ufw's limiter counts packets that
+# conntrack labels NEW rather than connections, and `nf_conntrack_tcp_loose=1`
+# (the kernel default) makes it pick up a mid-stream packet whose conntrack
+# entry is gone as a fresh flow. A long-idle SSH session that resumes therefore
+# trips 6-in-30s on its own retransmits — four landed inside one second here —
+# and because ufw's first rule does `recent --set` on every NEW packet
+# *including the ones it is about to reject*, each retry refreshes the 30s
+# window. The block then sustains itself for as long as the client keeps
+# trying, and since `ufw-user-limit` ends in `-j REJECT` the symptom is an
+# instant "Connection refused" on new logins too, not a timeout. There is also
+# nothing here to rate-limit: 27-sshd sets PasswordAuthentication no and
+# KbdInteractiveAuthentication no, so the brute force this was blunting cannot
+# happen.
+sudo ufw allow from "$lan" to any port 22 proto tcp comment 'ssh (lan)'
 
 # Tailscale traffic is already authenticated by the tailnet, and the peer IPs
 # are not knowable up front — allow SSH on the interface rather than by source.
@@ -68,6 +79,11 @@ sudo ufw allow from "$lan" to any port 48010 proto udp comment 'sunshine rtsp (l
 # Migration: drop the pre-scoping blanket rules if a previous run added them.
 # `ufw delete` on a rule that doesn't exist just says so and exits 0.
 sudo ufw delete limit 22/tcp >/dev/null 2>&1 || true
+
+# Migration: replace the scoped `limit` rule with the `allow` above. Deleted
+# after the allow is added, so this stays safe to run over the SSH session it
+# governs.
+sudo ufw delete limit from "$lan" to any port 22 proto tcp >/dev/null 2>&1 || true
 sudo ufw delete allow 47984:47990/tcp >/dev/null 2>&1 || true
 sudo ufw delete allow 48010/tcp >/dev/null 2>&1 || true
 sudo ufw delete allow 47998:48000/udp >/dev/null 2>&1 || true
