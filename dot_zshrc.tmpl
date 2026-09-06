@@ -74,6 +74,25 @@ ZSH_THEME="robbyrussell"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-vi-mode kubectl)
 source $ZSH/oh-my-zsh.sh
 
+# Keep credentials out of ~/.zsh_history. Oh My Zsh already sets
+# `hist_ignore_space` (a leading space keeps a command out of *both* stores —
+# Atuin honours it too), but that only helps when you remember. HISTORY_IGNORE
+# is the automatic net: zsh drops matching lines when it writes HISTFILE.
+# Atuin's own DB is filtered separately by `history_filter` in
+# dot_config/atuin/config.toml — keep the two lists in sync.
+#
+# Two glob traps, both found the hard way: `(#i)` must sit *outside* the
+# alternation (inside one branch it does not reach the others), and it does not
+# apply to a repeated or counted class — neither `[a-z0-9](#c8,)` nor
+# `[a-z0-9_]#` matches uppercase under it, hence the explicit `[a-zA-Z0-9]`
+# (this silently let `S3__SecretKey=` through until it was tested). Short forms (`ADMIN_PW=`) need a non-alpha boundary or
+# `StartupWMClass=` matches; `pwd` alone stays, it needs a `=` or `:`. The
+# keyword must sit immediately before the separator — matching a *value*
+# character after it missed `ADMIN_PW="..."` and multi-line commands, while
+# a loose `*` before the `=` would swallow half the history.
+setopt extended_glob
+HISTORY_IGNORE='(#i)(*(password|passwd|passphrase|secret|token|api[-_ ]#key|access[-_ ]#key|credential)[a-zA-Z0-9_]#(=|:)*|((#s)|*[^[:alpha:]])(pw|pwd|psw)[a-zA-Z0-9_]#(=|:)*|*sk-(proj|ant|live|test)-*|*ctx7sk-*|*sk_[a-zA-Z0-9_](#c16,)*|*user-secrets[[:space:]]#set*|*re_[a-zA-Z0-9](#c8,)*|*(ghp_|gho_|ghu_|ghs_|ghr_|github_pat_)*|*xox[baprs]-*|*AKIA[A-Z0-9](#c16)*|*authorization:[[:space:]]#(bearer|basic)[[:space:]]*|*-----BEGIN[[:space:]]*PRIVATE\ KEY*)'
+
 # Alias
 alias v="nvim"
 alias lg="lazygit"

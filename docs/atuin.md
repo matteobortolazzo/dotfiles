@@ -25,8 +25,76 @@ It does **not** overlap zoxide. zoxide ranks *directories* for `z`-jumping; Atui
 | `--disable-ai` (in `.zshrc`) | Atuin's `?` binding is a cloud feature; unusable without an account, and `?` stays a literal `?` at the prompt. |
 
 Everything else is Atuin's default: `search_mode = "fuzzy"`, `style = "compact"`,
-`inline_height = 40`, `show_preview = true`, `secrets_filter = true` (the last one keeps
-API keys and tokens out of the DB).
+`inline_height = 40`, `show_preview = true`.
+
+## Keeping secrets out of history
+
+Two stores, two mechanisms, and one manual lever that covers both.
+
+**The manual lever:** Oh My Zsh sets `hist_ignore_space`, so a command typed with a
+**leading space** is recorded by neither zsh nor Atuin (Atuin's `history start` hook
+honours it — verified, not assumed). Use it whenever a secret has to be typed inline.
+
+**Atuin's DB** (`dot_config/atuin/config.toml`) — `secrets_filter = true` is on by
+default but only knows AWS `AKIA…`, GitHub `ghp_…`, Slack `xox…` and PEM private-key
+headers. It does *not* catch OpenAI/Anthropic `sk-proj-…`, Resend `re_…`, Context7
+`ctx7sk-…`, or a `Password=` inside a connection string — all of which were sitting in
+the DB when this was first checked. `history_filter` adds unanchored Rust regexes for
+those shapes. `user-secrets set` is filtered by command name, since handing a secret to
+something is the entire point of that call.
+
+**`~/.zsh_history`** (`dot_zshrc.tmpl`) — Atuin's filters do not touch it, and Atuin
+never removes what `atuin import auto` seeded from it. zsh's own `HISTORY_IGNORE` (an
+extended-glob pattern, applied when zsh writes `HISTFILE`) mirrors the Atuin list.
+**Keep the two lists in sync** when adding a pattern.
+
+The keyword patterns stop at the `=` or `:` and match anything after it. Requiring a
+value character instead looked tighter but leaked twice: it missed `ADMIN_PW="…"`
+(the value starts with a quote) and every continuation line of a multi-line
+`docker run -e … \`. The keyword must sit immediately before the separator, so
+`kubectl get secrets` and `ssh -o StrictHostKeyChecking=no` still get recorded, while
+`grep -r password= .` does not — a false positive costs one history entry.
+
+Short forms (`ADMIN_PW=`) need a non-alpha boundary in front or `StartupWMClass=`
+matches; `pwd` on its own is safe, it takes a `=` or `:` to trigger.
+
+### Two zsh glob traps
+
+Both cost a leaked entry before being caught, so verify any new pattern by hand:
+
+```zsh
+[[ "S3__SecretKey=abc" == ${~HISTORY_IGNORE} ]] && echo DROP || echo keep
+```
+
+1. `(#i)` must sit **outside** the alternation. Placed inside one branch it does not
+   reach the others — `ADMIN_PW=` silently survived a pattern that looked correct.
+2. `(#i)` does not apply to a **repeated or counted** class: neither `[a-z0-9_]#` nor
+   `[a-z0-9](#c8,)` matches uppercase under it. Spell those `[a-zA-Z0-9]`.
+
+### Purging what is already stored
+
+Both filters apply to *new* commands only.
+
+```bash
+atuin history prune --dry-run   # list what would go
+atuin history prune             # delete it
+sqlite3 ~/.local/share/atuin/history.db 'vacuum;'   # deleted rows leave the file
+
+# ~/.zsh_history has no equivalent. Do NOT line-wise grep it: entries start with
+# `: <ts>:<dur>;` and a multi-line command's continuation lines carry the secret,
+# so a grep -v leaves half a `docker run` behind. Group by entry, match the whole
+# entry, and back the file up first.
+```
+
+Deleting the record is the cheap half. **Anything that reached either store must be
+rotated** — the DB is readable by anything running as your user, it lands in backups,
+and it would be uploaded if sync were ever turned on.
+
+### The real fix
+
+Never type the value. `$(op read op://vault/item/field)`, an `.envrc`, or
+`$(sid <name>)`-style lookups keep the secret out of the command line entirely — those
+lines are safe to keep in history and are the ones worth recalling anyway.
 
 `dot_config/atuin/config.toml` is a plain tracked file, not a template (no cross-platform
 difference) and not a `create_` entry: Atuin only writes a default config when none
