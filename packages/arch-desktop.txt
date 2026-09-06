@@ -1,3 +1,4 @@
+ayatana-ido
 brightnessctl
 cava
 cliphist
@@ -7,6 +8,7 @@ gnome-disk-utility
 gvfs
 imagemagick
 inter-font
+libayatana-indicator
 libreoffice-fresh
 matugen
 mpv
