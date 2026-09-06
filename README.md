@@ -213,6 +213,14 @@ nmcli -t -f CONNECTIVITY general status   # what NM currently thinks
 journalctl --user -u captive-portal -f    # what the watcher saw
 ```
 
+## File transfer between devices (AirDrop alternative)
+
+[LocalSend](https://localsend.org/) — native on Linux, macOS, Android and iOS, LAN-only, no account and no cloud hop. Installed by the package lists (`localsend-bin` on Arch, `cask "localsend"` on macOS); the phones are a manual store install.
+
+Discovery is UDP multicast to `224.0.0.167:53317`, transfer is a direct HTTPS connection on `53317/tcp`. Only the desktop runs a firewall, and `28-firewall` opens both — the split matters when something breaks: **device never appears** is the UDP rule missing, **device appears but sends stall at 0%** is the TCP one. Off the LAN there is no multicast, so add the peer by its MagicDNS IP; `53317/tcp` is open on `tailscale0` for that. On a headless-booted desktop nothing listens at all until a session is up — `tailscale file cp` works there instead, since it is served by `tailscaled`.
+
+See [`docs/localsend.md`](docs/localsend.md) for the protocol detail, why `-bin` over the source PKGBUILD, and the browser-based fallbacks for a machine you can't install on.
+
 ## Printing & scanning
 
 `main` profile, `run_once_after_46-printing.sh.tmpl`. Aims at driverless first: CUPS plus Avahi/nss-mdns covers IPP Everywhere (AirPrint) over the network, `ipp-usb` gives the same driverless path over a USB cable, and `hplip` covers HP hardware predating IPP Everywhere. `sane` + `sane-airscan` + `simple-scan` pick up the scanner half of a multifunction.
@@ -282,7 +290,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
 - `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `wslconfig.example`).
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

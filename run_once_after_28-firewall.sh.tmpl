@@ -36,6 +36,22 @@ sudo ufw limit from "$lan" to any port 22 proto tcp comment 'ssh (lan, rate-limi
 # the box to the tailnet.
 sudo ufw allow in on tailscale0 to any port 22 proto tcp comment 'ssh over tailscale'
 
+# LocalSend (docs/localsend.md). Two ports, same number, both required and for
+# different reasons — dropping either fails in a way that looks like the other
+# device is broken rather than like a firewall:
+#   udp = discovery. Peers announce to the multicast group 224.0.0.167:53317;
+#         `to any` covers that destination, which is not a LAN unicast address.
+#         Blocked, the desktop never appears in anyone's device list.
+#   tcp = the HTTP(S) API that carries the actual transfer. Blocked, the
+#         desktop is visible but every send to it stalls at 0%.
+sudo ufw allow from "$lan" to any port 53317 proto udp comment 'localsend discovery (lan)'
+sudo ufw allow from "$lan" to any port 53317 proto tcp comment 'localsend transfer (lan)'
+
+# Off-LAN, over the tailnet. Multicast doesn't traverse Tailscale, so there is
+# no UDP counterpart here on purpose: discovery is manual (add the peer by its
+# MagicDNS IP) and only the TCP transfer API is ever reached this way.
+sudo ufw allow in on tailscale0 to any port 53317 proto tcp comment 'localsend over tailscale'
+
 {{ if dig "gaming" false . -}}
 # Moonlight -> Sunshine, LAN clients only (the TV). Enabling a default-deny
 # firewall without these silently kills couch streaming: the client just fails

@@ -1,5 +1,6 @@
 1password
 jetbrains-toolbox
+localsend-bin
 ttf-jost
 ttf-ms-fonts
 zen-browser-bin

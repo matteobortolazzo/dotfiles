@@ -36,6 +36,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Captive-portal login | NetworkManager connectivity check + `captive-portal.service` | `system/NetworkManager/20-connectivity.conf` (mirrored to `/etc/NetworkManager/conf.d/` by `run_once_after_29-captive-portal.sh.tmpl`), `dot_config/niri/scripts/executable_captive-portal-watch.sh` | Linux-only, `main` profile. Opens a private Zen window when NM reports connectivity `portal`. Watcher is pulled in by `niri.service` via `Wants=`, like dms. |
 | Terminal | Ghostty | `~/.config/ghostty/` | Cross-platform |
 | File manager (TUI) | yazi | `~/.config/yazi/` | Cross-platform; only `theme.toml` tracked |
+| File transfer | LocalSend | — (no tracked config) | Cross-platform (Linux/macOS/Android/iOS). AirDrop alternative, LAN-only. Needs `53317` tcp+udp, opened by `28-firewall` on the `dev` box. See `docs/localsend.md`. |
 | Editor | Neovim | `~/.config/nvim/` | Cross-platform, Lua-based |
 | Editor (IDE) | IdeaVim | `~/.ideavimrc` | Cross-platform, JetBrains plugin |
 | Multiplexer | tmux | `~/.config/tmux/tmux.conf` or `~/.tmux.conf` | Cross-platform |
@@ -137,6 +138,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
 | sshd + ufw rules (`27-sshd`, `28-firewall`), `arch-dev.txt` | `dev` only | — | — |
+| LocalSend | `main` only | ✓ (Brewfile) | — |
 | Headless boot entry + on-demand session (`49-headless-boot`) | `headless` only | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
