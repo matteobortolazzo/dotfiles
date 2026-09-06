@@ -116,6 +116,31 @@ maintainer catches up, and can sit flagged out-of-date for a while. That is
 acceptable here: `21-aur.sh.tmpl` already retries failed packages one at a time
 and reports them by name rather than aborting the apply.
 
+### The ayatana libs
+
+`ayatana-ido` and `libayatana-indicator` are in `packages/arch-desktop.txt` for
+LocalSend's sake alone — nothing else here uses them and nothing pulls them in
+any more. That is the repack biting: the `.deb` is built on Ubuntu against
+libayatana-appindicator 0.5.x, so the binary links `libayatana-indicator3.so.7`
+and `libayatana-ido3-0.4.so.0` directly, while Arch's libayatana-appindicator
+0.6.0 dropped both from its `Depends On`. `localsend-bin`'s declared dependency
+on libayatana-appindicator was once enough and no longer is.
+
+The failure mode is why it is worth a paragraph: the app does not warn, it does
+not open a window, it does not log anywhere. Launching from the app menu looks
+like the click did nothing at all. Only running it from a terminal shows it:
+
+```bash
+localsend
+# localsend: error while loading shared libraries: libayatana-indicator3.so.7:
+# cannot open shared object file: No such file or directory
+ldd /opt/localsend/localsend | grep 'not found'   # the general form
+```
+
+An Arch rebuild of libayatana-appindicator can strip another of these at any
+time, so `ldd` on the binary is the first check whenever LocalSend stops
+starting — before assuming the firewall or the network.
+
 ## Checks
 
 ```bash
