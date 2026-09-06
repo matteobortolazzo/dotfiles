@@ -117,7 +117,7 @@ Sunshine's ports are opened by `28-firewall` (below) — that script is gated on
 `dev = true` (the desktop) turns the machine into an SSH target. Two scripts, and both are needed — either one alone leaves the box looking up and answering nothing:
 
 - `27-sshd` — enables `sshd.service`. Hardening (`PasswordAuthentication no`, `PermitRootLogin no`) is written to `/etc/ssh/sshd_config.d/10-hardening.conf` **only once `~/.ssh/authorized_keys` is non-empty**. Writing it against an empty key file would lock out every remote login on a box whose whole point is being headless. Until then the script prints the `ssh-copy-id` + re-run instructions.
-- `28-firewall` — opens port 22 in ufw (`limit`, so brute force is throttled without fail2ban), plus an interface rule for `tailscale0` and, on a `gaming` host, Sunshine's ports.
+- `28-firewall` — opens port 22 in ufw (a plain `allow`, LAN-scoped — the `limit` it used to carry rejected live sessions on their own retransmits, and `27-sshd` disables password auth so there is no brute force to throttle), plus an interface rule for `tailscale0` and, on a `gaming` host, Sunshine's ports.
 
 It also pulls `packages/arch-dev.txt` — currently `bind-tools`, for `dig`/`host`/`nslookup`. Debugging a remote box is mostly DNS questions (is MagicDNS resolving, is systemd-resolved answering), and none of those tools are in `base`.
 
