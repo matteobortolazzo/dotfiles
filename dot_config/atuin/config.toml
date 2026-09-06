@@ -9,3 +9,37 @@ keymap_cursor = { vim_insert = "blink-bar", vim_normal = "steady-block" }
 
 # Enter drops the command on the prompt to edit; a second Enter runs it.
 enter_accept = false
+
+# Secret hygiene. `secrets_filter` is on by default but only knows a handful of
+# shapes (AWS `AKIA…`, GitHub `ghp_…`, Slack `xox…`, PEM private-key headers) —
+# it does not catch OpenAI/Anthropic/Resend keys, connection strings, or a bare
+# `--password=`. These patterns are unanchored Rust regexes matched against the
+# whole command line; a false positive costs only a missing history entry.
+#
+# They apply to *new* commands. `atuin history prune` re-applies them to the
+# existing DB (`--dry-run` first). Neither touches ~/.zsh_history.
+secrets_filter = true
+history_filter = [
+  # name=value / name: value for anything that smells like a credential.
+  # Unanchored on purpose: `ConnectionStrings__OpenAiApiKey=` has no word
+  # boundary before `ApiKey`.
+  "(?i)(pass(word|wd|phrase)?|secret|token|api[-_ ]?key|access[-_ ]?key|client[-_ ]?secret|credential)[a-z0-9_]*[\"']?\\s*[=:]",
+  # Deliberately stop at the separator: requiring a value character missed
+  # `ADMIN_PW="..."` (the quote) and anything on a continuation line.
+  # short forms (ADMIN_PW=, PSW=) need a boundary, or `StartupWMClass=` matches
+  "(?i)(^|[^a-z])(pw|pwd|psw)[a-z0-9_]*[\"']?\\s*[=:]",
+  # vendor-shaped keys
+  "sk-(proj|ant|live|test)-",
+  "ctx7sk-",
+  "\\bsk_[A-Za-z0-9_]{16,}",
+  "\\bre_[A-Za-z0-9]{8,}",
+  "\\b(gh[pousr]_|github_pat_)[A-Za-z0-9_]{16,}",
+  "\\bxox[baprs]-",
+  "\\bAKIA[0-9A-Z]{16}\\b",
+  "-----BEGIN [A-Z ]*PRIVATE KEY",
+  # commands whose whole point is to hand a secret to something
+  "user-secrets set",
+  # credentials passed to common clients
+  "(?i)authorization:\\s*(bearer|basic)\\s",
+  "\\bcurl\\b.*\\s-(u|-user)\\s+\\S+:\\S",
+]
