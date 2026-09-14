@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (dig "ups" false .) -}}
+set -euo pipefail
+
+# UPS monitoring: NUT driving a Tecnoware EXA Plus 1500 over USB. See docs/ups.md.
+#
+# run_onchange rather than run_once (the idiom 45-greetd has to work around):
+# every file this mirrors lives in system/nut/, chezmoi hashes only the rendered
+# script, so the hashes below are embedded to make edits to them retrigger the
+# apply. Each install is cmp-guarded, so a re-run with nothing changed is a
+# no-op and does not bounce the daemons.
+#
+# nut.conf:             {{ include "system/nut/nut.conf" | sha256sum }}
+# ups.conf:             {{ include "system/nut/ups.conf" | sha256sum }}
+# upsd.conf:            {{ include "system/nut/upsd.conf" | sha256sum }}
+# upsd.users.in:        {{ include "system/nut/upsd.users.in" | sha256sum }}
+# upsmon.conf.in:       {{ include "system/nut/upsmon.conf.in" | sha256sum }}
+# upssched.conf:        {{ include "system/nut/upssched.conf" | sha256sum }}
+# upssched-cmd:         {{ include "system/nut/upssched-cmd" | sha256sum }}
+# tmpfiles-nut.conf:    {{ include "system/nut/tmpfiles-nut.conf" | sha256sum }}
+# nut-killpower.service:{{ include "system/nut/nut-killpower.service" | sha256sum }}
+
+if ! command -v upsdrvctl >/dev/null 2>&1; then
+  echo "nut not installed — skipping (it's in packages/arch-ups.txt)"
+  exit 0
+fi
+
+src="{{ .chezmoi.sourceDir }}/system/nut"
+changed=0
+
+# /etc/nut is pacman-owned: overwriting these ships the package's versions off
+# to .pacnew on upgrade and keeps ours in place, same deal as /etc/pam.d/greetd.
+install_if_changed() {
+  local source="$1" target="$2" mode="${3:-0640}" group="${4:-nut}"
+  if ! [ -f "$target" ] || ! sudo cmp -s "$source" "$target"; then
+    sudo install -m "$mode" -o root -g "$group" "$source" "$target"
+    echo "installed $target"
+    changed=1
+  fi
+}
+
+install_if_changed "$src/nut.conf"              /etc/nut/nut.conf
+install_if_changed "$src/ups.conf"              /etc/nut/ups.conf
+install_if_changed "$src/upsd.conf"             /etc/nut/upsd.conf
+install_if_changed "$src/upssched.conf"         /etc/nut/upssched.conf
+install_if_changed "$src/upssched-cmd"          /etc/nut/upssched-cmd 0750
+install_if_changed "$src/tmpfiles-nut.conf"     /etc/tmpfiles.d/nut-extra.conf 0644 root
+install_if_changed "$src/nut-killpower.service" /etc/systemd/system/nut-killpower.service 0644 root
+
+# The upsd <-> upsmon password. Generated here and never committed — this repo
+# is public. Reuse whatever is already on the machine so re-runs don't rotate it
+# (a rotation that only lands in one of the two files locks upsmon out of upsd).
+pass=""
+if sudo test -f /etc/nut/upsmon.conf; then
+  pass=$(sudo awk '/^MONITOR/ { print $5; exit }' /etc/nut/upsmon.conf || true)
+fi
+if [ -z "$pass" ] || [ "$pass" = "@UPSPASS@" ]; then
+  pass=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+  echo "generated a new upsd password for the upsmon account"
+fi
+
+render_if_changed() {
+  local source="$1" target="$2"
+  local rendered
+  rendered=$(sed "s|@UPSPASS@|$pass|g" "$source")
+  if ! [ -f "$target" ] || [ "$(sudo cat "$target")" != "$rendered" ]; then
+    printf '%s\n' "$rendered" | sudo install -m 0640 -o root -g nut /dev/stdin "$target"
+    echo "installed $target"
+    changed=1
+  fi
+}
+
+render_if_changed "$src/upsd.users.in"   /etc/nut/upsd.users
+render_if_changed "$src/upsmon.conf.in"  /etc/nut/upsmon.conf
+
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/nut-extra.conf
+sudo systemctl daemon-reload
+
+# Is the UPS actually plugged in? The data cable is easy to forget, and it
+# decides whether the units below can be *started* or only enabled: upsd comes
+# up regardless, but nut-driver@exa fails without a device and would take this
+# script down with it under `set -e`.
+attached=0
+grep -qs 0665 /sys/bus/usb/devices/*/idVendor && attached=1 || true
+
+# nut-driver-enumerator watches ups.conf and spawns a nut-driver@<section>
+# instance per UPS, so no driver is ever enabled by name here — enable the path
+# unit and the [exa] section brings up nut-driver@exa on its own.
+enable_unit() {
+  if ! systemctl list-unit-files "$1" >/dev/null 2>&1; then
+    echo "$1 not installed — skipping"
+    return
+  fi
+  if [ "$attached" = 1 ]; then
+    sudo systemctl enable --now "$1"
+  else
+    sudo systemctl enable "$1"
+  fi
+}
+
+sudo systemctl enable nut-killpower.service
+enable_unit nut-driver-enumerator.path
+enable_unit nut-server.service
+enable_unit nut-monitor.service
+
+if [ "$attached" = 0 ]; then
+  cat <<'EOF'
+
+  NUT is configured and enabled, but no 0665:* device is on the USB bus — the
+  UPS data cable is not plugged in (or not into this box). Nothing was started.
+  Connect it, then:
+      sudo systemctl start nut-driver-enumerator.path nut-server nut-monitor
+      upsc exa
+
+EOF
+  exit 0
+fi
+
+if [ "$changed" = 1 ]; then
+  sudo systemctl restart nut-driver-enumerator.service
+  sudo systemctl restart nut-server.service nut-monitor.service
+  echo "nut restarted with the new config"
+fi
+
+# One honest check that the whole chain works, rather than trusting three green
+# units: upsc goes client -> upsd -> driver -> UPS.
+if upsc exa ups.status >/dev/null 2>&1; then
+  echo "UPS reachable: exa is $(upsc exa ups.status) ($(upsc exa battery.charge 2>/dev/null || echo '?')% battery)"
+else
+  echo "nut is up but 'upsc exa' failed — check: journalctl -u nut-driver@exa -n 50" >&2
+fi
+{{ end -}}

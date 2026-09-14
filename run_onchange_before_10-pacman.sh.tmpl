@@ -18,6 +18,9 @@ set -euo pipefail
 {{- if dig "dev" false . }}
 # arch-dev.txt:      {{ include "packages/arch-dev.txt" | sha256sum }}
 {{- end }}
+{{- if dig "ups" false . }}
+# arch-ups.txt:      {{ include "packages/arch-ups.txt" | sha256sum }}
+{{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
 
@@ -49,6 +52,13 @@ pkg_gaming="$src/arch-gaming.txt"
 # gated on the `dev` role alone rather than also on `profile == "main"`.
 pkg_dev="$src/arch-dev.txt"
 [ -f "$pkg_dev" ] && sudo pacman -S --needed --noconfirm - < "$pkg_dev"
+{{ end -}}
+
+{{ if dig "ups" false . -}}
+# Plain Arch repos and role-gated like arch-dev.txt. Installing nut is what
+# lets run_onchange_after_51-ups.sh.tmpl configure it; see docs/ups.md.
+pkg_ups="$src/arch-ups.txt"
+[ -f "$pkg_ups" ] && sudo pacman -S --needed --noconfirm - < "$pkg_ups"
 {{ end -}}
 
 {{ if eq .profile "wsl" -}}

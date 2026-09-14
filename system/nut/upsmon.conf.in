@@ -1,0 +1,39 @@
+# Managed by chezmoi (system/nut/, mirrored by run_onchange_after_51-ups.sh.tmpl).
+# @UPSPASS@ is substituted at install time; see upsd.users.in.
+#
+# "primary" because this box runs the driver and owns the UPS: it is the one
+# that gets to tell the UPS to cut power once everyone else has gone down.
+MONITOR exa@localhost 1 upsmon @UPSPASS@ primary
+
+MINSUPPLIES 1
+SHUTDOWNCMD "/usr/bin/systemctl poweroff"
+NOTIFYCMD /usr/bin/upssched
+
+POLLFREQ 5
+POLLFREQALERT 5
+HOSTSYNC 15
+DEADTIME 15
+RBWARNTIME 43200
+NOCOMMWARNTIME 300
+FINALDELAY 5
+
+# Set right before SHUTDOWNCMD runs, read at the very end of shutdown by
+# nut-killpower.service. /etc rather than the default under /run: the flag has
+# to survive from "the system is still up" to final.target, and it is cleared
+# again on the next boot by the tmpfiles fragment.
+POWERDOWNFLAG /etc/killpower
+
+# EXEC on everything that matters, because NOTIFYCMD is upssched and the
+# five-minute battery timer lives there — an event that does not EXEC is an
+# event upssched never sees. WALL is kept for the rare case someone is sitting
+# at the machine; on a headless boot it is a no-op.
+NOTIFYFLAG ONLINE    SYSLOG+WALL+EXEC
+NOTIFYFLAG ONBATT    SYSLOG+WALL+EXEC
+NOTIFYFLAG LOWBATT   SYSLOG+WALL+EXEC
+NOTIFYFLAG FSD       SYSLOG+WALL+EXEC
+NOTIFYFLAG COMMOK    SYSLOG+EXEC
+NOTIFYFLAG COMMBAD   SYSLOG+WALL+EXEC
+NOTIFYFLAG NOCOMM    SYSLOG+WALL+EXEC
+NOTIFYFLAG SHUTDOWN  SYSLOG+WALL+EXEC
+NOTIFYFLAG REPLBATT  SYSLOG+WALL+EXEC
+NOTIFYFLAG NOPARENT  SYSLOG+WALL+EXEC

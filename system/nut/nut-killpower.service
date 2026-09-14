@@ -1,0 +1,23 @@
+[Unit]
+# Managed by chezmoi (system/nut/, mirrored by run_onchange_after_51-ups.sh.tmpl).
+#
+# The last thing that runs before the board loses power. Without it a long
+# outage ends with the UPS flattening its battery into an already-halted
+# machine, and when mains returns the UPS has nothing left to boot it with.
+# Telling the driver to cut the output means the UPS restores power by itself
+# when mains is back, and the box comes up — provided the BIOS is set to power
+# on after AC loss. See docs/ups.md.
+Description=NUT killpower — tell the UPS to cut its output after shutdown
+Documentation=man:upsdrvctl(8)
+DefaultDependencies=no
+ConditionPathExists=/etc/killpower
+After=final.target
+Before=systemd-poweroff.service systemd-halt.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/upsdrvctl shutdown
+TimeoutStartSec=30
+
+[Install]
+WantedBy=final.target

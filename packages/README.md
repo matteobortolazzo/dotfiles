@@ -75,7 +75,7 @@ List everything explicitly installed but untracked:
 ```bash
 cd "$(chezmoi source-path)/packages"
 comm -13 \
-  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt arch-dev.txt | sort -u) \
+  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt arch-dev.txt arch-ups.txt | sort -u) \
   <(pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$' | sort)
 ```
 
