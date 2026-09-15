@@ -55,7 +55,16 @@ if sudo test -f /etc/nut/upsmon.conf; then
   pass=$(sudo awk '/^MONITOR/ { print $5; exit }' /etc/nut/upsmon.conf || true)
 fi
 if [ -z "$pass" ] || [ "$pass" = "@UPSPASS@" ]; then
-  pass=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+  # `|| true` is load-bearing under `set -o pipefail`: head closes the pipe as
+  # soon as it has its 32 bytes, tr takes SIGPIPE and exits 141, and the
+  # pipeline reports that — aborting the script every single time, not
+  # intermittently. Tolerate the signal, then assert the result instead, so a
+  # genuinely empty /dev/urandom read still fails loudly.
+  pass=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32) || true
+  if [ "${#pass}" -ne 32 ]; then
+    echo "could not generate a 32-char upsd password" >&2
+    exit 1
+  fi
   echo "generated a new upsd password for the upsmon account"
 fi
 
@@ -124,9 +133,22 @@ fi
 
 # One honest check that the whole chain works, rather than trusting three green
 # units: upsc goes client -> upsd -> driver -> UPS.
+#
+# Poll rather than ask once. nutdrv_qx spends ~7s probing before it settles on a
+# Q* subdriver and opens its socket, and upsd only reports "Connected to UPS"
+# after that — so a single check straight after the restart above races the
+# driver and reports a failure on a UPS that is perfectly fine. upsmon logs one
+# COMMBAD in the same window; its 30s warn timer absorbs it.
+for _ in $(seq 30); do
+  if upsc exa ups.status >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
 if upsc exa ups.status >/dev/null 2>&1; then
   echo "UPS reachable: exa is $(upsc exa ups.status) ($(upsc exa battery.charge 2>/dev/null || echo '?')% battery)"
 else
-  echo "nut is up but 'upsc exa' failed — check: journalctl -u nut-driver@exa -n 50" >&2
+  echo "nut is up but 'upsc exa' failed after 30s — check: journalctl -u nut-driver@exa -n 50" >&2
 fi
 {{ end -}}
