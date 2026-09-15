@@ -1,0 +1,20 @@
+#!/bin/sh
+# Managed by chezmoi (system/nut/, mirrored by run_onchange_after_51-ups.sh.tmpl).
+# Invoked by upssched with the timer/command name as $1.
+set -eu
+
+case "$1" in
+  onbatt-shutdown)
+    logger -t upssched-cmd "on battery for 5 minutes — forcing shutdown"
+    # -c fsd, not `systemctl poweroff`: this goes back through upsmon so the
+    # normal path runs — POWERDOWNFLAG gets set, and the UPS is told to cut
+    # power at the end of the shutdown.
+    /usr/bin/upsmon -c fsd
+    ;;
+  commbad-warn)
+    logger -t upssched-cmd "lost contact with the UPS for 30s — running unprotected"
+    ;;
+  *)
+    logger -t upssched-cmd "unrecognised command: $1"
+    ;;
+esac

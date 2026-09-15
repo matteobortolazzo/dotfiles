@@ -13,6 +13,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `gaming` | Role — gaming / sim-rig host | `true` / `false` |
 | `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
+| `ups` | Hardware — a UPS is on this box's USB: NUT monitoring and clean shutdown on a power cut | `true` / `false`, defaults to `false` |
 | `devHost` | The dev box's MagicDNS hostname, aliased as `ssh desktop` | hostname, blank for none |
 
 | Profile | What you get |
@@ -24,6 +25,8 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
 
 `headless` is not a role but a boot policy, and it is deliberately not tied to `dev`: a laptop can be a dev box and still want its greeter on every boot. It only makes sense where the desktop is occasional rather than assumed.
+
+`ups` is a fact about the hardware rather than a role, and it is not implied by `dev` or `headless` either: it says a UPS data cable is plugged into *this* box, which is what decides whether NUT is installed and which machine gets to tell the UPS to cut its output. An unattended box with no UPS must not ship a monitor that can shut it down.
 
 Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`. `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so a machine whose config predates a prompt would otherwise fail every apply. The flip side: an existing machine is **not** re-prompted when a var is added, so `dig` returns the default and the new role is off until you run `chezmoi init` again (it keeps the existing answers and only asks the new question) or add the line to `~/.config/chezmoi/chezmoi.toml` by hand.
 
@@ -173,6 +176,21 @@ desktop down            # back to a plain TTY
 
 `49-headless-boot` writes the limine entry (above the `comment: machine-id=` line, so `limine-entry-tool` does not eat it on the next kernel update), sets `default_entry` by name and `remember_last_entry: no`, and installs the autologin configs plus `system/greetd/greetd-autologin@.service`.
 
+## UPS
+
+`ups = true` (the desktop) installs [NUT](https://networkupstools.org/) and points it at the Tecnoware EXA Plus 1500 on USB. A power cut then ends in a clean shutdown rather than a hard stop, and the UPS is told to cut its own output on the way down so it still has charge left to bring the box back when mains returns.
+
+Two triggers, whichever comes first: the UPS raising `LB`, or **five minutes on battery**. The timer is the one that matters — a Megatec/Q\* unit derives `LB` from an uncalibrated voltage curve, so on an aged battery it arrives late or not at all, and `battery.charge` can still read 60% as the inverter gives up. Flickers cost nothing; the timer is cancelled on `ONLINE`.
+
+```bash
+upsc exa ups.status           # OL / OB / OB LB / OL CHRG
+journalctl -u nut-monitor -f  # watch events live
+```
+
+`upsd` binds loopback only, so `28-firewall` has nothing to open. The shared `upsd`/`upsmon` password is generated on the machine and never enters this repo — `system/nut/` tracks the two files that need it as `.in` templates with a placeholder.
+
+Two things the config cannot do for you: **plug the USB data cable in** (without it every unit still starts and protects nothing), and set the BIOS to *Restore AC Power Loss → Power On*, without which the killpower shutdown is a one-way trip. See [`docs/ups.md`](docs/ups.md).
+
 ## WSL notes
 
 - `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, `[automount] enabled=false`, Windows PATH trimmed for fast shells), enables docker, and enables `ssh-agent.socket`. Run `wsl --shutdown` from Windows once after the first apply.
@@ -291,8 +309,8 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` via sudo.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `wslconfig.example`).
+- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` via sudo.
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

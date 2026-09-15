@@ -17,11 +17,18 @@
        target with no greetd, no compositor and no GPU session, and the desktop
        is started on demand. It defaults to false and is deliberately NOT tied
        to `dev` — a laptop can be a dev box and still want its greeter on every
-       boot. */ -}}
+       boot.
+
+       `ups` is likewise a property of the machine rather than a role: it says a
+       UPS is on this box's USB, which is what decides whether NUT is installed
+       and whether this is the host that gets to tell the UPS to cut power. It
+       is not implied by `dev` or `headless` — an unattended box with no UPS
+       must not ship a monitor that shuts it down. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
 {{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
 {{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
+{{- $ups := promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
 {{- $headless := promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
 {{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, aliased as `ssh desktop` (blank for none)" "" -}}
 
@@ -31,6 +38,7 @@
   gaming = {{ $gaming }}
   dev = {{ $dev }}
   headless = {{ $headless }}
+  ups = {{ $ups }}
   devHost = {{ $devHost | quote }}
 
 [onepassword]

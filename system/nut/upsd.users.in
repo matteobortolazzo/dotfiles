@@ -1,0 +1,12 @@
+# Managed by chezmoi (system/nut/, mirrored by run_onchange_after_51-ups.sh.tmpl).
+#
+# @UPSPASS@ is substituted at install time with a password generated on the
+# machine and never written back to the source tree — this repo is public. The
+# rendered file lands as root:nut 0640; the same secret goes into upsmon.conf.
+#
+# Only the monitor account exists. It can read variables and accept an FSD, and
+# nothing else: no SET, no instant commands. Add an [admin] block by hand if you
+# ever want `upscmd` to poke the UPS (battery test, beeper) — see docs/ups.md.
+[upsmon]
+  password = @UPSPASS@
+  upsmon primary
