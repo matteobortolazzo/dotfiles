@@ -1,2 +1,5 @@
 .config/scripts/ccc
 .config/scripts/ca
+.local/bin/dms-run-session
+.config/systemd/user/dms.service.d
+.local/share/dms-shell-hotfix
