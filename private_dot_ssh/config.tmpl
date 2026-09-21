@@ -1,4 +1,5 @@
 {{- $devHost := dig "devHost" "" . -}}
+{{- $devUser := dig "devUser" "" . -}}
 {{- if and $devHost (ne $devHost .chezmoi.hostname) }}
 # Remote dev on the desktop, over Tailscale — works from any network without
 # forwarding a port, since the tailnet is the perimeter. Agent forwarding rather
@@ -14,8 +15,14 @@
 # tailnet suffix pushed as a DNS search domain, so the short name resolves on
 # its own and the tailnet ID stays out of a public repo. If a client has
 # MagicDNS off, set devHost to <host>.<tailnet>.ts.net instead.
+#
+# User comes from `devUser`, set only where the local username differs from
+# the one on the desktop (the Mac); left out, ssh uses the local name.
 Host desktop {{ $devHost }}
     HostName {{ $devHost }}
+{{- if $devUser }}
+    User {{ $devUser }}
+{{- end }}
     ForwardAgent yes
 
 {{ end -}}

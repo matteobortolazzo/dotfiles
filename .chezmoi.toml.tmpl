@@ -7,7 +7,10 @@
        needs no inbound sshd. `devHost` is the other side of the same coin: the
        box you reach, named once here instead of hardcoded in the ssh config, so
        renaming the desktop is a one-line change and the alias is skipped on the
-       machine that matches it. Templates read the role vars with
+       machine that matches it. `devUser` is the login on that box, for clients
+       whose local username differs (the Mac); blank means ssh's default, the
+       local username, which is already right between the Linux machines.
+       Templates read the role vars with
        `dig "dev" false .`, not `.dev`, because .chezmoi.toml.tmpl runs on
        `chezmoi init` only — machines whose config predates a prompt must keep
        applying.
@@ -31,6 +34,7 @@
 {{- $ups := promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
 {{- $headless := promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
 {{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, aliased as `ssh desktop` (blank for none)" "" -}}
+{{- $devUser := promptStringOnce . "devUser" "Username on the remote dev box (blank if it matches this machine's)" "" -}}
 
 [data]
   profile = {{ $profile | quote }}
@@ -40,6 +44,7 @@
   headless = {{ $headless }}
   ups = {{ $ups }}
   devHost = {{ $devHost | quote }}
+  devUser = {{ $devUser | quote }}
 
 [onepassword]
   mode = "account"
