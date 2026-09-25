@@ -1,0 +1,4 @@
+# Keep terminals as separate windows for OmniWM's scrolling columns.
+keybind = cmd+t=new_window
+keybind = global:alt+t=new_window
+macos-dock-drop-behavior = new-window

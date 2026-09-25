@@ -35,6 +35,7 @@ brew "azure-cli"
 brew "fastfetch"
 
 cask "1password-cli"
+cask "omniwm"
 
 cask "docker-desktop"
 cask "ghostty"

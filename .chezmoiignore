@@ -22,6 +22,11 @@ system
 .config/scripts/pen-wsl
 {{ end -}}
 
+{{ if ne .profile "mac" -}}
+.config/omniwm
+Library/Application Support/com.mitchellh.ghostty
+{{ end -}}
+
 {{/* Probe live `op` auth the same way onepasswordRead does (client init + desktop-app
      handshake). Bounded: with no reachable app `op` sits on an authorization prompt for
      60s before failing, which would stall every source-state read over SSH. `timeout` is
