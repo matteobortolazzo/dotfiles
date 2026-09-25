@@ -24,6 +24,7 @@ system
 
 {{ if ne .profile "mac" -}}
 .config/omniwm
+.config/skhd
 Library/Application Support/com.mitchellh.ghostty
 {{ end -}}
 

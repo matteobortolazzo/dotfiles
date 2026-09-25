@@ -1,0 +1,2 @@
+# Niri Mod+B on macOS: activate Zen Browser or launch it if closed.
+alt - b : open -a "Zen Browser"

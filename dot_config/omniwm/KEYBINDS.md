@@ -29,12 +29,13 @@ quitting an entire app, so Option+Q closes only OmniWM's focused window.
 | Command+Option+, / . | Focus previous / next monitor |
 | Command+Option+Shift+, / . | Move window to previous / next monitor |
 | Option+T | New Ghostty window, while Ghostty is running and has Accessibility permission |
+| Option+B | Focus or launch Zen Browser (skhd) |
 | Command+T (in Ghostty) | New Ghostty window instead of a tab |
 
 OmniWM's default layout is niri-style scrolling columns. Its workspace layout
 can be changed to Hyprland-style dwindle in Settings. Keep one native macOS Space
 per display and use OmniWM workspaces for tiling.
 
-Some niri bindings do not have direct OmniWM equivalents: launching Zen or the
-file manager, shell panels and screenshots, and the separate consume-left/right
+Some niri bindings do not have direct OmniWM equivalents: launching the file
+manager, shell panels and screenshots, and the separate consume-left/right
 shortcuts. OmniWM's Option+Shift+Arrow keys can consume or expel windows.
