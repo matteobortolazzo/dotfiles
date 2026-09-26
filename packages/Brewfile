@@ -33,6 +33,7 @@ brew "zoxide"
 
 brew "azure-cli"
 brew "fastfetch"
+brew "teamookla/speedtest/speedtest"
 brew "asmvik/formulae/skhd"
 
 cask "1password-cli"
