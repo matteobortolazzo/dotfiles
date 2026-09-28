@@ -1,5 +1,3 @@
-# Niri Mod+B on macOS: activate Zen Browser or launch it if closed.
-cmd - b : open -a "Zen Browser"
-
-# Close the focused window without sending macOS Quit to the app.
-cmd - q : /opt/homebrew/bin/omniwmctl command close-focused-window
+# Niri Mod+B on macOS (Caps Lock = OmniWM Hyper = ctrl+alt+cmd):
+# activate Zen Browser or launch it if closed.
+ctrl + alt + cmd - b : open -a "Zen Browser"

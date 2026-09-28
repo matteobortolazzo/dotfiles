@@ -56,10 +56,10 @@ top = 0.0
 animationsEnabled = true
 defaultLayoutType = "niri"
 hotkeysEnabled = true
-hyperKeyModifiers = "Control+Option+Shift+Command"
+hyperKeyModifiers = "Control+Option+Command"
 ipcEnabled = true
 preventSleepEnabled = false
-systemHyperTrigger = "None"
+systemHyperTrigger = "CapsLock"
 updateChecksEnabled = true
 
 [gestures]
@@ -358,75 +358,75 @@ binding = "Unassigned"
 id = "assignFocusedWindowToScratchpad.10"
 
 [[hotkeys]]
-binding = "Command+1"
+binding = "Control+Option+Command+1"
 id = "switchWorkspace.0"
 
 [[hotkeys]]
-binding = "Command+Shift+1"
+binding = "Control+Option+Shift+Command+1"
 id = "moveToWorkspace.0"
 
 [[hotkeys]]
-binding = "Command+2"
+binding = "Control+Option+Command+2"
 id = "switchWorkspace.1"
 
 [[hotkeys]]
-binding = "Command+Shift+2"
+binding = "Control+Option+Shift+Command+2"
 id = "moveToWorkspace.1"
 
 [[hotkeys]]
-binding = "Command+3"
+binding = "Control+Option+Command+3"
 id = "switchWorkspace.2"
 
 [[hotkeys]]
-binding = "Command+Shift+3"
+binding = "Control+Option+Shift+Command+3"
 id = "moveToWorkspace.2"
 
 [[hotkeys]]
-binding = "Command+4"
+binding = "Control+Option+Command+4"
 id = "switchWorkspace.3"
 
 [[hotkeys]]
-binding = "Command+Shift+4"
+binding = "Control+Option+Shift+Command+4"
 id = "moveToWorkspace.3"
 
 [[hotkeys]]
-binding = "Command+5"
+binding = "Control+Option+Command+5"
 id = "switchWorkspace.4"
 
 [[hotkeys]]
-binding = "Command+Shift+5"
+binding = "Control+Option+Shift+Command+5"
 id = "moveToWorkspace.4"
 
 [[hotkeys]]
-binding = "Command+6"
+binding = "Control+Option+Command+6"
 id = "switchWorkspace.5"
 
 [[hotkeys]]
-binding = "Command+Shift+6"
+binding = "Control+Option+Shift+Command+6"
 id = "moveToWorkspace.5"
 
 [[hotkeys]]
-binding = "Command+7"
+binding = "Control+Option+Command+7"
 id = "switchWorkspace.6"
 
 [[hotkeys]]
-binding = "Command+Shift+7"
+binding = "Control+Option+Shift+Command+7"
 id = "moveToWorkspace.6"
 
 [[hotkeys]]
-binding = "Command+8"
+binding = "Control+Option+Command+8"
 id = "switchWorkspace.7"
 
 [[hotkeys]]
-binding = "Command+Shift+8"
+binding = "Control+Option+Shift+Command+8"
 id = "moveToWorkspace.7"
 
 [[hotkeys]]
-binding = "Command+9"
+binding = "Control+Option+Command+9"
 id = "switchWorkspace.8"
 
 [[hotkeys]]
-binding = "Command+Shift+9"
+binding = "Control+Option+Shift+Command+9"
 id = "moveToWorkspace.8"
 
 [[hotkeys]]
@@ -506,27 +506,27 @@ binding = "Control+Option+Tab"
 id = "workspaceBackAndForth"
 
 [[hotkeys]]
-binding = "Command+RightBracket"
+binding = "Control+Option+Command+RightBracket"
 id = "switchWorkspace.next"
 
 [[hotkeys]]
-binding = "Command+LeftBracket"
+binding = "Control+Option+Command+LeftBracket"
 id = "switchWorkspace.previous"
 
 [[hotkeys]]
-binding = "Command+H"
+binding = "Control+Option+Command+H"
 id = "focus.left"
 
 [[hotkeys]]
-binding = "Command+J"
+binding = "Control+Option+Command+J"
 id = "focus.down"
 
 [[hotkeys]]
-binding = "Command+K"
+binding = "Control+Option+Command+K"
 id = "focus.up"
 
 [[hotkeys]]
-binding = "Command+L"
+binding = "Control+Option+Command+L"
 id = "focus.right"
 
 [[hotkeys]]
@@ -570,23 +570,23 @@ binding = "Unassigned"
 id = "centerColumn"
 
 [[hotkeys]]
-binding = "Command+Shift+F"
+binding = "Control+Option+Shift+Command+F"
 id = "centerVisibleColumns"
 
 [[hotkeys]]
-binding = "Command+Shift+LeftBracket"
+binding = "Control+Option+Shift+Command+LeftBracket"
 id = "moveWindowToWorkspaceUp"
 
 [[hotkeys]]
-binding = "Command+Shift+RightBracket"
+binding = "Control+Option+Shift+Command+RightBracket"
 id = "moveWindowToWorkspaceDown"
 
 [[hotkeys]]
-binding = "Control+Command+Shift+Comma"
+binding = "Control+Option+Shift+Command+I"
 id = "moveColumnToWorkspaceUp"
 
 [[hotkeys]]
-binding = "Control+Command+Shift+Period"
+binding = "Control+Option+Shift+Command+U"
 id = "moveColumnToWorkspaceDown"
 
 [[hotkeys]]
@@ -642,11 +642,11 @@ binding = "Option+Shift+Right Arrow"
 id = "move.right"
 
 [[hotkeys]]
-binding = "Command+Shift+J"
+binding = "Control+Option+Shift+Command+J"
 id = "moveWindowDown"
 
 [[hotkeys]]
-binding = "Command+Shift+K"
+binding = "Control+Option+Shift+Command+K"
 id = "moveWindowUp"
 
 [[hotkeys]]
@@ -662,19 +662,19 @@ binding = "Unassigned"
 id = "consumeWindowIntoColumn"
 
 [[hotkeys]]
-binding = "Command+P"
+binding = "Control+Option+Command+P"
 id = "expelWindowFromColumn"
 
 [[hotkeys]]
-binding = "Command+Option+Period"
+binding = "Control+Option+Command+Period"
 id = "focusMonitorNext"
 
 [[hotkeys]]
-binding = "Command+Option+Comma"
+binding = "Control+Option+Command+Comma"
 id = "focusMonitorPrevious"
 
 [[hotkeys]]
-binding = "Control+Command+Grave"
+binding = "Control+Option+Command+Grave"
 id = "focusMonitorLast"
 
 [[hotkeys]]
@@ -694,11 +694,11 @@ binding = "Unassigned"
 id = "moveWorkspaceToMonitor.down"
 
 [[hotkeys]]
-binding = "Command+Option+Shift+Comma"
+binding = "Control+Option+Shift+Command+Comma"
 id = "moveWindowToMonitor.left"
 
 [[hotkeys]]
-binding = "Command+Option+Shift+Period"
+binding = "Control+Option+Shift+Command+Period"
 id = "moveWindowToMonitor.right"
 
 [[hotkeys]]
@@ -710,7 +710,7 @@ binding = "Unassigned"
 id = "moveWindowToMonitor.down"
 
 [[hotkeys]]
-binding = "Command+Z"
+binding = "Control+Option+Command+Z"
 id = "toggleFullscreen"
 
 [[hotkeys]]
@@ -718,11 +718,11 @@ binding = "Unassigned"
 id = "toggleNativeFullscreen"
 
 [[hotkeys]]
-binding = "Command+Shift+H"
+binding = "Control+Option+Shift+Command+H"
 id = "moveColumn.left"
 
 [[hotkeys]]
-binding = "Command+Shift+L"
+binding = "Control+Option+Shift+Command+L"
 id = "moveColumn.right"
 
 [[hotkeys]]
@@ -742,7 +742,7 @@ binding = "Control+Option+End"
 id = "moveColumnToLast"
 
 [[hotkeys]]
-binding = "Command+G"
+binding = "Control+Option+Command+G"
 id = "toggleColumnTabbed"
 
 [[hotkeys]]
@@ -862,11 +862,11 @@ binding = "Unassigned"
 id = "moveColumnToIndex.9"
 
 [[hotkeys]]
-binding = "Control+Command+Period"
+binding = "Control+Option+Command+R"
 id = "cycleSizeForward"
 
 [[hotkeys]]
-binding = "Control+Command+Comma"
+binding = "Control+Option+Shift+Command+R"
 id = "cycleSizeBackward"
 
 [[hotkeys]]
@@ -886,7 +886,7 @@ binding = "Unassigned"
 id = "cycleWindowSecondarySpanBackward"
 
 [[hotkeys]]
-binding = "Command+F"
+binding = "Control+Option+Command+F"
 id = "toggleContainerFullPrimarySpan"
 
 [[hotkeys]]
@@ -894,15 +894,15 @@ binding = "Control+Option+F"
 id = "expandContainerToAvailablePrimarySpan"
 
 [[hotkeys]]
-binding = "Control+Command+0"
+binding = "Control+Option+Command+0"
 id = "resetWindowSecondarySpan"
 
 [[hotkeys]]
-binding = "Control+Command+H"
+binding = "Control+Option+Command+Minus"
 id = "setContainerPrimarySpan.decrease10Percent"
 
 [[hotkeys]]
-binding = "Control+Command+L"
+binding = "Control+Option+Command+Equal"
 id = "setContainerPrimarySpan.increase10Percent"
 
 [[hotkeys]]
@@ -914,11 +914,11 @@ binding = "Unassigned"
 id = "setWindowPrimarySpan.increase10Percent"
 
 [[hotkeys]]
-binding = "Control+Command+J"
+binding = "Control+Option+Shift+Command+Minus"
 id = "setWindowSecondarySpan.decrease10Percent"
 
 [[hotkeys]]
-binding = "Control+Command+K"
+binding = "Control+Option+Shift+Command+Equal"
 id = "setWindowSecondarySpan.increase10Percent"
 
 [[hotkeys]]
@@ -982,7 +982,7 @@ binding = "Unassigned"
 id = "preselectClear"
 
 [[hotkeys]]
-binding = "Command+D"
+binding = "Control+Option+Command+D"
 id = "openCommandPalette"
 
 [[hotkeys]]
@@ -994,11 +994,11 @@ binding = "Unassigned"
 id = "rescueOffscreenWindows"
 
 [[hotkeys]]
-binding = "Command+V"
+binding = "Control+Option+Command+V"
 id = "toggleFocusedWindowFloating"
 
 [[hotkeys]]
-binding = "Unassigned"
+binding = "Control+Option+Command+Q"
 id = "closeFocusedWindow"
 
 [[hotkeys]]
@@ -1022,7 +1022,7 @@ binding = "Unassigned"
 id = "toggleWorkspaceLayout"
 
 [[hotkeys]]
-binding = "Command+S"
+binding = "Control+Option+Command+S"
 id = "toggleOverview"
 
 [[hotkeys]]

@@ -1,3 +1,5 @@
 # Keep terminals as separate windows for OmniWM's scrolling columns.
-keybind = global:cmd+t=new_window
+keybind = cmd+t=new_window
+# Niri Mod+T: Caps Lock is OmniWM's Hyper key (ctrl+alt+cmd).
+keybind = global:ctrl+alt+super+t=new_window
 macos-dock-drop-behavior = new-window
