@@ -7,7 +7,7 @@
 # which an SSH session doesn't have.
 #
 # The host comes from the `devHost` data var, and the block is skipped when it
-# matches this machine's hostname — a box should never carry an alias pointing
+# matches this machine's hostname — a box should never carry an entry pointing
 # at itself, and Tailscale derives the MagicDNS name from the system hostname,
 # so the comparison is exact.
 #
@@ -18,8 +18,7 @@
 #
 # User comes from `devUser`, set only where the local username differs from
 # the one on the desktop (the Mac); left out, ssh uses the local name.
-Host desktop {{ $devHost }}
-    HostName {{ $devHost }}
+Host {{ $devHost }}
 {{- if $devUser }}
     User {{ $devUser }}
 {{- end }}

@@ -14,7 +14,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
 | `ups` | Hardware — a UPS is on this box's USB: NUT monitoring and clean shutdown on a power cut | `true` / `false`, defaults to `false` |
-| `devHost` | The dev box's MagicDNS hostname, aliased as `ssh desktop` | hostname, blank for none |
+| `devHost` | The dev box's MagicDNS hostname, reached as `ssh <devHost>` | hostname, blank for none |
 
 | Profile | What you get |
 |---|---|
@@ -140,7 +140,7 @@ The second trap is the mirror image: `ENABLED=yes` in `/etc/ufw/ufw.conf` is *no
 Over Tailscale, so nothing is forwarded on the router and the tailnet is the perimeter. From any device signed into the tailnet, anywhere:
 
 ```bash
-ssh desktop        # alias from private_dot_ssh/config.tmpl
+ssh amd-desktop    # the devHost entry from private_dot_ssh/config.tmpl
 ```
 
 The target comes from the `devHost` data var rather than a hostname baked into the ssh config, and the block is skipped when `devHost` equals `.chezmoi.hostname` — no machine carries an alias pointing at itself, and Tailscale derives the MagicDNS name from the system hostname, so that comparison is exact. Renaming the desktop is a one-line config change on each client.

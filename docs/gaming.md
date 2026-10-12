@@ -287,7 +287,7 @@ Rejected client options, so they don't get re-litigated:
 `~/.ssh/authorized_keys` is non-empty, so a headless box can't lock itself out.
 Tailscale covers off-LAN access.
 
-`~/.ssh/config` on the *other* machines gets a `Host desktop` entry with
+`~/.ssh/config` on the *other* machines gets a `Host <devHost>` entry with
 `ForwardAgent yes`. Agent forwarding rather than a key on the desktop, because
 its 1Password agent socket needs an unlocked GUI that an SSH session doesn't
 have.

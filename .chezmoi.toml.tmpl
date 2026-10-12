@@ -33,7 +33,7 @@
 {{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
 {{- $ups := promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
 {{- $headless := promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
-{{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, aliased as `ssh desktop` (blank for none)" "" -}}
+{{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, reached as `ssh <devHost>` (blank for none)" "" -}}
 {{- $devUser := promptStringOnce . "devUser" "Username on the remote dev box (blank if it matches this machine's)" "" -}}
 
 [data]

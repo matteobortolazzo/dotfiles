@@ -7,7 +7,7 @@ set -euo pipefail
 # has no business accepting logins.
 #
 # Tailscale (run_once_after_23-tailscale.sh.tmpl) covers off-LAN access; this is
-# for plain `ssh desktop` + tmux on the local network. Opening the port in the
+# for plain `ssh <devHost>` + tmux on the local network. Opening the port in the
 # firewall is 28-firewall's job — sshd listening is not the same as reachable.
 
 if ! systemctl list-unit-files sshd.service >/dev/null 2>&1; then
