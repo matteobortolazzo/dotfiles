@@ -92,7 +92,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `40-aspire` | Aspire CLI, standalone build | `~/.aspire/bin` |
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
-`main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`), `23-tailscale` (enables `tailscaled`, and fixes the NetworkManager/systemd-resolved wiring MagicDNS depends on — see below).
+`main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`). `23-tailscale` runs on `main` and `wsl`: it enables `tailscaled` on both, and on `main` also fixes the NetworkManager/systemd-resolved wiring MagicDNS depends on (see below). WSL has no NetworkManager and owns `/etc/resolv.conf` itself, so there tailscaled uses its direct DNS mode instead.
 
 Two non-obvious ones:
 

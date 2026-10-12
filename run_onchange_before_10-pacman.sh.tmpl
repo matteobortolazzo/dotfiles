@@ -63,7 +63,7 @@ pkg_ups="$src/arch-ups.txt"
 
 {{ if eq .profile "wsl" -}}
 # wl-clipboard: WSLg exposes a Wayland display, giving nvim/tmux-yank a
-# working clipboard provider.
-sudo pacman -S --needed --noconfirm docker docker-buildx docker-compose wl-clipboard
+# working clipboard provider. tailscale: enabled by 23-tailscale.
+sudo pacman -S --needed --noconfirm docker docker-buildx docker-compose wl-clipboard tailscale
 {{ end -}}
 {{ end -}}

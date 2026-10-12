@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
-{{ if eq .profile "main" -}}
+{{ if or (eq .profile "main") (eq .profile "wsl") -}}
 set -euo pipefail
 
 if systemctl list-unit-files tailscaled.service >/dev/null 2>&1; then
   sudo systemctl enable --now tailscaled.service
 fi
+{{- if eq .profile "wsl" }}
+
+# WSL: no NetworkManager, and /etc/resolv.conf belongs to WSL
+# (generateResolvConf, a symlink into /mnt/wsl). tailscaled falls back to its
+# "direct" DNS mode there: it backs up WSL's file and writes its own pointing
+# at 100.100.100.100, which forwards non-tailnet queries to WSL's resolver and
+# keeps its search domains. WSL only regenerates the file at boot, before
+# tailscaled starts, so the two never fight at runtime. Don't also run
+# Tailscale on the Windows side with networkingMode=mirrored: Linux would see
+# both tailnet interfaces and routes.
+{{- end }}
+{{- if eq .profile "main" }}
 
 # MagicDNS needs systemd-resolved to own /etc/resolv.conf. See
 # system/NetworkManager/10-dns-systemd-resolved.conf for why the default NM
@@ -35,5 +47,10 @@ if systemctl is-active --quiet systemd-resolved.service \
   fi
 else
   echo "systemd-resolved not active — leaving /etc/resolv.conf alone"
+fi
+{{- end }}
+
+if command -v tailscale >/dev/null 2>&1 && ! tailscale status >/dev/null 2>&1; then
+  echo "tailscaled is up but this machine isn't on the tailnet — run 'sudo tailscale up'"
 fi
 {{ end -}}

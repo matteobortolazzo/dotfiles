@@ -137,6 +137,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Neovim, tmux, zsh, yazi, Ghostty, lazygit, bat, neofetch, git, IdeaVim | ✓ | ✓ | ✓ |
 | Package manager | pacman / yay (AUR) | brew | — |
 | Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
+| Tailscale (`23-tailscale`); NM/resolved DNS wiring `main` only | `main` + `wsl` | — | — |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `gaming` only | — | — |
 | sshd + ufw rules (`27-sshd`, `28-firewall`), `arch-dev.txt` | `dev` only | — | — |
 | NUT / UPS monitoring (`51-ups`), `arch-ups.txt` | `ups` only | — | — |
