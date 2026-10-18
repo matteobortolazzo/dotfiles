@@ -1,342 +1,303 @@
-# Stream Deck as a monitor + remote for the headless desktop — proposal
+# Stream Deck as the headless desktop's only screen — proposal
 
-> **Status: proposal, nothing implemented.** This is the design to react to
-> before any file lands. Open questions are at the end.
+> **Status: proposal, nothing implemented.** Open questions at the end.
 
-The original 15-key Stream Deck sits in the laptop's dock. The laptop is the
-machine you type on; the desktop is the box that does the work and boots
-headless (`docs/headless.md`). The deck becomes the one glanceable surface for
-that box: load, memory, GPU, UPS, what owns vt1, which coding agents are
-running and which one is waiting for you — plus the handful of buttons you
-otherwise type over SSH (`desktop up niri`, `desktop up gamescope`,
-`desktop down`).
+The original 15-key Stream Deck plugs **directly into the desktop**. That box
+boots headless (`docs/headless.md`): no greetd, no compositor, no monitor
+driven. The deck becomes its screen — fifteen 72 px tiles showing load,
+memory, GPU, UPS, what owns vt1, which coding agents are running and which one
+is waiting — and its only physical buttons: `desktop up niri`, `desktop up
+gamescope`, `desktop down`, and a hold-to-confirm power key, for a machine
+whose power button is otherwise the only thing you can press.
 
-The deck only exists while docked, which is a feature: it is the "at my desk,
-desktop-dev mode" control panel, and it vanishes when the laptop leaves.
+Nothing crosses the network. The daemon reads `/proc`, `nvidia-smi`, `upsc`,
+`systemctl` and cenci's local socket on the same box, and it runs from
+`multi-user.target`, so it is up on a headless boot before anyone logs in and
+keeps running underneath a niri or gamescope session when one is started.
 
 ## What is in the way today
 
-One real blocker and one latency problem, both on the desktop side.
+Three things, all small, all on this box.
 
 1. **`desktop` needs an interactive `sudo`.** `dot_local/bin/executable_desktop`
-   runs `sudo systemctl start greetd-autologin@…`. From a deck button that
-   runs `ssh <devHost> desktop up niri` there is no TTY to type a password
-   into, so the call fails. There is no sudoers or polkit rule in the repo
-   today (checked). Fix below (polkit, scoped to those units).
-2. **Every poll is a fresh SSH handshake.** The `Host <devHost>` block in
-   `private_dot_ssh/config.tmpl` has `ForwardAgent yes` and nothing else. A
-   2-second poll loop over Tailscale would pay a full key exchange plus
-   agent round trip each tick. Fix below (`ControlMaster`), and it speeds up
-   every `ssh <devHost> …` you type as a side effect.
+   runs `sudo systemctl start greetd-autologin@…`. The deck daemon is a
+   service, not a terminal: no password prompt is possible. Fix: a polkit
+   rule scoped to those units, and `desktop` stops needing `sudo` (also over
+   SSH, which it was written for).
+2. **`TAG+="uaccess"` does nothing on a headless box.** The usual Stream Deck
+   udev recipe grants the device to the *active seat's* user via an ACL. On a
+   `multi-user.target` boot there is no seat session, so nobody gets the ACL
+   and the daemon cannot open the device. The rule has to set `OWNER=`
+   (or a group) explicitly instead.
+3. **No user session to host a user service.** A `systemctl --user` unit
+   would need `loginctl enable-linger`. Simpler and more honest: a **system**
+   unit with `User=<you>`, `WantedBy=multi-user.target`, bound to the device
+   unit so it starts when the deck is present and stops if it is unplugged.
 
-Everything else needed already exists: `desktop status` knows what owns vt1,
-`upsc exa` has the UPS, `nvidia-smi` works on a headless boot because the
-driver stays loaded (deliberate, see `docs/headless.md`), Sunshine's prep hook
-leaves a state file while a stream is live, and cenci publishes agent state in
-one machine-readable line.
+Everything else exists: `desktop status` knows what owns vt1, `upsc exa` has
+the UPS, `nvidia-smi` works headless because the driver stays loaded
+(deliberate, see `docs/headless.md`), Sunshine's prep hook leaves a state file
+while a stream is live, and cenci broadcasts agent state on a local socket.
 
-## cenci: what the deck can read
+## cenci: what the deck reads, and how
 
-cenci-watch's daemon runs on whichever host the tmux server runs on (the
-desktop, when you work there over SSH). Every desktop widget it ships (DMS,
-Waybar, GNOME, Plasma, SwiftBar) polls the same thing:
+cenci-watch's daemon lives on the tmux server, which on this box is the thing
+you attach to over SSH. It broadcasts the full state as **newline-delimited
+JSON over a Unix socket** (`~/.local/state/cenci/run/cenci.sock`): connect,
+keep the connection, and a new snapshot line arrives on every change. cenci's
+own `pkg/watch` is a Go client for that stream, but the protocol is plain
+enough that the Python daemon reads it directly — no `widget-json` polling,
+no `jq`, push-driven like the tmux frontend itself.
 
-```bash
-cenci widget-json
-# {"text":"▶ 2  ! 1","tooltip":"a-work:3 - 42-implement (claude) (running)\n…",
-#  "class":"need-input","alt":"active","headroom":{"claude":0.62},"dispatch":{…}}
-```
+Each snapshot carries `windows[]` (session, window index, `window_name` like
+`42-implement`, `task_name`, `agent`, `status`), a `summary` of counts,
+`headroom` per agent (budget left, 0–1) and `dispatch` (fleet loop on/off,
+last pass). Status precedence for colour follows cenci's own rule: `failed` >
+`escalated` > `need_input` > `running` > `done` > `stopped` > `idle`. If the
+socket is absent the row reads "no daemon"; the daemon reconnects with
+backoff because cenci's daemon is spawned on demand by the first hook and
+can come and go.
 
-- `class` is the highest-priority state (`failed` > `escalated` > `need-input`
-  > `running` > `done` > `stopped` > `idle`) — the tile colour.
-- `tooltip` is one line per session, `session:index - name (agent) (status)`.
-  The README states the status token is pinned to the last position because
-  plugins parse it with an end-anchored regex, so parsing it is sanctioned,
-  not a hack. Those lines are what give the deck **one key per agent session**.
-- `headroom` is the per-agent usage budget left (0–1). Worth a small gauge:
-  it is the number that decides whether dispatch will keep going tonight.
-- `dispatch` says whether the fleet loop is on and when it last ran.
-- Exit 1 / no output means the daemon is down → tile reads "no daemon".
+The socket directory is hardened to the owning user (mode 0700, foreign-owned
+dirs rejected). Running the deck daemon **as you**, not root, is what makes
+this just work.
 
-cenci documents the remote case as "forward the Unix socket over SSH and run
-`widget-json -socket` locally". For the deck we do not need that: the deck's
-collector already SSHes in every tick, so it just runs `cenci widget-json` on
-the desktop and ships the line back inside the same JSON as the CPU numbers.
-One round trip, no second tunnel. (The forwarded socket stays the right answer
-if we ever want push instead of poll — `pkg/watch` is a public Go client for
-exactly that.)
-
-The laptop runs cenci too (the DMS plugin is enabled in
-`dot_config/DankMaterialShell/plugin_settings.json`). The agent row should
-merge **both** hosts, with a one-glyph host tag, so a session on the laptop
-and one on the desktop sit side by side.
-
-**Press on a session tile = jump into it.** The tile knows `session:index`, so
-it opens (or focuses, via `focus-or-spawn.sh`) a Ghostty running
-`ssh -t <devHost> tmux attach -t <session> \; select-window -t <session>:<index>`.
-That is the missing piece every bar widget lacks: they show that an agent
-needs input, the deck takes you to it in one press.
-
-## Layout (3 rows × 5 keys, 72 px tiles)
-
-Default page while the desktop is reachable:
+## Layout (3 rows × 5 keys)
 
 ```
 ┌─────────┬─────────┬─────────┬─────────┬─────────┐
-│ CPU     │ RAM     │ GPU     │ UPS     │ NET     │  row 1: stats, 2 s
+│ CPU     │ RAM     │ GPU     │ UPS     │ NET     │  row 1: stats
 │ 23%     │ 11/64G  │ 4% 41°  │ OL 100% │ ts ✓    │
-│ ld 1.2  │         │ 12 W    │ 38 min  │ 3 ctr   │
+│ ld 1.2  │ 48°     │ 12 W    │ 38 min  │ ssh 1   │
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
-│ AGENTS  │ #42     │ #78     │ #91     │ +2      │  row 2: cenci
-│ ▶2 !1   │ impl    │ refine  │ impl    │ more    │  colour = status
-│ cl 62%  │ ! input │ ▶ run   │ ✓ done  │         │  press = jump
+│ AGENTS  │ #42     │ #78     │ #91     │ ⟳ 5m    │  row 2: cenci
+│ ▶2 !1   │ impl    │ refine  │ impl    │ 2/0     │  colour = status
+│ cl 62%  │ ! input │ ▶ run   │ ✓ done  │ 14:05   │
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
-│ NIRI    │ GAME    │ GREETER │ DOWN    │ ⇆       │  row 3: actions
-│ ● on    │ ○       │ ○       │         │ laptop  │  active one lit
+│ NIRI    │ GAME    │ GREETER │ DOWN    │ ⏻       │  row 3: actions
+│ ● on    │ ○       │ ○       │         │ hold    │  active one lit
 └─────────┴─────────┴─────────┴─────────┴─────────┘
 ```
 
-Tiles, by row:
+**Row 1 — stats, every 2 s.**
+- `CPU`: utilisation from `/proc/stat`, 1-min load, package temp from
+  `k10temp` via `/sys/class/hwmon` (no `lm_sensors`).
+- `RAM`: used/total from `/proc/meminfo`.
+- `GPU`: util, temp, power draw from `nvidia-smi --query-gpu=…,--format=csv`.
+  The "~12 W idle" figure from `headless.md`, live, and the first thing to
+  look at when a session was left running on vt1.
+- `UPS`: `ups.status`, `battery.charge`, `battery.runtime` from `upsc exa`.
+  Red on `OB`; see the takeover below.
+- `NET`: Tailscale online, established SSH session count
+  (`ss -tn state established '( sport = :22 )'`), running docker containers,
+  root disk free. Which of these shows on the tile cycles on press.
 
-**Row 1 — stats.** CPU % + 1-min load; RAM used/total; GPU util, temp and
-power draw from `nvidia-smi --query-gpu=…` (the "12 W idle" number from
-`headless.md`, live); UPS `ups.status` + `battery.charge` + `battery.runtime`
-from `upsc exa` (tile goes `urgent` red on `OB`, this is the one you most want
-to glance at during a storm); network/health tile: Tailscale up, running
-docker container count, root disk free. CPU temp comes from `k10temp` via
-`/sys/class/hwmon`, no `lm_sensors` needed.
+**Row 2 — agents, push-driven.** Aggregate tile (counts + lowest headroom);
+three session tiles sorted need-input → failed → running → done → idle, each
+with the ticket number or slug, the skill, the status glyph and colour; the
+last tile is the fleet **dispatch loop**: `⟳` + interval when enabled, `⚙`
+while a pass runs, last `dispatched/skipped` and time, blank when off. More
+than three sessions → the third tile becomes `+N` and switches to an agents
+page that lists them five per row.
 
-**Row 2 — agents.** Aggregate tile (cenci `text` + headroom %), then up to
-three session tiles sorted need-input → failed → running → done → idle, then a
-"+N" overflow tile that opens `cenci status` in a terminal. Session tile shows
-the ticket number / slug, the skill, the status glyph, and a host tag when it
-is the laptop's own daemon rather than the desktop's. Press = jump (above).
+Since there is no screen to jump to, a press on a session tile opens a detail
+page (full task name, agent, session:window, how long in this state) rather
+than a terminal. A **hold** on a `done` session runs `cenci close <ticket>`
+to reap its window; a hold on the dispatch tile toggles
+`cenci dispatch loop on|off`. Nothing on a tap mutates agent state.
 
-**Row 3 — actions.** `NIRI` / `GAME` / `GREETER` map to `desktop up niri`,
-`desktop up gamescope`, `desktop greeter`; the one whose unit is active is
-drawn lit (gold) from `desktop status`. `GAME` additionally shows a streaming
-badge while Sunshine's `stream-prep` state file exists. `DOWN` is
-`desktop down`. `⇆` switches to the laptop page. Power actions (reboot,
-poweroff) live on a hold: hold `DOWN` 1.5 s for a confirm tile. The original
-deck has no hardware long-press, but the library reports key down/up so the
-daemon can time it; nothing destructive on a single tap.
+**Row 3 — actions.**
+- `NIRI` / `GAME` / `GREETER` → `desktop up niri`, `desktop up gamescope`,
+  `desktop greeter`. The unit that owns vt1 is drawn gold (from the same list
+  `desktop status` prints). `GAME` shows a streaming badge while
+  `/run/user/<uid>/sunshine-stream-prep.desk-off` exists.
+- `DOWN` → `desktop down`.
+- `⏻` → hold 1.5 s for a confirm page: **reboot** / **power off** / cancel.
+  The library reports key down/up, so the daemon times the hold; nothing
+  destructive is a single tap. On a box with no monitor this is the one
+  physical control that is otherwise missing.
 
-**Laptop page.** Local `dms ipc` calls that are awkward mid-call: mic mute
-(state read back via `wpctl`), DND, lock, audio sink cycle (the one thing a
-niri bind cannot express because it needs a sink id), wallpaper next,
-screenshot, back to the server page. Also the laptop's own cenci sessions if
-you prefer them here instead of merged.
+**UPS takeover.** On `OB` the whole deck switches to a page: charge, runtime,
+load, and a countdown of the **five-minute `upssched` timer** that is the real
+shutdown policy (`docs/ups.md`): the daemon stamps when `OB` first appeared
+and counts down from 300 s. Keys: back to normal view; hold-to-shutdown now.
+On `OL` it returns to the previous page. Power to the deck comes from the
+same UPS-backed PSU, so it stays lit until killpower.
 
-**Offline page.** Shown automatically when the desktop does not answer: grey
-"offline" tiles, a Wake-on-LAN key (LAN only — a magic packet is an L2
-broadcast and does not cross Tailscale; from elsewhere the key is disabled and
-says so), Tailscale status, and the laptop-page switch.
+**Lifecycle on the deck.** `ExecStartPre` paints a "headless · booting" tile
+set before the first poll; `ExecStop` paints "shutting down" so the last
+thing visible during a `desktop down`/reboot is intentional rather than a
+frozen frame. Brightness: full for a minute after a press, then 15 %;
+the deck is in a room, not a pocket, so it never blanks fully — a dim
+glanceable panel is the point.
 
 Colours are the Glassmorphic Dark tokens from `.claude/CLAUDE.md`: `bg-solid`
 tiles, `text-primary` labels, `accent` gold for the active session/unit,
 `urgent` for need-input and on-battery, `success` for done/online, `warning`
-for low headroom. Labels in Inter, glyphs from JetBrains Mono Nerd Font (both
-already in `arch-desktop.txt`). The deck becomes one more place the palette is
-applied, next to niri, DMS, Ghostty and regreet.
+for low headroom (< 25 %, cenci's own threshold). Inter for labels, JetBrains
+Mono Nerd Font for glyphs — both in `arch-desktop.txt`, which the desktop has.
 
 ## Architecture
 
 ```
-laptop (deck in dock)                       desktop (headless, Tailscale)
-┌──────────────────────────┐   ssh, mux'd   ┌─────────────────────────────┐
-│ deckd (user service)     │ ─────────────▶ │ deck-stats  → one JSON line │
-│  · renders 15 tiles      │   every 2 s    │   /proc, nvidia-smi, upsc,  │
-│  · runs press actions    │                │   desktop status, sunshine, │
-│  · local: dms/niri/wpctl │ ◀───────────── │   docker, tailscale,        │
-│  · remote: ssh devHost … │                │   cenci widget-json         │
-│  · cenci (local socket)  │                │ polkit: start/stop greetd*  │
-└──────────────────────────┘                └─────────────────────────────┘
-       ▲ udev: deck plugged → start; unplugged → stop
+desktop, headless boot (multi-user.target)
+┌────────────────────────────────────────────────────────────────┐
+│ streamdeck.service  (system unit, User=<you>, BindsTo=device)   │
+│   deckd.py                                                     │
+│   ├─ poll 2 s: /proc, hwmon, nvidia-smi, upsc, systemctl,      │
+│   │            ss, docker, tailscale, sunshine state file      │
+│   ├─ push:     cenci.sock  (NDJSON stream, reconnect+backoff)  │
+│   ├─ render:   Pillow → 15 × 72 px tiles                       │
+│   └─ press:    desktop up|down|greeter · systemctl reboot/off  │
+│                cenci close / dispatch loop (hold only)         │
+│ polkit: <you> may manage greetd*, power-off, reboot            │
+│ udev:   0fd9 → OWNER=<you>, SYSTEMD_WANTS=streamdeck.service   │
+└────────────────────────────────────────────────────────────────┘
+          niri / gamescope session on vt1 may or may not exist;
+          the deck does not care and is not part of it.
 ```
 
-**Why one collector script, not N commands.** Fifteen tiles polling
-individually would be fifteen SSH execs per tick. `deck-stats` on the desktop
-gathers everything into one JSON object; the laptop runs it once per tick.
-It is a tracked script (`dot_local/bin/executable_deck-stats`, gated on
-`dev`), so what the deck can show is versioned with the box that produces it.
-It also runs fine by hand: `ssh <devHost> deck-stats | jq`.
+**Why a custom daemon.** The deciding feature is tiles created from data (one
+key per agent session, a UPS takeover page). Compared:
 
-**Why a small custom daemon, not a GUI app.** Compared on what this design
-actually needs:
-
-| | Dynamic tiles (one key per agent session) | Colour by state | Config in chezmoi | Runs with no GUI | Notes |
+| | Tiles from data | Colour by state | Config in chezmoi | Runs with no GUI session | Notes |
 |---|---|---|---|---|---|
-| **Custom daemon** (`python-elgato-streamdeck` + Pillow) | ✓ | ✓ | ✓ plain file | ✓ | ~400 lines; we own rendering and press logic |
-| **deckmaster** (Go, TOML) | ✗ static key map | ✗ fixed colours | ✓ | ✓ | has a `command` widget on an interval; zero code, but no per-session keys |
-| **StreamController** (GTK4, Flathub) | ✗ | plugin-dependent | ✗ lives in `~/.var/app` | ✗ | best GUI; icons and pages; could not confirm a "command output on key" plugin |
-| **OpenDeck** (Tauri) | ✗ | plugin-dependent | ✗ | ✗ | runs Elgato-SDK plugins, mostly Windows-app oriented |
+| **Custom daemon** (`python-elgato-streamdeck` + Pillow) | ✓ | ✓ | ✓ | ✓ | ~400 lines; we own rendering and press logic |
+| **deckmaster** (Go, TOML) | ✗ static key map | ✗ | ✓ | ✓ | `command` widget on an interval; zero code, text only |
+| **StreamController** (GTK4) | ✗ | plugin-dependent | ✗ | ✗ needs a desktop | best GUI, wrong shape for a headless box |
+| **OpenDeck** (Tauri) | ✗ | plugin-dependent | ✗ | ✗ | Elgato-SDK plugins, Windows-app oriented |
 
-The per-session agent keys are the feature that decides it, and only a custom
-daemon can create keys from data. Python rather than Go for the first cut:
-the config and the code sit next to each other in this repo, there is no build
-step on `chezmoi apply`, and `stream-prep.sh` already leans on `python3` here.
-If it grows, the natural Go rewrite would use cenci's `pkg/watch` for push and
-`muesli/streamdeck` (deckmaster's device layer) for the hardware — and could
-be contributed back to cenci as a `watch/plugin/streamdeck` surface. The
-dotfiles-specific tiles (UPS, `desktop`, GPU) would stay here either way.
+Python for the first cut: config and code live together in this repo, no
+build step on `chezmoi apply`, and `stream-prep.sh` already leans on
+`python3` on this box. If it grows, a Go rewrite would use cenci's `pkg/watch`
+for the stream and `muesli/streamdeck` (deckmaster's device layer) for the
+hardware, and could be offered back to cenci as a `watch/plugin/streamdeck`
+surface — the UPS/`desktop`/GPU tiles stay here either way.
 
-**Device access.** The deck is USB HID, vendor `0fd9` (original: product
-`0060`, the 2019 revision `006d`; check `lsusb`). The library's current docs
-want the `hid` Python package backed by libhidapi's **libusb** build, which on
-Arch is the single `hidapi` package. One udev rule grants the seated user
-access without root:
+**Device access.** USB HID, vendor `0fd9`; the original deck is product
+`0060` (2017) or `006d` (2019 revision) — `lsusb` tells. The library's docs
+want the `hid` Python package on libhidapi's **libusb** build, which on Arch is
+the single `hidapi` package. Because the libusb backend opens the raw USB
+device, the rule must cover `usb` as well as `hidraw`:
 
 ```udev
-# system/udev/70-streamdeck.rules
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", TAG+="uaccess", TAG+="systemd", \
-  ENV{SYSTEMD_USER_WANTS}="streamdeck.service"
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", TAG+="uaccess"
+# system/udev/70-streamdeck.rules — OWNER, not uaccess: no seat on a headless boot
+SUBSYSTEM=="usb",    ATTRS{idVendor}=="0fd9", OWNER="<you>", MODE="0600", \
+  TAG+="systemd", ENV{SYSTEMD_WANTS}="streamdeck.service"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", OWNER="<you>", MODE="0600"
 ```
 
-`SYSTEMD_USER_WANTS` is what makes hotplug free: the user manager starts
-`streamdeck.service` when the device appears and, with `StopWhenUnneeded=yes`
-on the service, stops it when the device goes. No polling for the dock, no
-daemon idling on battery at a café. The unit is also `PartOf=graphical-session.target`
-so it dies with the session and inherits niri's `WAYLAND_DISPLAY` for the
-local `dms ipc` / `niri msg` actions — same reasoning as `captive-portal.service`.
+The username is rendered by the install script from `.chezmoi.username`,
+never hardcoded in the tracked rule.
 
-**Idle and lock.** Full brightness while in use, dim to ~10 % after a minute
-without a press, blank on `org.freedesktop.login1.Session.Lock` and restore on
-`Unlock` (DBus, no polling). DMS's lock already emits those.
+**Service.** A system unit mirrored from `system/streamdeck/` the same way
+`nut-killpower.service` is, with:
 
-## Desktop-side changes
+```ini
+[Unit]
+Description=Stream Deck status panel for a headless box
+After=multi-user.target nut-monitor.service docker.service
+BindsTo=dev-streamdeck.device          # SYMLINK+="streamdeck" in the udev rule
+After=dev-streamdeck.device
 
-1. **polkit rule instead of `sudo`.** `system/polkit/49-desktop-units.rules`,
-   installed by `run_once_after_49-headless-boot.sh.tmpl` next to the autologin
-   units, allows the dev user to `manage-units` for exactly `greetd.service`
-   and `greetd-autologin@*.service` (`getty@tty1` stops through `Conflicts=`,
-   nothing needs to touch it directly), plus `login1.power-off` and
-   `login1.reboot` so the hold-to-confirm keys work from an SSH session, which
-   logind otherwise treats as a non-seat caller and asks for auth:
+[Service]
+User=<you>
+ExecStartPre=%h/.local/share/streamdeck/venv/bin/python %h/.config/streamdeck/deckd.py splash booting
+ExecStart=%h/.local/share/streamdeck/venv/bin/python %h/.config/streamdeck/deckd.py
+ExecStop=%h/.local/share/streamdeck/venv/bin/python %h/.config/streamdeck/deckd.py splash shutdown
+Restart=on-failure
+RestartSec=3
 
-   ```js
-   polkit.addRule(function (action, subject) {
-     if (subject.user !== "<user>") return polkit.Result.NOT_HANDLED;
-     if (action.id === "org.freedesktop.systemd1.manage-units") {
-       var u = action.lookup("unit") || "";
-       if (u === "greetd.service" || u.indexOf("greetd-autologin@") === 0)
-         return polkit.Result.YES;
-     }
-     if (action.id === "org.freedesktop.login1.power-off" ||
-         action.id === "org.freedesktop.login1.reboot")
-       return polkit.Result.YES;
-     return polkit.Result.NOT_HANDLED;
-   });
-   ```
+[Install]
+WantedBy=multi-user.target
+```
 
-   `desktop` then drops `sudo` and calls `systemctl` directly (falling back to
-   `sudo` only if polkit says no, so it keeps working at the desk on a box
-   without the rule). Security delta: whoever holds your SSH key can already
-   do everything as you on that box; this adds "start/stop the greeter and
-   power off without a password", which is the documented purpose of
-   `desktop up` over SSH anyway. The UPS killpower path is root and unaffected.
+`%h` resolves to that user's home under `User=`. `BindsTo=` the device unit
+plus `SYSTEMD_WANTS=` on the rule is what gives start-on-plug and
+stop-on-unplug without any polling; on a box where the deck is permanently
+attached it simply starts at boot.
 
-2. **`deck-stats`.** `dot_local/bin/executable_deck-stats`, gated on `dev` in
-   `.chezmoiignore` the way `.local/bin/desktop` is gated on `main`. Emits one
-   JSON object; every field optional so a missing tool (no UPS, no GPU) drops
-   the field rather than failing the tick:
+**polkit rule.** `system/polkit/49-desktop-units.rules`, installed by
+`run_once_after_49-headless-boot.sh.tmpl` next to the autologin units, since
+it exists to make `desktop` callable from anything that is not a seat
+session (the deck daemon today, your SSH shell already):
 
-   ```json
-   {"host":"<devHost>","ts":1760781600,
-    "cpu":{"pct":23,"load1":1.2,"temp":48},
-    "mem":{"used_mb":11264,"total_mb":65536},
-    "gpu":{"util":4,"temp":41,"power_w":12},
-    "ups":{"status":"OL","charge":100,"runtime_s":2280},
-    "disk":{"root_free_gb":412},
-    "docker":{"running":3},
-    "tailscale":{"online":true},
-    "desktop":{"active":"greetd-autologin@niri.service","streaming":false},
-    "cenci":{"text":"▶ 2  ! 1","class":"need-input","tooltip":"…","headroom":{"claude":0.62}}}
-   ```
+```js
+polkit.addRule(function (action, subject) {
+  if (subject.user !== "<you>") return polkit.Result.NOT_HANDLED;
+  if (action.id === "org.freedesktop.systemd1.manage-units") {
+    var u = action.lookup("unit") || "";
+    if (u === "greetd.service" || u.indexOf("greetd-autologin@") === 0)
+      return polkit.Result.YES;
+  }
+  if (action.id === "org.freedesktop.login1.power-off" ||
+      action.id === "org.freedesktop.login1.reboot")
+    return polkit.Result.YES;
+  return polkit.Result.NOT_HANDLED;
+});
+```
 
-   `desktop.active` comes from the same unit list `desktop status` prints;
-   `desktop.streaming` is the existence of `$XDG_RUNTIME_DIR/sunshine-stream-prep.desk-off`.
-   `cenci` is `cenci widget-json` passed through verbatim (`null` when it
-   exits 1).
+`desktop` then calls `systemctl` directly and falls back to `sudo` only if
+polkit refuses, so it keeps working unchanged on a box without the rule.
+Security delta: anyone with your SSH key already has a shell as you on this
+box; this adds "start/stop the greeter and power off without a password",
+which is what `desktop up` over SSH was built for. `getty@tty1` stops through
+`Conflicts=`, so the rule never has to name it. The NUT killpower path runs
+as root and is untouched.
 
-3. **SSH multiplexing.** Add to the `Host <devHost>` block in
-   `private_dot_ssh/config.tmpl`:
-
-   ```
-       ControlMaster auto
-       ControlPath ~/.ssh/cm-%r@%h:%p
-       ControlPersist 10m
-   ```
-
-   First connection pays the handshake; every poll and every button press
-   afterwards is a channel on the existing connection (tens of ms). The agent
-   forward rides the master, so the 1Password-backed key keeps working.
-   `private_dot_ssh/` is already `private_`, so the socket directory is fine.
-
-## Laptop-side files
+## Files
 
 | File | Purpose |
 |---|---|
-| `dot_config/streamdeck/deckd.py` (or `dot_local/bin/executable_deckd`) | the daemon: device, renderer, poll loop, press handlers |
-| `dot_config/streamdeck/config.toml` | pages → tiles; each tile has a `kind` (`stat`, `cenci`, `unit`, `cmd`, `page`) and its `press` command |
-| `dot_config/systemd/user/streamdeck.service` | `StopWhenUnneeded=yes`, `PartOf=graphical-session.target`, `Restart=on-failure` |
-| `system/udev/70-streamdeck.rules` | uaccess + `SYSTEMD_USER_WANTS` |
-| `run_once_after_52-streamdeck.sh.tmpl` | installs the udev rule (needs root, same mirror idiom as greetd/nut), creates `~/.local/share/streamdeck/venv` with `streamdeck pillow hid` (pip into a venv — Arch's system Python is PEP 668 externally-managed, and the README's rule is toolchains install into `$HOME`) |
+| `dot_config/streamdeck/deckd.py` | the daemon: device, renderer, pollers, cenci stream, press/hold handlers, pages |
+| `dot_config/streamdeck/config.toml` | tile layout per page, poll interval, hold time, brightness, UPS name (`exa`) |
+| `system/streamdeck/streamdeck.service` | system unit above, mirrored to `/etc/systemd/system/` |
+| `system/udev/70-streamdeck.rules` | OWNER + `SYSTEMD_WANTS` + `SYMLINK+="streamdeck"` |
+| `system/polkit/49-desktop-units.rules` | manage greetd units / power without a prompt (installed by `49-headless-boot`) |
+| `run_once_after_52-streamdeck.sh.tmpl` | mirrors rule + unit with `sudo install`, renders `<you>`, creates `~/.local/share/streamdeck/venv` with `streamdeck pillow hid` (Arch's Python is PEP 668 externally-managed; the README's rule is toolchains install into `$HOME`), `udevadm trigger`, `systemctl enable --now` |
+| `dot_local/bin/executable_desktop` | drop `sudo`, fall back to it |
 | `docs/streamdeck.md` | this file, rewritten as the real doc once it lands |
 
-Gate: a new `deck` data var, prompted like `ups` ("a Stream Deck is on this
-box's dock"). It is a hardware fact, not a role, and `ups` is the precedent for
-exactly that shape. Read with `dig "deck" false .` everywhere. Suggested
-`pacman -S hidapi` (not installed by the scripts, per the repo rule).
-
-## Press actions, concretely
-
-| Tile | Press | Hold 1.5 s |
-|---|---|---|
-| session `#42` | focus-or-spawn Ghostty → `ssh -t <devHost> tmux attach -t a-work \; select-window -t a-work:3` | — |
-| `+N` | Ghostty → `ssh -t <devHost> cenci status` then shell | — |
-| `AGENTS` | toggle merged/remote-only view | `ssh <devHost> cenci dispatch loop on\|off` (toggle) |
-| `NIRI` / `GAME` / `GREETER` | `ssh <devHost> desktop up niri` / `up gamescope` / `greeter` | — |
-| `DOWN` | `ssh <devHost> desktop down` | confirm tile → reboot / poweroff |
-| `UPS` | Ghostty → `ssh -t <devHost> upsc exa` | — |
-| `GPU` / `CPU` | Ghostty → `ssh -t <devHost> btop` (if present) | — |
-| offline `WOL` | magic packet to the desktop's MAC (stored in the deck config, LAN only) | — |
-
-All remote presses are the same commands you type today; nothing on the
-desktop learns a new verb except `deck-stats`.
+Gate: a new **`deck`** data var, prompted like `ups` ("a Stream Deck is
+plugged into this box"). Hardware fact, not a role — `ups` is the precedent
+for that shape. Read with `dig "deck" false .`. Per the repo rule the script
+suggests `pacman -S hidapi` and does not install it.
 
 ## Risks and caveats
 
+- **The `uaccess` trap** above is the one that silently breaks every online
+  recipe on this box: the daemon logs "could not open device" and nothing
+  else is wrong. `OWNER=` is the fix; worth a comment in the rule.
 - **Original-deck quirks.** The 2017 unit is the oldest the library supports;
-  it needs a `reset()` after hotplug and occasionally misses the first frame.
-  The udev-driven restart covers the reconnect path.
-- **Dock re-enumeration on resume.** Thunderbolt docks sometimes re-enumerate
-  USB late after suspend. Same answer: the device unit reappears, the service
-  restarts.
-- **Tick cost.** One multiplexed SSH exec per 2 s plus `nvidia-smi` and
-  `upsc` on the desktop is negligible, but `nvidia-smi` can take ~100 ms on
-  first call after idle; `deck-stats` should time-box each probe.
-- **Two cenci hosts, one deck.** Merging local + remote sessions means the
-  daemon reads the local socket directly and the remote one via `deck-stats`;
-  sort order has to be by status first, host second, or the row shuffles.
-- **15 keys.** The server page is full. Anything else (per-project dev page,
-  tmux session jumps) is a page, and page-switching on a 15-key deck costs a
-  key per page. Two pages plus offline is the comfortable maximum.
+  it wants a `reset()` on open and sometimes drops the first frame. Harmless
+  with `Restart=on-failure`.
+- **`nvidia-smi` on a GPU that is idle** can take ~100 ms on the first call;
+  time-box every probe so one slow tool cannot stall the tick.
+- **Two things can start vt1 sessions now:** you over SSH and the deck. Both
+  go through the same `Conflicts=` units, so the worst case is the same as
+  today — a session started from the deck kills a TTY login left on the
+  monitor nobody is looking at.
+- **cenci daemon lifetime.** It is spawned on demand by the first agent hook
+  and may not exist on a fresh boot; the row reads "no daemon" until the
+  first `claude`/`codex` starts, which is correct, not an error.
+- **15 keys.** Server page, agents page, UPS takeover, power confirm. That is
+  the comfortable maximum; a docker/services page is possible but each page
+  costs a key.
 
 ## Open questions
 
-1. **Python in dotfiles, or Go in its own repo (possibly as a cenci surface)?**
-   Proposal says Python first; a Go rewrite is cheap later because the config
-   format and `deck-stats` contract do not change.
-2. **New `deck` var** vs. gating on "profile `main` and hostname ≠ `devHost`".
-   The var is cleaner and matches `ups`; the hostname rule needs no re-init.
-3. **Hold-to-confirm for reboot/poweroff** — wanted at all, or keep power out
-   of the deck entirely and leave it to `ssh`?
-4. **Merge the laptop's own cenci sessions into the agent row**, or keep them
-   on the laptop page?
+1. **Python in dotfiles vs Go in its own repo (or as a cenci surface).** The
+   proposal says Python first; `config.toml` and the tile semantics would
+   survive a rewrite.
+2. **New `deck` var**, or gate on `ups`/`headless` since it is the same box?
+   The var is honest about what it is; the piggyback saves a prompt.
+3. **Power keys on the deck at all?** Hold-to-confirm is the proposal; the
+   alternative is leaving power to SSH and the UPS.
+4. **UPS takeover page** — wanted, or is red on one tile enough?
 5. **"Game mode" = `desktop up gamescope`?** Assumed yes (the couch session).
-   If you also mean Feral `gamemode`, that is per-process and not something to
-   toggle from here.
-6. **Wake-on-LAN** — is WoL enabled on the desktop's NIC (`ethtool eno1 | grep
-   Wake-on`), and do you want the MAC in a public repo? It could live in the
-   machine-local `.chezmoi.toml` data instead.
+   Feral `gamemode` is per-process and not something to toggle from here.
+6. **Press on a session tile**: detail page (proposed), or nothing?
+7. **Later, from the laptop:** the earlier laptop-dock variant of this design
+   (one `deck-stats` JSON over a multiplexed SSH connection) is a strict
+   superset and could come back as a second surface if you ever want the same
+   view at the laptop's dock. Not part of this proposal.
