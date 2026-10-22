@@ -4,22 +4,24 @@
 # here. Runs as root, after every limine-entry-tool run (kernel updates,
 # limine-update, mkinitcpio), and idempotently from `chezmoi apply`.
 #
-# Writes the 'CachyOS (headless)' entry into limine.conf and repairs the OS
-# entry's own name line.
+# Writes the 'CachyOS (headless)' entry into limine.conf, directly above the OS
+# entry, and keeps the OS entry's 'comment: machine-id=…' line where both
+# limine-entry-tool and limine-snapper-sync look for it.
 #
-# Why a hook and not a one-shot write: limine-entry-tool identifies the OS entry
-# it owns by the '/+<name>' line adjacent to 'comment: machine-id=…'. Globals
-# must precede every entry in limine.conf, so a hand-written entry has nowhere
-# to live except immediately above that marker — where the tool mistakes it for
-# the OS entry name, drops its own '/+CachyOS' line as redundant, and reparents
-# the generated kernel entries under ours. The headless entry then becomes a
-# *directory* whose first child is the normal graphical entry: selecting it at
-# the menu boots the graphical cmdline, greetd starts, and the entry looks
-# perfectly correct in the file the whole time.
+# The machine-id comment must sit *under* the OS entry's '/+<name>' line: limine
+# attaches every option, comments included, to the entry above it, and both tools
+# find the OS entry they own by that comment. Earlier versions of this hook put
+# the headless block between '/+CachyOS' and the marker, which handed the
+# machine-id to 'CachyOS (headless)'. limine-snapper-sync then saw an OS entry
+# with no '//<kernel>' children ("Your OS entry has no kernel") and stopped
+# syncing, and every limine-entry-tool run stranded another '/+CachyOS' block
+# with hashes that go stale on the next kernel rebuild. A marker left above its
+# name line by those versions is moved back under it here.
 #
-# Placement is therefore unavoidable and the damage has to be repaired after the
-# fact, on every regeneration. Sorted before 90-limine-enroll-config so an
-# enrolled config hash covers the repaired file, not the broken one.
+# Why a hook and not a one-shot write: limine-entry-tool rewrites limine.conf on
+# every kernel update, and a hand-written entry has to be re-asserted after it.
+# Sorted before 90-limine-enroll-config so an enrolled config hash covers the
+# final file.
 #
 # Hook exit codes: >=100 aborts limine-entry-tool, 1..99 is a warning. Nothing
 # here is worth failing a kernel update over, so every giving-up path exits 0
@@ -138,29 +140,36 @@ awk -v b="$begin" -v e="$end" '
 	{ print }
 ' "$conf" >"$work/stripped"
 
-# Re-insert the block above the marker, and restore the OS entry name line
-# directly below it when limine-entry-tool has eaten it. That one line is the
-# whole repair: with it present the generated '//<kernel-id>' entries nest under
-# the OS entry where they belong, and the headless entry stays a leaf that
-# actually boots the cmdline written above. Only ever *added*, never rewritten —
-# a dual-boot file may carry several '/+…' entries and none of them are ours.
+# Re-insert the block above the OS entry's name line and make sure the marker sits
+# directly under that name. Three layouts reach this point:
+#   name, marker   correct — insert above the name
+#   marker, name   left by earlier versions of this hook — move the marker under
+#   marker alone   name line lost — restore it, derived as above
+# The name is only ever *added*, never rewritten — a dual-boot file may carry
+# several '/+…' entries and none of them are ours.
 awk -v block="$work/block" -v os_line="$os_line" '
-	!inserted && /^comment: machine-id=/ {
-		while ((getline line < block) > 0) print line
-		close(block)
-		print
-		if ((getline nxt) > 0) {
-			if (nxt !~ /^\/\+/) print os_line
-			print nxt
-		} else {
-			print os_line
-		}
-		inserted = 1
-		next
-	}
-	{ print }
+	{ line[NR] = $0 }
 	END {
-		if (!inserted) exit 1
+		for (i = 1; i <= NR; i++) if (line[i] ~ /^comment: machine-id=/) { m = i; break }
+		if (!m) exit 1
+		p = m - 1; while (p > 0 && line[p] == "") p--
+		n = m + 1; while (n <= NR && line[n] == "") n++
+		if (p > 0 && line[p] ~ /^\/\+/) { name = p; after = m }
+		else if (n <= NR && line[n] ~ /^\/\+/) { name = n; after = n; skip = m }
+		else { name = m; after = m; restore = 1 }
+		for (i = 1; i <= NR; i++) {
+			if (i == skip) continue
+			if (i == name) {
+				while ((getline l < block) > 0) print l
+				close(block)
+				if (restore) print os_line
+			}
+			if (i != m || !restore) print line[i]
+			if (i == after) {
+				if (restore) print line[m]
+				else if (skip) print line[skip]
+			}
+		}
 	}
 ' "$work/stripped" >"$work/new" || {
 	echo "85-headless-entry: failed to place the entry in $conf" >&2

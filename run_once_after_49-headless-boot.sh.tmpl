@@ -21,15 +21,11 @@ set -euo pipefail
 # jobs (dev target / sim rig + couch gaming) and the choice belongs at the boot
 # menu, where it is also recoverable when the desktop half breaks.
 #
-# This script no longer writes limine.conf itself. The entry has to sit
-# immediately above the 'comment: machine-id=…' marker (globals must precede
-# every entry, so there is nowhere else), and that is exactly where
-# limine-entry-tool looks for the OS entry it owns — it adopts the entry as its
-# own name line, drops its '/+CachyOS' line, and reparents the generated kernel
-# entries under ours. The headless entry silently becomes a *directory* booting
-# the graphical cmdline. So the writing and the repair both live in a
-# limine-entry-tool post hook that re-runs after every kernel update:
-# system/limine/85-headless-entry.
+# This script no longer writes limine.conf itself. limine-entry-tool rewrites
+# the file on every kernel update, so the entry lives in a post hook that
+# re-asserts it — directly above '/+CachyOS', leaving the 'comment: machine-id=…'
+# marker under that name where limine-entry-tool and limine-snapper-sync look
+# for it: system/limine/85-headless-entry.
 #
 # Re-run after editing this file (run_once only fires on first apply):
 #   chezmoi execute-template < "$(chezmoi source-path)/run_once_after_49-headless-boot.sh.tmpl" | bash

@@ -113,26 +113,43 @@ The entry is written by a `limine-entry-tool` post hook,
 `/etc/boot/hooks/post.d/85-headless-entry`. It runs after every kernel update,
 `limine-update` and `mkinitcpio` run, and idempotently from `chezmoi apply`.
 
-The hook exists because a one-shot write does not survive. Global options must
-precede every entry in `limine.conf`, so a hand-written entry has nowhere to go
-except immediately above the `comment: machine-id=…` marker — and that is
-exactly where `limine-entry-tool` looks for the OS entry it owns. On the next
-regeneration it adopts `/CachyOS (headless)` as its own name line, drops its
-`/+CachyOS` line as redundant, and the generated `//linux-cachyos` entries
-reparent under ours.
+The hook exists because a one-shot write does not survive: `limine-entry-tool`
+rewrites `limine.conf` on every kernel update, so the entry has to be re-asserted
+after it.
 
-That failure is silent and nasty: the headless entry becomes a *directory* whose
-first child is the normal graphical entry. The menu still shows
-`CachyOS (headless)`, the `cmdline:` in the file still reads
-`systemd.unit=multi-user.target`, and selecting it boots the graphical cmdline
-with greetd and all. `cat /proc/cmdline` is the only thing that tells you:
+**Where the entry goes matters.** Both `limine-entry-tool` and
+`limine-snapper-sync` find the OS entry they own by its
+`comment: machine-id=…` line, and limine attaches every option — comments
+included — to the entry *above* it. So the layout has to be:
+
+```
+/CachyOS (headless)          <- ours, a leaf
+  …
+/+CachyOS                    <- the OS entry
+comment: machine-id=…        <- directly under its name
+  //linux-cachyos
+  //Snapshots
+```
+
+The first version of the hook put its block *between* `/+CachyOS` and the
+marker. That handed the machine-id to `CachyOS (headless)`, with two silent
+consequences. `limine-snapper-sync` saw an OS entry with no `//<kernel>` children,
+logged "Your OS entry has no kernel" and stopped adding snapshots. And every
+kernel update stranded another `/+CachyOS` block with hashes that went stale on
+the next rebuild — seven of them by October 2026, plus two `Snapshots` submenus.
+The hook now moves a marker found above its name line back under it.
+
+If the headless entry ever ends up as a *directory* (kernel entries nested under
+it), selecting it boots the graphical cmdline even though the file still reads
+`systemd.unit=multi-user.target`. `cat /proc/cmdline` is the only thing that
+tells you:
 
 ```bash
 cat /proc/cmdline   # headless boot must contain systemd.unit=multi-user.target
 ```
 
-So the hook re-asserts both the entry and the `/+…` OS entry name line after
-every regeneration. It only ever *adds* that line back, never rewrites an
+The hook also restores the `/+…` OS entry name line if it is ever missing. It
+only ever *adds* that line back, never rewrites an
 existing one, since a file may carry several `/+…` entries and none of them are
 ours — `FIND_BOOTLOADERS=yes` alone contributes `/+Other systems and
 bootloaders`. For the same reason the name is derived, not copied from whatever
