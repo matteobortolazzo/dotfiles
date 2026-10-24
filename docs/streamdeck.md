@@ -278,14 +278,18 @@ counts down from 300 s. Keys: back to normal view; hold-to-shutdown now. On
 `OL` it returns to the previous page. Power to the deck comes from the same
 UPS-backed PSU, so it stays lit until killpower.
 
-**Brightness:** full for a minute after a press, then 15 %; the deck is in a
+**Brightness:** full for a minute after a press, then 50 %; the deck is in a
 room, not a pocket, so it never blanks fully — a dim glanceable panel is the
-point.
+point. 15 % was tried first and read as off on the V2.
 
-Colours are the Glassmorphic Dark tokens from `.claude/CLAUDE.md`: `bg-solid`
-tiles, `text-primary` labels, `accent` gold for the active session/unit,
-`urgent` for need-input and on-battery, `success` for done/online, `warning`
-for warnings.
+Colours are the Glassmorphic Dark tokens from `.claude/CLAUDE.md`, used as
+**tile backgrounds**, not just text: grey-on-`bg-solid` was unreadable on the
+deck's panel. Each key is a dark shade of its state colour with white text and
+a light-tint label: `success`/`warning`/`urgent` by load for CPU, RAM and GPU
+(plus a gauge bar along the bottom, also for UPS charge), the status colour for
+each agent session, `info`/magenta/cyan for NIRI/GAME/GREETER, `urgent` for
+power, and a bright `accent` gold key with a white border for whatever owns
+vt1. Text is drawn large and shrinks to fit rather than truncating.
 
 ## Architecture
 
