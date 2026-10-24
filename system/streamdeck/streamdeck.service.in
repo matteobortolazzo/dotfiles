@@ -12,12 +12,13 @@
 Description=Stream Deck status panel (deckd)
 # Start on plug-in (SYSTEMD_WANTS in the udev rule), stop on unplug. The device
 # unit exists because the rule tags the hidraw node `systemd` and links it as
-# /dev/streamdeck.
+# /dev/streamdeck. No [Install]: udev's coldplug at boot fires SYSTEMD_WANTS
+# for a deck that is already attached, and a WantedBy=multi-user.target would
+# only add a failed dependency on a boot without the deck.
 BindsTo=dev-streamdeck.device
 After=dev-streamdeck.device
 # Ordering only, no Wants=: the UPS and docker tiles read these, and starting
-# after them means the first poll shows real values instead of "down". No
-# After=multi-user.target: the unit is WantedBy= it, which would be a cycle.
+# after them means the first poll shows real values instead of "down".
 After=nut-monitor.service docker.service
 
 [Service]
@@ -26,17 +27,12 @@ User=@USER@
 # deckd shells out to `desktop` and `cenci`, both in ~/.local/bin. systemd sets
 # HOME and USER for User=, but PATH is the system default.
 Environment=PATH=@HOME@/.local/bin:/usr/local/bin:/usr/bin
-# A splash before the first poll and one on the way down, so the last frame
-# during `desktop down`, a reboot or a power-off is intentional rather than a
-# frozen one. `-`: a failed splash (deck pulled mid-stop) must not fail the unit.
+# A splash before the first poll (`-`: a failed splash must not fail the
+# unit). The "shutting down" splash is painted by deckd itself on SIGTERM: an
+# ExecStop= would run while deckd still holds the device.
 ExecStartPre=-@HOME@/.local/bin/deckd splash booting
 ExecStart=@HOME@/.local/bin/deckd
-ExecStop=-@HOME@/.local/bin/deckd splash shutdown
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=10
 
-[Install]
-# Start at boot when the deck is already attached; the udev rule covers
-# plugging it in later.
-WantedBy=multi-user.target

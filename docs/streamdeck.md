@@ -28,7 +28,7 @@ keeps running underneath a niri or gamescope session when one is started.
    in `~/.config/chezmoi/chezmoi.toml` by hand.
 2. `chezmoi apply`. `52-streamdeck` builds `deckd` into `~/.local/bin/deckd`,
    renders and installs the udev rule and the unit, re-triggers the deck's
-   hidraw node, enables `streamdeck.service`, and starts it if the deck is
+   hidraw node, and starts `streamdeck.service` if the deck is
    attached.
 3. **Only on a machine where `49-headless-boot` already ran:** it installs the
    polkit rule `desktop` needs to run without a password. The edit that added
@@ -70,8 +70,9 @@ ls -l /dev/streamdeck                # -> hidrawN, owned by you, 0600
    explicitly.
 3. **No user session to host a user service.** A `systemctl --user` unit
    would need `loginctl enable-linger`. Fix: a **system** unit with
-   `User=<you>`, `WantedBy=multi-user.target`, bound to the device unit so it
-   starts when the deck is present and stops if it is unplugged.
+   `User=<you>`, started by the udev rule and bound to the device unit, so it
+   starts when the deck is present (at boot or on plug-in) and stops if it is
+   unplugged.
 
 Everything else already existed: `desktop status` knows what owns vt1,
 `upsc exa` has the UPS, `nvidia-smi` works headless because the driver stays
@@ -128,11 +129,7 @@ User=@USER@
 Environment=PATH=@HOME@/.local/bin:/usr/local/bin:/usr/bin
 ExecStartPre=-@HOME@/.local/bin/deckd splash booting
 ExecStart=@HOME@/.local/bin/deckd
-ExecStop=-@HOME@/.local/bin/deckd splash shutdown
 Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
 ```
 
 - **Absolute paths, rendered.** `%h` in a *system* unit is the service
@@ -140,19 +137,17 @@ WantedBy=multi-user.target
   `$HOME` for `@HOME@`. `PATH` is set because `deckd` shells out to `desktop`
   and `cenci`, both in `~/.local/bin`.
 - **`BindsTo=` the device unit** plus `SYSTEMD_WANTS=` on the rule gives
-  start-on-plug and stop-on-unplug without any polling; on a box where the
-  deck is permanently attached it simply starts at boot.
+  start-on-plug and stop-on-unplug without any polling. There is no
+  `[Install]`: udev's coldplug at boot fires `SYSTEMD_WANTS` for a deck that
+  is already attached, so a permanently attached deck starts at boot anyway,
+  and a boot without the deck logs nothing.
 - **Ordering after NUT and docker, without `Wants=`**: the UPS and docker
-  tiles read them, so the first poll shows real values. No
-  `After=multi-user.target` — the unit is wanted by that target, and ordering
-  after it would be a cycle.
+  tiles read them, so the first poll shows real values.
 - **Splashes.** `ExecStartPre` paints "booting" before the first poll;
-  `ExecStop` paints "shutting down", so the last frame during `desktop down`,
-  a reboot or a power-off is intentional rather than frozen. Both are
-  `-`-prefixed: a failed splash (deck pulled mid-stop) must not fail the unit.
-  `ExecStop` runs while the main process is still alive, so `deckd` must exit
-  on `SIGTERM` without repainting or resetting the deck, or it wipes the
-  splash.
+  `deckd` paints "shutting down" itself on `SIGTERM`, so the last frame
+  during `desktop down`, a reboot or a power-off is intentional rather than
+  frozen. Not an `ExecStop=`: that runs while `deckd` still holds the device.
+  `ExecStartPre` is `-`-prefixed: a failed splash must not fail the unit.
 - **Runs as you**, not root. That is what makes cenci's socket just work (see
   below), and it is all the access the panel needs: the device node is yours,
   and everything privileged goes through polkit.
@@ -337,7 +332,7 @@ done with Python, which is where the protocol was ported from.
 | `system/streamdeck/70-streamdeck.rules.in` | OWNER + `SYMLINK+="streamdeck"` + `SYSTEMD_WANTS`, hidraw only |
 | `system/streamdeck/streamdeck.service.in` | the system unit above |
 | `system/polkit/49-desktop-units.rules.in` | greetd units + reboot/power-off without a prompt |
-| `run_onchange_after_52-streamdeck.sh.tmpl` | builds `deckd`, renders `@USER@`/`@HOME@`, installs rule + unit, re-triggers the deck, enables/starts the unit |
+| `run_onchange_after_52-streamdeck.sh.tmpl` | builds `deckd`, renders `@USER@`/`@HOME@`, installs rule + unit, re-triggers the deck, starts the unit |
 | `run_once_after_49-headless-boot.sh.tmpl` | also renders and installs the polkit rule |
 | `dot_local/bin/executable_desktop` | `systemctl --no-ask-password` first, `sudo` as fallback |
 
@@ -346,7 +341,7 @@ both `.in` files and of every `deckd/**/*.go`, `go.mod` and `go.sum`, so an
 edit to any of them re-runs it on the next apply. The build is reproducible
 (`-trimpath`), every install is `cmp`-guarded, and the service is restarted
 only when the binary, rule or unit actually changed. If the deck is not
-attached, the unit is enabled but not started; plugging it in starts it.
+attached, nothing is started; plugging it in starts it.
 
 ## Hardware check
 
@@ -377,10 +372,6 @@ the udev rule (the ACL is gone on replug or reboot):
   migration is a system group: `GROUP="streamdeck", MODE="0660"` in the rule,
   the group created by a `sysusers.d` drop-in, and `SupplementaryGroups=streamdeck`
   in the unit.
-- **Boot with the deck unplugged.** The unit is `WantedBy=multi-user.target`
-  and `BindsTo=` a device that never appears, so that job waits out the device
-  timeout and is logged as a failed dependency. It does not hold up the boot,
-  and plugging the deck in later starts the panel through the rule.
 - **`nvidia-smi` on an idle GPU** can take ~100 ms on the first call; every
   probe is time-boxed so one slow tool cannot stall the tick.
 - **Two things can start vt1 sessions:** you over SSH and the deck. Both go

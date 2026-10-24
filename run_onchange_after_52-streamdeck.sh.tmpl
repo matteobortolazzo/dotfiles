@@ -108,12 +108,13 @@ if [ "$rule_changed" = 1 ]; then
 fi
 
 sudo systemctl daemon-reload
-sudo systemctl enable streamdeck.service
+# Not enabled: the unit has no [Install]. The udev rule's SYSTEMD_WANTS starts
+# it on plug-in and on the coldplug at boot.
 
 if [ "${#nodes[@]}" -eq 0 ]; then
   cat <<'EOF'
 
-  deckd is installed and streamdeck.service enabled, but no Stream Deck
+  deckd and streamdeck.service are installed, but no Stream Deck
   (0fd9:006d) is attached. Nothing was started: plugging it in starts the
   panel through the udev rule.
 
