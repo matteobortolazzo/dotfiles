@@ -219,9 +219,9 @@ dirs rejected). Running `deckd` **as you**, not root, is what makes this work.
 │ 23%     │ 11/64G  │ 4% 41°  │ OL 100% │ ts ✓    │
 │ ld 1.2  │ 48°     │ 12 W    │ 38 min  │ ssh 1   │
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
-│ AGENTS  │ #42     │ #78     │ #91     │ ⟳ 5m    │  row 2: cenci
-│ ▶2 !1   │ impl    │ refine  │ impl    │ 2/0     │  colour = status
-│ ✓3      │ ! input │ ▶ run   │ ✓ done  │ 14:05   │
+│ RUNNING │ INPUT   │ FAILED  │ DONE    │ IDLE    │  row 2: cenci
+│ 3       │ 1       │ 0       │ 2       │ 1       │  count per state
+│         │         │         │         │         │  tinted when > 0
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
 │ NIRI    │ GAME    │ GREETER │ DOWN    │ ⏻       │  row 3: actions
 │ ● on    │ ○       │ ○       │         │ hold    │  active one lit
@@ -245,19 +245,17 @@ details below.
   (`ss -tn state established '( sport = :22 )'`), running docker containers,
   root disk free. Which of these shows on the tile cycles on press.
 
-**Row 2 — agents, push-driven.** Aggregate tile (counts per status); three
-session tiles sorted need-input → failed → running → done → idle, each with
-the ticket number or slug, the skill, the status glyph and colour; the last
-tile is the fleet **dispatch loop**: `⟳` + interval when enabled, `⚙` while a
-pass runs, last `dispatched/skipped` and time, blank when off. More than three
-sessions → the third tile becomes `+N` and switches to an agents page that
-lists them five per row.
+**Row 2 — agents, push-driven.** One count per state, from the snapshot's
+`summary`: `RUNNING`, `INPUT` (`need_input` + `escalated`), `FAILED`, `DONE`,
+`IDLE` (`idle` + `stopped`). A count above zero tints its key (blue, yellow,
+red, green, grey); zero stays dark. Per-session tiles were tried first and
+were too condensed to read at 72 px.
 
-Since there is no screen to jump to, a press on a session tile opens a
-**detail page** (full task name, agent, session:window, how long in this
-state) rather than a terminal. A **hold** on a `done` session runs
-`cenci close <window-name>` to reap its window; a hold on the dispatch tile
-toggles `cenci dispatch loop on|off`. Nothing on a tap mutates agent state.
+A tap on any count opens the **agents page**, which lists the sessions five
+per row; a press on one there opens its **detail page** (full task name,
+agent, session:window, how long in this state), and a **hold** on a `done`
+session runs `cenci close <window-name>` to reap its window. Nothing on a tap
+mutates agent state.
 
 **Row 3 — actions.**
 - `NIRI` / `GAME` / `GREETER` → `desktop up niri`, `desktop up gamescope`,
@@ -304,7 +302,7 @@ desktop, headless boot (multi-user.target)
 │   ├─ render:   image/jpeg + opentype → 15 × 72 px tiles        │
 │   ├─ device:   /dev/streamdeck → hidraw, pure Go               │
 │   └─ press:    desktop up|down|greeter · systemctl reboot/off  │
-│                cenci close / dispatch loop (hold only)         │
+│                cenci close (hold only, agents page)            │
 │ polkit: <you> may manage greetd*, power-off, reboot            │
 │ udev:   0fd9:006d hidraw → OWNER=<you>, SYSTEMD_WANTS=…        │
 └────────────────────────────────────────────────────────────────┘

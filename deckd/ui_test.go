@@ -109,7 +109,7 @@ func TestUPSTakeover(t *testing.T) {
 	}
 }
 
-func TestAgentsRowOverflowAndActions(t *testing.T) {
+func TestAgentsRowCounts(t *testing.T) {
 	ui := NewUI(true, "exa")
 	now := time.Now()
 	snap, err := decodeSnapshot([]byte(liveSnapshot))
@@ -118,15 +118,15 @@ func TestAgentsRowOverflowAndActions(t *testing.T) {
 	}
 	ui.SetSnapshot(snap, now)
 	tiles, keys := ui.frame(now)
-	if got := lineTexts(tiles[6]); !strings.HasPrefix(got, "#42|refine|! input") {
-		t.Errorf("first session tile %q", got)
+	want := []string{"RUNNING|1|", "INPUT|1|", "FAILED|1|", "DONE|1|", "IDLE|1|"}
+	for i, w := range want {
+		if got := lineTexts(tiles[5+i]); got != w {
+			t.Errorf("tile %d = %q, want %q", 5+i, got, w)
+		}
 	}
-	if got := lineTexts(tiles[8]); got != "MORE|+3|" {
-		t.Errorf("overflow tile %q", got)
-	}
-	keys[6].tap()
-	if ui.page != pageDetail || ui.detailPane != "%84" {
-		t.Fatalf("tap on session: page %v pane %q", ui.page, ui.detailPane)
+	keys[7].tap()
+	if ui.page != pageAgents {
+		t.Fatalf("tap on a count: page %v", ui.page)
 	}
 	ui.page = pageMain
 	ui.SetSnapshot(nil, now)

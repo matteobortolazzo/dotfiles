@@ -390,6 +390,9 @@ func (u *UI) sessionKeys(w Window) keyAction {
 	return a
 }
 
+// agentsRow is one count per state, nothing else: what is running, what is
+// waiting on you, what broke, what finished, what sits idle. A tap on any of
+// them opens the agents page, which lists the sessions themselves.
 func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction) {
 	s := u.snap
 	if s == nil {
@@ -397,51 +400,27 @@ func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction)
 		return
 	}
 	sum := s.Summary
-	attention := sum.NeedInput + sum.Failed + sum.Escalated
-	c := cText
-	if attention > 0 {
-		c = cUrgent
+	counts := []struct {
+		name string
+		n    int
+		tint color.RGBA
+	}{
+		{"RUNNING", sum.Running, cInfo},
+		{"INPUT", sum.NeedInput + sum.Escalated, cWarning},
+		{"FAILED", sum.Failed, cUrgent},
+		{"DONE", sum.Done, cSuccess},
+		{"IDLE", sum.Idle + sum.Stopped, cSecondary},
 	}
-	t[5] = tile(label("AGENTS"),
-		mid(fmt.Sprintf("▶%d !%d", sum.Running, attention), c),
-		note(fmt.Sprintf("✓%d ·%d", sum.Done, sum.Idle+sum.Stopped), cSecondary))
-	t[5].Tint = cAccent
-	if attention > 0 {
-		t[5].Tint = cUrgent
-	}
-	k[5].tap = func() { u.page = pageAgents }
-
-	ws := s.Windows
-	for i := 0; i < 3 && i < len(ws); i++ {
-		if i == 2 && len(ws) > 3 {
-			t[8] = tile(label("MORE"), big(fmt.Sprintf("+%d", len(ws)-2), cAccent))
-			t[8].Tint = cAccent
-			k[8].tap = func() { u.page = pageAgents }
-			break
+	for i, c := range counts {
+		tl := tile(label(c.name), big(fmt.Sprint(c.n), cText))
+		if c.n > 0 {
+			tl.Tint = c.tint
+		} else {
+			tl.Lines[1].Color = cDisabled
 		}
-		t[6+i] = sessionTile(ws[i])
-		k[6+i] = u.sessionKeys(ws[i])
+		t[5+i] = tl
+		k[5+i].tap = func() { u.page = pageAgents }
 	}
-
-	d := s.Dispatch
-	dt := tile(label("DISPATCH"), mid("off", cDisabled), note("hold", cDisabled))
-	switch {
-	case d.PassRunning:
-		dt.Lines[1] = mid(" pass", cWarning)
-	case d.Enabled:
-		dt.Lines[1] = mid("\U000F0450 on", cSuccess)
-	}
-	if d.Enabled || d.PassRunning {
-		dt.Lines[2] = note(fmt.Sprintf("%d/%d", d.LastDispatched, d.LastSkipped), cSecondary)
-		dt.Tint = dt.Lines[1].Color
-	}
-	t[9] = dt
-	next := "on"
-	if d.Enabled {
-		next = "off"
-	}
-	k[9].hold = func() { u.run(userTool("cenci"), "dispatch", "loop", next) }
-	k[9].tap = func() {}
 }
 
 func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction) {
