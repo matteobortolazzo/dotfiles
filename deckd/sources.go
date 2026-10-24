@@ -6,7 +6,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -219,13 +218,14 @@ func parseUpsc(s string) (UPS, error) {
 // --- NET ---
 
 type Net struct {
-	Tailscale, TailscaleOK bool
-	SSH                    int
-	SSHOK                  bool
-	Docker                 int
-	DockerOK               bool
-	DiskFree               uint64
-	DiskOK                 bool
+	Runners, RunnersTotal int
+	RunnersOK             bool
+	SSH                   int
+	SSHOK                 bool
+	Docker                int
+	DockerOK              bool
+	DiskFree              uint64
+	DiskOK                bool
 }
 
 func countLines(s string) int {
@@ -238,12 +238,24 @@ func countLines(s string) int {
 	return n
 }
 
-func tailscaleOnline(out string) (bool, error) {
-	var st struct{ BackendState string }
-	if err := json.Unmarshal([]byte(out), &st); err != nil {
-		return false, err
+// runnerUnit matches the system units `svc.sh install` creates for each
+// self-hosted GitHub Actions runner.
+const runnerUnit = "actions.runner.*"
+
+// parseRunners counts `systemctl list-units --all --plain --no-legend` rows
+// (UNIT LOAD ACTIVE SUB DESCRIPTION): active ones out of all of them.
+func parseRunners(out string) (active, total int) {
+	for _, l := range strings.Split(out, "\n") {
+		f := strings.Fields(l)
+		if len(f) < 3 {
+			continue
+		}
+		total++
+		if f[2] == "active" {
+			active++
+		}
 	}
-	return st.BackendState == "Running", nil
+	return active, total
 }
 
 // --- vt1 ---
@@ -351,11 +363,10 @@ func (p *Poller) Poll(ctx context.Context) Stats {
 		}
 	})
 	run(func() {
-		out, err := probe(ctx, tool("tailscale"), "status", "--json", "--peers=false")
+		out, err := probe(ctx, tool("systemctl"), "list-units", "--all", "--plain", "--no-legend", "--type=service", runnerUnit)
 		if err == nil {
-			if on, err := tailscaleOnline(out); err == nil {
-				set(func() { s.Net.Tailscale, s.Net.TailscaleOK = on, true })
-			}
+			a, t := parseRunners(out)
+			set(func() { s.Net.Runners, s.Net.RunnersTotal, s.Net.RunnersOK = a, t, true })
 		}
 	})
 	run(func() {

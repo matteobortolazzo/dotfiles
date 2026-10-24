@@ -77,13 +77,15 @@ func TestParseIsActive(t *testing.T) {
 	}
 }
 
-func TestTailscaleAndCount(t *testing.T) {
-	on, err := tailscaleOnline(`{"Version":"1","BackendState":"Running"}`)
-	if err != nil || !on {
-		t.Errorf("running: %v %v", on, err)
+func TestRunnersAndCount(t *testing.T) {
+	out := "actions.runner.o-r.a.service loaded active running GitHub Actions Runner (o-r.a)\n" +
+		"actions.runner.o-r.b.service loaded failed failed GitHub Actions Runner (o-r.b)\n" +
+		"actions.runner.o-r.c.service loaded inactive dead GitHub Actions Runner (o-r.c)\n"
+	if a, n := parseRunners(out); a != 1 || n != 3 {
+		t.Errorf("parseRunners = %d/%d, want 1/3", a, n)
 	}
-	if on, _ := tailscaleOnline(`{"BackendState":"Stopped"}`); on {
-		t.Error("stopped reported online")
+	if a, n := parseRunners(""); a != 0 || n != 0 {
+		t.Errorf("no runners = %d/%d", a, n)
 	}
 	if n := countLines("abc\ndef\n\n"); n != 2 {
 		t.Errorf("countLines = %d", n)

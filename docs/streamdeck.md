@@ -241,7 +241,8 @@ details below.
   look at when a session was left running on vt1.
 - `UPS`: `ups.status`, `battery.charge`, `battery.runtime` from `upsc exa`.
   Red on `OB`; see the takeover below.
-- `NET`: Tailscale online, established SSH session count
+- `NET`: active/total GitHub Actions runner units
+  (`systemctl list-units --all 'actions.runner.*'`), established SSH session count
   (`ss -tn state established '( sport = :22 )'`), running docker containers,
   root disk free. Which of these shows on the tile cycles on press.
 
@@ -303,7 +304,7 @@ desktop, headless boot (multi-user.target)
 │ streamdeck.service  (system unit, User=<you>, BindsTo=device)   │
 │   ~/.local/bin/deckd  (Go, built from deckd/ by 52-streamdeck) │
 │   ├─ poll 2 s: /proc, hwmon, nvidia-smi, upsc, systemctl,      │
-│   │            ss, docker, tailscale, sunshine state file      │
+│   │            ss, docker, sunshine state file                 │
 │   ├─ push:     cenci.sock  (NDJSON stream, reconnect+backoff)  │
 │   ├─ render:   image/jpeg + opentype → 15 × 72 px tiles        │
 │   ├─ device:   /dev/streamdeck → hidraw, pure Go               │

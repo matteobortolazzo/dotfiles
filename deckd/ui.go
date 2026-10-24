@@ -314,11 +314,18 @@ func (u *UI) netTile() Tile {
 	var name string
 	switch u.netMode {
 	case 0:
-		name = "TAILSCALE"
-		if n.TailscaleOK {
-			val, c = "off", cUrgent
-			if n.Tailscale {
-				val, c = "on", cSuccess
+		name = "RUNNERS"
+		if n.RunnersOK {
+			val = fmt.Sprintf("%d/%d", n.Runners, n.RunnersTotal)
+			switch {
+			case n.RunnersTotal == 0:
+				c = cSecondary
+			case n.Runners == n.RunnersTotal:
+				c = cSuccess
+			case n.Runners == 0:
+				c = cUrgent
+			default:
+				c = cWarning
 			}
 		}
 	case 1:
