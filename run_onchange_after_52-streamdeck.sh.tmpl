@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "deck" false .) -}}
+set -euo pipefail
+
+# Stream Deck status panel: build deckd from deckd/ and wire it to the device
+# with a udev rule and a system unit. See docs/streamdeck.md.
+#
+# run_onchange for the same reason as 51-ups: chezmoi hashes only the rendered
+# script, so the hashes of everything it builds or mirrors are embedded below to
+# make an edit to any of them retrigger the apply. Installs are cmp-guarded and
+# the service is only restarted when the binary, rule or unit actually changed.
+#
+# 70-streamdeck.rules.in:  {{ include "system/streamdeck/70-streamdeck.rules.in" | sha256sum }}
+# streamdeck.service.in:   {{ include "system/streamdeck/streamdeck.service.in" | sha256sum }}
+{{- /* glob, not a fixed list: the Go program grows files and packages. A missing
+       deckd/ globs to nothing rather than failing the render. */}}
+{{- $root := printf "%s/" .chezmoi.sourceDir }}
+{{- $deckd := concat (glob (joinPath .chezmoi.sourceDir "deckd/**/*.go")) (glob (joinPath .chezmoi.sourceDir "deckd/go.mod")) (glob (joinPath .chezmoi.sourceDir "deckd/go.sum")) }}
+{{- range $deckd }}
+# {{ trimPrefix $root . }}: {{ include . | sha256sum }}
+{{- else }}
+# deckd sources: absent at render time
+{{- end }}
+
+src="{{ .chezmoi.sourceDir }}"
+bin="$HOME/.local/bin/deckd"
+user=$(id -un)
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+rerun_hint() {
+  echo "  then re-run: chezmoi execute-template < \"$src/run_onchange_after_52-streamdeck.sh.tmpl\" | bash"
+}
+
+# --- build ------------------------------------------------------------------
+#
+# Pure Go on /dev/hidraw, no cgo: nothing to link against and nothing for the
+# kernel's usbhid driver to be detached from. -trimpath keeps the build
+# reproducible, so an unchanged tree produces a byte-identical binary and the
+# cmp below sees no change.
+
+bin_changed=0
+if [ ! -f "$src/deckd/go.mod" ]; then
+  echo "deckd sources absent ($src/deckd/go.mod missing) — skipping the build"
+elif ! command -v go >/dev/null 2>&1; then
+  echo "go not installed — skipping the deckd build (it's in packages/arch-terminal.txt):"
+  echo "  sudo pacman -S go"
+  rerun_hint
+else
+  echo "building deckd"
+  (cd "$src/deckd" && CGO_ENABLED=0 go build -trimpath -o "$work/deckd" .)
+  if ! [ -f "$bin" ] || ! cmp -s "$work/deckd" "$bin"; then
+    # Copy beside it and rename over: the running service holds the old inode,
+    # and writing into a busy executable fails with ETXTBSY.
+    mkdir -p "${bin%/*}"
+    install -m 0755 "$work/deckd" "$bin.new"
+    mv -f "$bin.new" "$bin"
+    echo "installed $bin"
+    bin_changed=1
+  fi
+fi
+
+if ! [ -x "$bin" ]; then
+  echo "no deckd binary at $bin — not installing the udev rule or the unit"
+  exit 0
+fi
+
+# --- udev rule + system unit --------------------------------------------------
+
+render() {
+  sed -e "s|@USER@|$user|g" -e "s|@HOME@|$HOME|g" "$1" > "$2"
+}
+
+install_if_changed() {
+  if ! [ -f "$2" ] || ! sudo cmp -s "$1" "$2"; then
+    sudo install -m 0644 -o root -g root "$1" "$2"
+    echo "installed $2"
+    return 0
+  fi
+  return 1
+}
+
+render "$src/system/streamdeck/70-streamdeck.rules.in" "$work/70-streamdeck.rules"
+render "$src/system/streamdeck/streamdeck.service.in"  "$work/streamdeck.service"
+
+rule_changed=0
+unit_changed=0
+install_if_changed "$work/70-streamdeck.rules" /etc/udev/rules.d/70-streamdeck.rules && rule_changed=1
+install_if_changed "$work/streamdeck.service"  /etc/systemd/system/streamdeck.service && unit_changed=1
+
+# The deck's hidraw node(s), by HID_ID (bus:vendor:product). Re-triggering only
+# these applies the new OWNER/symlink/systemd tag without replaying every rule
+# on the box.
+nodes=()
+for dev in /sys/class/hidraw/hidraw*; do
+  [ -e "$dev/device/uevent" ] || continue
+  if grep -qi '^HID_ID=[0-9a-f]*:00000FD9:0000006D$' "$dev/device/uevent"; then
+    nodes+=("$dev")
+  fi
+done
+
+if [ "$rule_changed" = 1 ]; then
+  sudo udevadm control --reload
+  for dev in "${nodes[@]}"; do
+    sudo udevadm trigger --settle --action=change "$dev"
+  done
+fi
+
+sudo systemctl daemon-reload
+# Not enabled: the unit has no [Install]. The udev rule's SYSTEMD_WANTS starts
+# it on plug-in and on the coldplug at boot.
+
+if [ "${#nodes[@]}" -eq 0 ]; then
+  cat <<'EOF'
+
+  deckd and streamdeck.service are installed, but no Stream Deck
+  (0fd9:006d) is attached. Nothing was started: plugging it in starts the
+  panel through the udev rule.
+
+EOF
+  exit 0
+fi
+
+if [ "$bin_changed" = 1 ] || [ "$rule_changed" = 1 ] || [ "$unit_changed" = 1 ]; then
+  sudo systemctl restart streamdeck.service
+  action="restarted"
+else
+  sudo systemctl start streamdeck.service
+  action="running (unchanged)"
+fi
+
+cat <<EOF
+
+  Stream Deck: ${nodes[*]##*/} -> /dev/streamdeck, streamdeck.service $action.
+    binary $([ "$bin_changed" = 1 ] && echo rebuilt || echo unchanged), rule $([ "$rule_changed" = 1 ] && echo updated || echo unchanged), unit $([ "$unit_changed" = 1 ] && echo updated || echo unchanged)
+    journalctl -u streamdeck -f    # watch it
+
+EOF
+{{ end -}}

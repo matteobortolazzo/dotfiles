@@ -108,6 +108,13 @@ enable_unit() {
 }
 
 sudo systemctl enable nut-killpower.service
+# The units below are WantedBy=nut.target, not multi-user.target: enabling
+# them alone links them under a target nothing pulls in, so they run after this
+# script's --now and then never again after a reboot — the box comes up with
+# no UPS monitoring and no shutdown policy, silently. nut.target is the one
+# that is WantedBy=multi-user.target, and nut-driver.target carries the
+# enumerator-spawned nut-driver@exa.
+sudo systemctl enable nut.target nut-driver.target
 enable_unit nut-driver-enumerator.path
 enable_unit nut-server.service
 enable_unit nut-monitor.service

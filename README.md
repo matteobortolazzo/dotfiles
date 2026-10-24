@@ -14,6 +14,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
 | `ups` | Hardware — a UPS is on this box's USB: NUT monitoring and clean shutdown on a power cut | `true` / `false`, defaults to `false` |
+| `deck` | Hardware — a Stream Deck is plugged into this box: builds `deckd`, the status panel, and its udev rule + system unit | `true` / `false`, defaults to `false` |
 | `devHost` | The dev box's MagicDNS hostname, reached as `ssh <devHost>` | hostname, blank for none |
 
 | Profile | What you get |
@@ -27,6 +28,8 @@ They stay orthogonal on purpose: the gaming desktop runs the same platform as th
 `headless` is not a role but a boot policy, and it is deliberately not tied to `dev`: a laptop can be a dev box and still want its greeter on every boot. It only makes sense where the desktop is occasional rather than assumed.
 
 `ups` is a fact about the hardware rather than a role, and it is not implied by `dev` or `headless` either: it says a UPS data cable is plugged into *this* box, which is what decides whether NUT is installed and which machine gets to tell the UPS to cut its output. An unattended box with no UPS must not ship a monitor that can shut it down.
+
+`deck` is the same kind of fact: a Stream Deck is plugged into this box, so `52-streamdeck` builds `deckd` and wires it to the device. See [`docs/streamdeck.md`](docs/streamdeck.md).
 
 Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`. `.chezmoi.toml.tmpl` only runs on `chezmoi init`, so a machine whose config predates a prompt would otherwise fail every apply. The flip side: an existing machine is **not** re-prompted when a var is added, so `dig` returns the default and the new role is off until you run `chezmoi init` again (it keeps the existing answers and only asks the new question) or add the line to `~/.config/chezmoi/chezmoi.toml` by hand.
 
@@ -309,8 +312,9 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` via sudo.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `wslconfig.example`).
+- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` via sudo.
+- `deckd/` — the Stream Deck panel daemon (Go module), built into `~/.local/bin/deckd` by `52-streamdeck`; not deployed as a file.
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery
