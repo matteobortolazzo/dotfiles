@@ -26,12 +26,20 @@
        UPS is on this box's USB, which is what decides whether NUT is installed
        and whether this is the host that gets to tell the UPS to cut power. It
        is not implied by `dev` or `headless` — an unattended box with no UPS
-       must not ship a monitor that shuts it down. */ -}}
+       must not ship a monitor that shuts it down.
+
+       `deck` is the same shape as `ups`: a hardware fact, not a role. It says a
+       Stream Deck is plugged into this box, which is what decides whether
+       deckd is built and its udev rule + system unit are installed. Nothing
+       else implies it — the deck is the headless desktop's screen today, but
+       `headless` without a deck is a perfectly good box, and a deck on a box
+       that boots graphical still works. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
 {{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
 {{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
 {{- $ups := promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
+{{- $deck := promptBoolOnce . "deck" "Stream Deck plugged into this box (deckd status panel)" false -}}
 {{- $headless := promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
 {{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, reached as `ssh <devHost>` (blank for none)" "" -}}
 {{- $devUser := promptStringOnce . "devUser" "Username on the remote dev box (blank if it matches this machine's)" "" -}}
@@ -43,6 +51,7 @@
   dev = {{ $dev }}
   headless = {{ $headless }}
   ups = {{ $ups }}
+  deck = {{ $deck }}
   devHost = {{ $devHost | quote }}
   devUser = {{ $devUser | quote }}
 
