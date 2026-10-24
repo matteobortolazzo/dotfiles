@@ -231,7 +231,7 @@ func pctColor(p float64) color.RGBA {
 	case p >= 70:
 		return cWarning
 	}
-	return cText
+	return cSuccess
 }
 
 func human(b uint64) string {
@@ -251,6 +251,7 @@ func (u *UI) statsRow(t *[keyCount]Tile, k *[keyCount]keyAction) {
 	cpu := tile(label("CPU"), big(dash, cDisabled), note(dash, cSecondary))
 	if s.CPUOK {
 		cpu.Lines[1] = big(fmt.Sprintf("%.0f%%", s.CPU), pctColor(s.CPU))
+		cpu.Tint, cpu.Gauge = pctColor(s.CPU), s.CPU/100
 	}
 	var sub []string
 	if s.LoadOK {
@@ -269,6 +270,7 @@ func (u *UI) statsRow(t *[keyCount]Tile, k *[keyCount]keyAction) {
 		p := 100 * float64(s.MemUsed) / float64(s.MemTotal)
 		ram.Lines[1] = mid(strings.TrimSuffix(human(s.MemUsed), "G")+"/"+human(s.MemTotal), pctColor(p))
 		ram.Lines[2] = note(fmt.Sprintf("%.0f%%", p), cSecondary)
+		ram.Tint, ram.Gauge = pctColor(p), p/100
 	}
 	t[1] = ram
 
@@ -276,6 +278,7 @@ func (u *UI) statsRow(t *[keyCount]Tile, k *[keyCount]keyAction) {
 	if s.GPUOK {
 		gpu.Lines[1] = mid(fmt.Sprintf("%d%% %d°", s.GPU.Util, s.GPU.Temp), pctColor(float64(s.GPU.Util)))
 		gpu.Lines[2] = note(fmt.Sprintf("%.0f W", s.GPU.Power), cSecondary)
+		gpu.Tint, gpu.Gauge = pctColor(float64(s.GPU.Util)), float64(s.GPU.Util)/100
 	}
 	t[2] = gpu
 
@@ -289,6 +292,7 @@ func (u *UI) statsRow(t *[keyCount]Tile, k *[keyCount]keyAction) {
 		status, _, _ := strings.Cut(s.UPS.Status, " ")
 		ups.Lines[1] = mid(fmt.Sprintf("%s %d%%", status, s.UPS.Charge), c)
 		ups.Lines[2] = note(fmt.Sprintf("%d min", s.UPS.Runtime/60), cSecondary)
+		ups.Tint, ups.Gauge = c, float64(s.UPS.Charge)/100
 	}
 	t[3] = ups
 	k[3].tap = func() { u.upsDismissed = false } // reopen the takeover while OB
@@ -331,7 +335,12 @@ func (u *UI) netTile() Tile {
 			}
 		}
 	}
-	return tile(label(name), big(val, c), note(string(dots), cSecondary))
+	t := tile(label(name), big(val, c), note(string(dots), cSecondary))
+	t.Tint = cInfo
+	if c == cUrgent || c == cWarning {
+		t.Tint = c
+	}
+	return t
 }
 
 type statusStyle struct {
@@ -363,8 +372,9 @@ func sessionTile(w Window) Tile {
 	head, rest := shortName(w.WindowName)
 	st := styleFor(w.Status)
 	t := tile(mid(head, cText), note(rest, cSecondary), Line{st.text, small, true, st.color})
+	t.Tint = st.color
 	if w.Status == "need_input" || w.Status == "failed" {
-		t.Border = st.color
+		t.Border = cWhite
 	}
 	return t
 }
@@ -395,12 +405,17 @@ func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction)
 	t[5] = tile(label("AGENTS"),
 		mid(fmt.Sprintf("▶%d !%d", sum.Running, attention), c),
 		note(fmt.Sprintf("✓%d ·%d", sum.Done, sum.Idle+sum.Stopped), cSecondary))
+	t[5].Tint = cAccent
+	if attention > 0 {
+		t[5].Tint = cUrgent
+	}
 	k[5].tap = func() { u.page = pageAgents }
 
 	ws := s.Windows
 	for i := 0; i < 3 && i < len(ws); i++ {
 		if i == 2 && len(ws) > 3 {
 			t[8] = tile(label("MORE"), big(fmt.Sprintf("+%d", len(ws)-2), cAccent))
+			t[8].Tint = cAccent
 			k[8].tap = func() { u.page = pageAgents }
 			break
 		}
@@ -418,6 +433,7 @@ func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction)
 	}
 	if d.Enabled || d.PassRunning {
 		dt.Lines[2] = note(fmt.Sprintf("%d/%d", d.LastDispatched, d.LastSkipped), cSecondary)
+		dt.Tint = dt.Lines[1].Color
 	}
 	t[9] = dt
 	next := "on"
@@ -430,13 +446,15 @@ func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction)
 
 func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction) {
 	s := u.stats
-	act := func(key int, name, unit string, args ...string) {
+	act := func(key int, name, unit string, tint color.RGBA, args ...string) {
 		on := s.VT1OK && s.VT1 == unit
-		tl := tile(mid(name, cText), note("○", cDisabled))
+		tl := tile(mid(name, cText), note("○", cSecondary))
+		tl.Tint = tint
 		if on {
-			tl.Lines[0].Color = cAccent
-			tl.Lines[1] = note("● on", cAccent)
-			tl.Border = cAccent
+			tl.Lines[1] = note("● on", cText)
+			tl.Tint = cAccent
+			tl.Fill = mix(cBG, cAccent, 0.75)
+			tl.Border = cWhite
 		}
 		if now.Sub(u.pending[key]) < pendingShown {
 			tl.Lines[1] = note("…", cAccent)
@@ -447,18 +465,22 @@ func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction
 			u.run(userTool("desktop"), args...)
 		}
 	}
-	act(10, "NIRI", "greetd-autologin@niri.service", "up", "niri")
-	act(11, "GAME", "greetd-autologin@gamescope.service", "up", "gamescope")
-	act(12, "GREETER", "greetd.service", "greeter")
-	act(13, "DOWN", "", "down")
+	act(10, "NIRI", "greetd-autologin@niri.service", cInfo, "up", "niri")
+	act(11, "GAME", "greetd-autologin@gamescope.service", cMagenta, "up", "gamescope")
+	act(12, "GREETER", "greetd.service", cCyan, "greeter")
+	act(13, "DOWN", "", cSecondary, "down")
 	if s.VT1OK && s.VT1 == "" && now.Sub(u.pending[13]) >= pendingShown {
-		t[13].Lines[1] = note("● tty", cAccent)
+		t[13].Lines[1] = note("● tty", cText)
+		t[13].Tint = cAccent
+		t[13].Fill = mix(cBG, cAccent, 0.75)
+		t[13].Border = cWhite
 	}
 	if s.Stream {
 		t[11].Lines[2] = Line{"● live", small, true, cUrgent}
 	}
 
 	t[14] = tile(big("⏻", cText), note("hold", cSecondary))
+	t[14].Tint = cUrgent
 	k[14].hold = func() { u.page, u.powerOpened = pagePower, now }
 	k[14].tap = func() {}
 }

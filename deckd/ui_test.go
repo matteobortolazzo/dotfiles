@@ -141,7 +141,7 @@ func TestVT1HighlightAndStream(t *testing.T) {
 	now := time.Now()
 	ui.SetStats(Stats{VT1OK: true, VT1: "greetd-autologin@gamescope.service", Stream: true}, now)
 	tiles, _ := ui.frame(now)
-	if tiles[11].Border != cAccent || tiles[10].Border == cAccent {
+	if tiles[11].Tint != cAccent || tiles[10].Tint == cAccent {
 		t.Error("GAME should be the gold tile")
 	}
 	if !strings.Contains(lineTexts(tiles[11]), "live") {

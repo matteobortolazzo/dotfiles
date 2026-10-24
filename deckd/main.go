@@ -22,7 +22,7 @@ const (
 	pollEvery     = 2 * time.Second
 	brightFor     = 60 * time.Second
 	brightHigh    = 100
-	brightLow     = 15 // dim, never off: a glanceable panel is the point
+	brightLow     = 50 // dim, never off: a glanceable panel is the point
 )
 
 var (

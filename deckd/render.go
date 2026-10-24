@@ -27,19 +27,29 @@ var (
 	cSuccess   = rgb(0x7ab88a)
 	cWarning   = rgb(0xd4a954)
 	cInfo      = rgb(0x6fa3c7)
+	cMagenta   = rgb(0xb88aaf) // ANSI 5
+	cCyan      = rgb(0x6abab0) // ANSI 6
+	cWhite     = rgb(0xfaf7f2) // ANSI 15
 )
+
+// mix blends a toward b by t (0..1).
+func mix(a, b color.RGBA, t float64) color.RGBA {
+	f := func(x, y uint8) uint8 { return uint8(float64(x) + (float64(y)-float64(x))*t + 0.5) }
+	return color.RGBA{f(a.R, b.R), f(a.G, b.G), f(a.B, b.B), 0xff}
+}
 
 func rgb(v uint32) color.RGBA {
 	return color.RGBA{uint8(v >> 16), uint8(v >> 8), uint8(v), 0xff}
 }
 
-// Text sizes, in pixels. JetBrains Mono advances 0.6em, so a 64 px usable
-// width holds ~9 small, ~7 medium or ~5 large characters.
+// Text sizes, in pixels. These are the sizes asked for; drawLines shrinks a
+// line that would not fit the key, down to minSize, before it truncates.
 const (
-	small  = 11
-	medium = 14
-	large  = 19
-	splash = 30
+	small   = 14
+	medium  = 20
+	large   = 28
+	splash  = 30
+	minSize = 11
 )
 
 // Line is one row of text on a tile; an empty Text is skipped.
@@ -54,7 +64,14 @@ type Line struct {
 type Tile struct {
 	Lines  [3]Line
 	Border color.RGBA // zero alpha: none
-	Fill   color.RGBA // zero alpha: bg-solid
+	Fill   color.RGBA // zero alpha: bg-solid, or derived from Tint
+	// Tint colours the whole key: the background becomes a dark shade of it,
+	// labels a light one, and every other line is drawn in white for
+	// contrast. Zero alpha: untinted, line colours used as given.
+	Tint color.RGBA
+	// Gauge, when Tint is set and Gauge > 0, draws a bar along the bottom
+	// edge filled to that fraction (0..1).
+	Gauge float64
 }
 
 func label(s string) Line             { return Line{s, small, true, cSecondary} }
@@ -136,23 +153,35 @@ func drawLines(img draw.Image, rect image.Rectangle, lines []Line) {
 		ascent int
 		height int
 	}
-	const gap = 3
+	const gap = 2
 	var ls []laid
 	total := 0
-	for _, l := range lines {
-		if l.Text == "" {
-			continue
+	// Lay out at the requested sizes, then shrink every line together until
+	// the block fits the key's height (leaving room for a gauge bar).
+	for shrink := 0; ; shrink++ {
+		ls, total = ls[:0], 0
+		for _, l := range lines {
+			if l.Text == "" {
+				continue
+			}
+			size := max(l.Size-shrink, minSize)
+			face := fontSet.face(size, l.Bold)
+			for ; size > minSize && font.MeasureString(face, l.Text).Ceil() > rect.Dx()-6; size-- {
+				face = fontSet.face(size-1, l.Bold)
+			}
+			m := face.Metrics()
+			h := (m.Ascent + m.Descent).Ceil()
+			ls = append(ls, laid{face, fit(face, l.Text, rect.Dx()-6), l.Color, m.Ascent.Ceil(), h})
+			total += h
 		}
-		face := fontSet.face(l.Size, l.Bold)
-		m := face.Metrics()
-		h := (m.Ascent + m.Descent).Ceil()
-		ls = append(ls, laid{face, fit(face, l.Text, rect.Dx()-6), l.Color, m.Ascent.Ceil(), h})
-		total += h
+		if len(ls) == 0 {
+			return
+		}
+		total += gap * (len(ls) - 1)
+		if total <= rect.Dy()-12 || shrink > large {
+			break
+		}
 	}
-	if len(ls) == 0 {
-		return
-	}
-	total += gap * (len(ls) - 1)
 	y := rect.Min.Y + (rect.Dy()-total)/2
 	for _, l := range ls {
 		w := font.MeasureString(l.face, l.text).Ceil()
@@ -171,10 +200,29 @@ func drawLines(img draw.Image, rect image.Rectangle, lines []Line) {
 func Render(t Tile) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, keyPixels, keyPixels))
 	fill := t.Fill
+	lines := t.Lines
+	if t.Tint.A != 0 {
+		if fill.A == 0 {
+			fill = mix(cBG, t.Tint, 0.42)
+		}
+		for i := range lines {
+			if lines[i].Color == cSecondary || lines[i].Color == cDisabled {
+				lines[i].Color = mix(t.Tint, cWhite, 0.55)
+			} else {
+				lines[i].Color = cWhite
+			}
+		}
+	}
 	if fill.A == 0 {
 		fill = cBG
 	}
 	draw.Draw(img, img.Bounds(), image.NewUniform(fill), image.Point{}, draw.Src)
+	if t.Tint.A != 0 && t.Gauge > 0 {
+		const gh = 6
+		w := int(float64(keyPixels)*min(t.Gauge, 1) + 0.5)
+		draw.Draw(img, image.Rect(0, keyPixels-gh, keyPixels, keyPixels), image.NewUniform(mix(cBG, t.Tint, 0.2)), image.Point{}, draw.Src)
+		draw.Draw(img, image.Rect(0, keyPixels-gh, w, keyPixels), image.NewUniform(mix(t.Tint, cWhite, 0.15)), image.Point{}, draw.Src)
+	}
 	if t.Border.A != 0 {
 		const bw = 3
 		u := image.NewUniform(t.Border)
@@ -185,7 +233,7 @@ func Render(t Tile) *image.RGBA {
 			draw.Draw(img, r, u, image.Point{}, draw.Src)
 		}
 	}
-	drawLines(img, img.Bounds(), t.Lines[:])
+	drawLines(img, img.Bounds(), lines[:])
 	return img
 }
 
