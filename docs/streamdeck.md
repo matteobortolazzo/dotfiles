@@ -1,6 +1,6 @@
 # Stream Deck as the headless desktop's only screen — proposal
 
-> **Status: proposal, nothing implemented.** Open questions at the end.
+> **Status: decided, not yet implemented.** See [Decisions](#decisions-2026-10-24) at the end.
 > The hardware itself is verified on the desktop (2026-10-24, headless boot):
 > see [Hardware check](#hardware-check).
 
@@ -307,20 +307,53 @@ rule (the ACL is gone on replug or reboot):
   the comfortable maximum; a docker/services page is possible but each page
   costs a key.
 
-## Open questions
+## Decisions (2026-10-24)
 
-1. **Python in dotfiles vs Go in its own repo (or as a cenci surface).** The
-   proposal says Python first; `config.toml` and the tile semantics would
-   survive a rewrite.
-2. **New `deck` var**, or gate on `ups`/`headless` since it is the same box?
-   The var is honest about what it is; the piggyback saves a prompt.
-3. **Power keys on the deck at all?** Hold-to-confirm is the proposal; the
-   alternative is leaving power to SSH and the UPS.
-4. **UPS takeover page** — wanted, or is red on one tile enough?
-5. **"Game mode" = `desktop up gamescope`?** Assumed yes (the couch session).
-   Feral `gamemode` is per-process and not something to toggle from here.
-6. **Press on a session tile**: detail page (proposed), or nothing?
-7. **Later, from the laptop:** the earlier laptop-dock variant of this design
-   (one `deck-stats` JSON over a multiplexed SSH connection) is a strict
-   superset and could come back as a second surface if you ever want the same
-   view at the laptop's dock. Not part of this proposal.
+These supersede the proposal text above wherever the two disagree.
+
+1. **Go, in this repo.** Source in `deckd/` at the repo root (its own Go
+   module, listed in `.chezmoiignore` like `docs/` and `system/`). The install
+   script builds it with `go build` into `~/.local/bin/deckd`; `go` is already
+   in `arch-terminal.txt`. Python, the venv and `config.toml` are dropped:
+   layout, poll interval, hold time and UPS name are constants or flags.
+2. **New `deck` data var**, prompted like `ups` ("a Stream Deck is plugged
+   into this box"), read with `dig "deck" false .`.
+3. **Power keys: yes, long press.** Hold 1.5 s for the confirm page, as above.
+4. **UPS takeover page: yes**, as above.
+5. **`GAME` = `desktop up gamescope`.**
+6. **Press on a session tile opens the detail page.**
+7. **Laptop surface: out of scope.**
+
+Consequences of choosing Go, also decided:
+
+- **Device layer: pure Go on `/dev/hidraw`, no cgo, no hidapi.** The
+  Original V2 protocol is small, ported from `python-elgato-streamdeck`'s
+  `StreamDeckOriginalV2`: images are 1024-byte output reports (`02 07 key
+  last len_lo len_hi page_lo page_hi` + 1016 bytes of a 72×72 JPEG, flipped
+  on both axes); key states are input reports, 15 bytes from offset 4;
+  `reset` is feature `03 02`, brightness feature `03 08 <percent>`, serial
+  feature report `06`, firmware `05` (32 bytes each, via
+  `HIDIOCSFEATURE`/`HIDIOCGFEATURE`). Reading hidraw instead of libusb also
+  means the kernel's `usbhid` driver is never detached.
+- **The udev rule is hidraw-only**, since nothing opens the USB node:
+
+  ```udev
+  # OWNER, not uaccess: no seat on a headless boot
+  SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", \
+    OWNER="<you>", MODE="0600", SYMLINK+="streamdeck", \
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="streamdeck.service"
+  ```
+- **The unit uses absolute paths.** `%h` in a *system* unit is the service
+  manager's home (`/root`), not `User=`'s, so the script renders the unit
+  with the real home: `ExecStart=/home/<you>/.local/bin/deckd`,
+  `ExecStartPre=… splash booting`, `ExecStop=… splash shutdown`.
+- **Rendering:** `image/jpeg` plus `golang.org/x/image/font/opentype` with
+  the system's JetBrains Mono Nerd Font (`/usr/share/fonts/TTF/`).
+- **cenci:** the live snapshot on `cenci.sock` (checked 2026-10-24) has
+  `windows[]` (`session`, `window_index`, `window_name`, `task_name`,
+  `status`, `agent`), `summary` and `dispatch` (`enabled`, `daemon_running`,
+  `pass_running`, `last_dispatched`, `last_skipped`) — **no `headroom`**. The
+  aggregate tile shows counts only. Hold actions call
+  `cenci close <window-name>` and `cenci dispatch loop on|off`.
+- **Hidapi is not needed**, so the script has nothing to suggest installing
+  beyond `go`.
