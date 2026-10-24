@@ -1,6 +1,8 @@
 # Stream Deck as the headless desktop's only screen — proposal
 
 > **Status: proposal, nothing implemented.** Open questions at the end.
+> The hardware itself is verified on the desktop (2026-10-24, headless boot):
+> see [Hardware check](#hardware-check).
 
 The original 15-key Stream Deck plugs **directly into the desktop**. That box
 boots headless (`docs/headless.md`): no greetd, no compositor, no monitor
@@ -24,10 +26,12 @@ Three things, all small, all on this box.
    service, not a terminal: no password prompt is possible. Fix: a polkit
    rule scoped to those units, and `desktop` stops needing `sudo` (also over
    SSH, which it was written for).
-2. **`TAG+="uaccess"` does nothing on a headless box.** The usual Stream Deck
-   udev recipe grants the device to the *active seat's* user via an ACL. On a
-   `multi-user.target` boot there is no seat session, so nobody gets the ACL
-   and the daemon cannot open the device. The rule has to set `OWNER=`
+2. **`uaccess` does nothing on a headless box.** systemd's hwdb already tags
+   the deck (`ID_AV_PRODUCTION_CONTROLLER=1` → `TAGS=:uaccess:seat:`), which
+   grants it to the *active seat's* user via an ACL. On a `multi-user.target`
+   boot there is no seat session, so nobody gets the ACL: `/dev/hidraw4` is
+   `root 0600`, the USB node `root 0664`, and opening fails with
+   `TransportError: Could not open HID device`. The rule has to set `OWNER=`
    (or a group) explicitly instead.
 3. **No user session to host a user service.** A `systemctl --user` unit
    would need `loginctl enable-linger`. Simpler and more honest: a **system**
@@ -174,15 +178,19 @@ for the stream and `muesli/streamdeck` (deckmaster's device layer) for the
 hardware, and could be offered back to cenci as a `watch/plugin/streamdeck`
 surface — the UPS/`desktop`/GPU tiles stay here either way.
 
-**Device access.** USB HID, vendor `0fd9`; the original deck is product
-`0060` (2017) or `006d` (2019 revision) — `lsusb` tells. The library's docs
-want the `hid` Python package on libhidapi's **libusb** build, which on Arch is
-the single `hidapi` package. Because the libusb backend opens the raw USB
-device, the rule must cover `usb` as well as `hidraw`:
+**Device access.** USB HID, vendor `0fd9`; this deck is product `006d`, the
+Original V2 (`lsusb`: "Stream Deck original V2", 72×72 JPEG keys). The
+`streamdeck` package (0.10.0) has no Python dependencies: it loads
+`libhidapi-libusb.so` through ctypes, which on Arch is the `hidapi` package
+(0.15.0, already installed). Because the libusb backend opens the raw USB
+device, the rule must cover `usb` as well as `hidraw`. The `usb` line is
+limited to the device node (`DEVTYPE=usb_device`), not its interfaces, so the
+symlink and the systemd tag land on one device unit:
 
 ```udev
 # system/udev/70-streamdeck.rules — OWNER, not uaccess: no seat on a headless boot
-SUBSYSTEM=="usb",    ATTRS{idVendor}=="0fd9", OWNER="<you>", MODE="0600", \
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0fd9", \
+  OWNER="<you>", MODE="0600", SYMLINK+="streamdeck", \
   TAG+="systemd", ENV{SYSTEMD_WANTS}="streamdeck.service"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", OWNER="<you>", MODE="0600"
 ```
@@ -254,7 +262,7 @@ as root and is untouched.
 | `system/streamdeck/streamdeck.service` | system unit above, mirrored to `/etc/systemd/system/` |
 | `system/udev/70-streamdeck.rules` | OWNER + `SYSTEMD_WANTS` + `SYMLINK+="streamdeck"` |
 | `system/polkit/49-desktop-units.rules` | manage greetd units / power without a prompt (installed by `49-headless-boot`) |
-| `run_once_after_52-streamdeck.sh.tmpl` | mirrors rule + unit with `sudo install`, renders `<you>`, creates `~/.local/share/streamdeck/venv` with `streamdeck pillow hid` (Arch's Python is PEP 668 externally-managed; the README's rule is toolchains install into `$HOME`), `udevadm trigger`, `systemctl enable --now` |
+| `run_once_after_52-streamdeck.sh.tmpl` | mirrors rule + unit with `sudo install`, renders `<you>`, creates `~/.local/share/streamdeck/venv` with `streamdeck pillow` (Arch's Python is PEP 668 externally-managed; the README's rule is toolchains install into `$HOME`), `udevadm trigger`, `systemctl enable --now` |
 | `dot_local/bin/executable_desktop` | drop `sudo`, fall back to it |
 | `docs/streamdeck.md` | this file, rewritten as the real doc once it lands |
 
@@ -263,14 +271,29 @@ plugged into this box"). Hardware fact, not a role — `ups` is the precedent
 for that shape. Read with `dig "deck" false .`. Per the repo rule the script
 suggests `pacman -S hidapi` and does not install it.
 
+## Hardware check
+
+Done on the desktop on a headless boot (`systemd.unit=multi-user.target`),
+with `streamdeck` 0.10.0 + Pillow in a throwaway venv and a temporary
+`setfacl -m u:<you>:rw` on the USB and hidraw nodes standing in for the udev
+rule (the ACL is gone on replug or reboot):
+
+- Enumerates as `StreamDeckOriginalV2`, 15 keys in a 3×5 layout, firmware
+  `1.03.000`.
+- `reset()`, `set_brightness()` and `set_key_image()` work; tiles rendered
+  through `PILHelper` in the palette colours come out the right way up, key 0
+  at top-left, numbered row by row.
+- All 15 keys report a clean down/up pair, in order, with nothing dropped or
+  doubled. A tap is ~0.1 s down-to-up, so timing a 1.5 s hold from the
+  callback's events is reliable.
+- Without the ACL, `open()` fails with `Could not open HID device` — the
+  `uaccess` trap above, reproduced.
+
 ## Risks and caveats
 
 - **The `uaccess` trap** above is the one that silently breaks every online
   recipe on this box: the daemon logs "could not open device" and nothing
   else is wrong. `OWNER=` is the fix; worth a comment in the rule.
-- **Original-deck quirks.** The 2017 unit is the oldest the library supports;
-  it wants a `reset()` on open and sometimes drops the first frame. Harmless
-  with `Restart=on-failure`.
 - **`nvidia-smi` on a GPU that is idle** can take ~100 ms on the first call;
   time-box every probe so one slow tool cannot stall the tick.
 - **Two things can start vt1 sessions now:** you over SSH and the deck. Both
