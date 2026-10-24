@@ -405,23 +405,26 @@ func (u *UI) agentsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction)
 		return
 	}
 	sum := s.Summary
+	// Symbols and colours follow cenci-watch's tmux defaults
+	// (watch/internal/config/config.go), so the deck reads like the status
+	// line: ▶ running blue, ! input red, ✗ failed red, ✓ done green, ~ idle dim.
 	counts := []struct {
-		name string
-		n    int
-		tint color.RGBA
+		name, sym string
+		n         int
+		tint      color.RGBA
 	}{
-		{"RUNNING", sum.Running, cInfo},
-		{"INPUT", sum.NeedInput + sum.Escalated, cWarning},
-		{"FAILED", sum.Failed, cUrgent},
-		{"DONE", sum.Done, cSuccess},
-		{"IDLE", sum.Idle + sum.Stopped, cSecondary},
+		{"RUNNING", "▶", sum.Running, cInfo},
+		{"INPUT", "!", sum.NeedInput + sum.Escalated, cUrgent},
+		{"FAILED", "✗", sum.Failed, cUrgent},
+		{"DONE", "✓", sum.Done, cSuccess},
+		{"IDLE", "~", sum.Idle + sum.Stopped, cSecondary},
 	}
 	for i, c := range counts {
-		tl := tile(label(c.name), big(fmt.Sprint(c.n), cText))
+		tl := tile(Line{c.sym + " " + fmt.Sprint(c.n), large, true, cText}, label(c.name))
 		if c.n > 0 {
 			tl.Tint = c.tint
 		} else {
-			tl.Lines[1].Color = cDisabled
+			tl.Lines[0].Color = cDisabled
 		}
 		t[5+i] = tl
 		k[5+i].tap = func() { u.page = pageAgents }
@@ -432,7 +435,7 @@ func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction
 	s := u.stats
 	act := func(key int, name, unit string, tint color.RGBA, args ...string) {
 		on := s.VT1OK && s.VT1 == unit
-		tl := tile(mid(name, cText), note("○", cSecondary))
+		tl := tile(mid(name, cText), note("hold", cSecondary))
 		tl.Tint = tint
 		if on {
 			tl.Lines[1] = note("● on", cText)
@@ -444,10 +447,13 @@ func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction
 			tl.Lines[1] = note("…", cAccent)
 		}
 		t[key] = tl
-		k[key].tap = func() {
+		// Hold, not tap: each of these kills whatever owns vt1, so a stray
+		// brush of the deck must not end a game or a niri session.
+		k[key].hold = func() {
 			u.pending[key] = now
 			u.run(userTool("desktop"), args...)
 		}
+		k[key].tap = func() {}
 	}
 	act(10, "NIRI", "greetd-autologin@niri.service", cInfo, "up", "niri")
 	act(11, "GAME", "greetd-autologin@gamescope.service", cMagenta, "up", "gamescope")

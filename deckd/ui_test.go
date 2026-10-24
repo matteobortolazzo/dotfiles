@@ -118,7 +118,7 @@ func TestAgentsRowCounts(t *testing.T) {
 	}
 	ui.SetSnapshot(snap, now)
 	tiles, keys := ui.frame(now)
-	want := []string{"RUNNING|1|", "INPUT|1|", "FAILED|1|", "DONE|1|", "IDLE|1|"}
+	want := []string{"▶ 1|RUNNING|", "! 1|INPUT|", "✗ 1|FAILED|", "✓ 1|DONE|", "~ 1|IDLE|"}
 	for i, w := range want {
 		if got := lineTexts(tiles[5+i]); got != w {
 			t.Errorf("tile %d = %q, want %q", 5+i, got, w)
@@ -153,5 +153,25 @@ func TestWrap(t *testing.T) {
 	got := wrap("Claude Code refine ticket", 9, 2)
 	if len(got) != 2 || got[0] != "Claude" || got[1] != "Code" {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestDesktopModesNeedHold(t *testing.T) {
+	ui := NewUI(true, "exa")
+	now := time.Now()
+	ui.SetStats(Stats{VT1OK: true}, now)
+	_, keys := ui.frame(now)
+	for key := 10; key <= 13; key++ {
+		keys[key].tap()
+		if !ui.pending[key].IsZero() {
+			t.Errorf("key %d: a tap started an action", key)
+		}
+		if keys[key].hold == nil {
+			t.Fatalf("key %d: no hold action", key)
+		}
+		keys[key].hold()
+		if ui.pending[key].IsZero() {
+			t.Errorf("key %d: hold did not start the action", key)
+		}
 	}
 }

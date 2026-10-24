@@ -219,12 +219,12 @@ dirs rejected). Running `deckd` **as you**, not root, is what makes this work.
 │ 23%     │ 11/64G  │ 4% 41°  │ OL 100% │ ts ✓    │
 │ ld 1.2  │ 48°     │ 12 W    │ 38 min  │ ssh 1   │
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
-│ RUNNING │ INPUT   │ FAILED  │ DONE    │ IDLE    │  row 2: cenci
-│ 3       │ 1       │ 0       │ 2       │ 1       │  count per state
+│ ▶ 3     │ ! 1     │ ✗ 0     │ ✓ 2     │ ~ 1     │  row 2: cenci
+│ RUNNING │ INPUT   │ FAILED  │ DONE    │ IDLE    │  count per state
 │         │         │         │         │         │  tinted when > 0
 ├─────────┼─────────┼─────────┼─────────┼─────────┤
 │ NIRI    │ GAME    │ GREETER │ DOWN    │ ⏻       │  row 3: actions
-│ ● on    │ ○       │ ○       │         │ hold    │  active one lit
+│ ● on    │ hold    │ hold    │ hold    │ hold    │  all hold-only
 └─────────┴─────────┴─────────┴─────────┴─────────┘
 ```
 
@@ -247,8 +247,10 @@ details below.
 
 **Row 2 — agents, push-driven.** One count per state, from the snapshot's
 `summary`: `RUNNING`, `INPUT` (`need_input` + `escalated`), `FAILED`, `DONE`,
-`IDLE` (`idle` + `stopped`). A count above zero tints its key (blue, yellow,
-red, green, grey); zero stays dark. Per-session tiles were tried first and
+`IDLE` (`idle` + `stopped`). Each carries cenci-watch's tmux symbol and colour
+(`watch/internal/config/config.go`), so the deck reads like the status line:
+`▶` blue, `!` red, `✗` red, `✓` green, `~` dim grey. A count above zero tints
+its key; zero stays dark. Per-session tiles were tried first and
 were too condensed to read at 72 px.
 
 A tap on any count opens the **agents page**, which lists the sessions five
@@ -263,6 +265,9 @@ mutates agent state.
   `desktop status` prints). `GAME` shows a streaming badge while
   `/run/user/<uid>/sunshine-stream-prep.desk-off` exists.
 - `DOWN` → `desktop down`.
+- All four are **hold 1.5 s**, not tap: each one ends whatever owns vt1, so a
+  stray brush of the deck must not kill a game or a niri session. The hold
+  fires while the key is still down, and the key shows `…` for 5 s after.
 - `⏻` → **hold 1.5 s** for a confirm page: **reboot** / **power off** /
   cancel (`systemctl reboot|poweroff`, allowed by the polkit rule). `deckd`
   times the hold from key down/up; nothing destructive is a single tap. On a
