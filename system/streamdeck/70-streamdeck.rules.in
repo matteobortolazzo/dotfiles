@@ -1,0 +1,16 @@
+# Stream Deck Original V2 (0fd9:006d) -> deckd, the headless desktop's status
+# panel. Rendered by run_onchange_after_52-streamdeck.sh.tmpl (@USER@ is the
+# chezmoi user) into /etc/udev/rules.d/70-streamdeck.rules. See docs/streamdeck.md.
+#
+# OWNER, not uaccess: no seat on a headless boot. systemd's hwdb already tags
+# the deck uaccess, but that ACL goes to the *active seat session's* user, and a
+# multi-user.target boot has no seat session, so the node stays root 0600 and
+# deckd fails with nothing more than "could not open device".
+#
+# hidraw only: deckd speaks the protocol over /dev/hidraw (output and feature
+# reports), so the raw USB node is never opened and needs no rule. The symlink
+# gives the system unit a stable dev-streamdeck.device to BindsTo=, and
+# SYSTEMD_WANTS starts the panel on plug-in.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", \
+  OWNER="@USER@", MODE="0600", SYMLINK+="streamdeck", \
+  TAG+="systemd", ENV{SYSTEMD_WANTS}="streamdeck.service"

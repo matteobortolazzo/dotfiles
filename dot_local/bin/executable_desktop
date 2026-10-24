@@ -2,9 +2,22 @@
 # Bring the graphical session up and down on a box that boots headless.
 # See docs/headless.md; the units and greetd configs come from
 # run_once_after_49-headless-boot.sh.tmpl.
+#
+# No sudo needed where that script installed its polkit rule
+# (/etc/polkit-1/rules.d/49-desktop-units.rules): systemctl is tried first with
+# --no-ask-password, which is what lets deckd (the Stream Deck panel, a service
+# with no terminal) and an SSH shell run this. Without the rule, polkit refuses
+# and it falls back to sudo, so the script still works on a box that lacks it.
 set -eu
 
 self=${0##*/}
+
+# systemctl via polkit, else via sudo. The first attempt's stderr is dropped:
+# its only interesting failure is "access denied", and the sudo retry reports
+# any real error itself.
+sctl() {
+    systemctl --no-ask-password "$@" 2>/dev/null || sudo systemctl "$@"
+}
 
 # Sessions are whatever autologin configs the setup script installed.
 sessions() {
@@ -59,16 +72,16 @@ case "${1-}" in
             sessions | sed 's/^/  /' >&2 || echo "  none" >&2
             exit 1
         fi
-        sudo systemctl start "greetd-autologin@$session.service"
+        sctl start "greetd-autologin@$session.service"
         echo "$self: $session session starting on vt1"
         ;;
     greeter)
-        sudo systemctl start greetd.service
+        sctl start greetd.service
         echo "$self: regreet starting on vt1"
         ;;
     down)
         units | while read -r unit; do
-            sudo systemctl stop "$unit" 2>/dev/null || true
+            sctl stop "$unit" 2>/dev/null || true
         done
         echo "$self: vt1 released, back to a plain TTY"
         ;;

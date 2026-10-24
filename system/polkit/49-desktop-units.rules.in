@@ -1,0 +1,32 @@
+// Let @USER@ run `desktop` and reboot/power off the box without a password.
+// Rendered and installed to /etc/polkit-1/rules.d/49-desktop-units.rules by
+// run_once_after_49-headless-boot.sh.tmpl. See docs/streamdeck.md.
+//
+// For callers that are not a seat session and cannot answer sudo: deckd (a
+// system service running as @USER@) and an SSH shell. `desktop` tries
+// `systemctl --no-ask-password` first and only falls back to sudo when this
+// rule is absent.
+//
+// Scope: greetd.service and greetd-autologin@*.service only. getty@tty1 stops
+// through their Conflicts=, so it never has to be named. Power-off and reboot
+// include the -multiple-sessions variants (an SSH login or a running niri
+// session counts as another session) but deliberately not -ignore-inhibit:
+// an inhibitor lock still wins.
+polkit.addRule(function (action, subject) {
+  if (subject.user !== "@USER@") return polkit.Result.NOT_HANDLED;
+
+  if (action.id === "org.freedesktop.systemd1.manage-units") {
+    var unit = action.lookup("unit") || "";
+    if (unit === "greetd.service" || unit.indexOf("greetd-autologin@") === 0)
+      return polkit.Result.YES;
+  }
+
+  switch (action.id) {
+    case "org.freedesktop.login1.power-off":
+    case "org.freedesktop.login1.power-off-multiple-sessions":
+    case "org.freedesktop.login1.reboot":
+    case "org.freedesktop.login1.reboot-multiple-sessions":
+      return polkit.Result.YES;
+  }
+  return polkit.Result.NOT_HANDLED;
+});

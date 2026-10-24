@@ -57,6 +57,29 @@ else
   sudo /etc/boot/hooks/post.d/85-headless-entry
 fi
 
+user="${USER:-$(id -un)}"
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+# --- polkit: desktop units + power without a prompt --------------------------
+#
+# `desktop` is run from things that cannot answer sudo: an SSH shell is awkward,
+# deckd (the Stream Deck panel, a system service running as you) is impossible.
+# The rule lets you manage greetd / greetd-autologin@* and reboot or power off;
+# `desktop` tries `systemctl --no-ask-password` first and falls back to sudo
+# only when the rule is missing. polkitd watches rules.d, no reload needed.
+# See docs/streamdeck.md.
+
+if [ -d /etc/polkit-1 ]; then
+  sed "s|@USER@|$user|g" "{{ .chezmoi.sourceDir }}/system/polkit/49-desktop-units.rules.in" \
+    > "$work/49-desktop-units.rules"
+  install_if_changed "$work/49-desktop-units.rules" \
+    /etc/polkit-1/rules.d/49-desktop-units.rules 0644 || true
+else
+  echo "polkit not installed — skipping the desktop-units rule ('desktop' will use sudo)"
+fi
+
 # --- on-demand sessions ---------------------------------------------------
 #
 # greetd.service alone covers the desk (regreet, type a password). It cannot
@@ -69,11 +92,6 @@ if ! command -v greetd >/dev/null 2>&1; then
   echo "(the headless entry still works; install greetd cage greetd-regreet for the desktop half)"
   exit 0
 fi
-
-user="${USER:-$(id -un)}"
-
-work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
 
 write_autologin() {
   local session="$1" session_command="$2"
