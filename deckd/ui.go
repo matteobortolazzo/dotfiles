@@ -291,7 +291,12 @@ func (u *UI) statsRow(t *[keyCount]Tile, k *[keyCount]keyAction) {
 		}
 		status, _, _ := strings.Cut(s.UPS.Status, " ")
 		ups.Lines[1] = mid(fmt.Sprintf("%s %d%%", status, s.UPS.Charge), c)
-		ups.Lines[2] = note(fmt.Sprintf("%d min", s.UPS.Runtime/60), cSecondary)
+		// Q* units (this one) report ups.load but no battery.runtime.
+		if s.UPS.Runtime > 0 {
+			ups.Lines[2] = note(fmt.Sprintf("%d min", s.UPS.Runtime/60), cSecondary)
+		} else {
+			ups.Lines[2] = note(fmt.Sprintf("load %d%%", s.UPS.Load), cSecondary)
+		}
 		ups.Tint, ups.Gauge = c, float64(s.UPS.Charge)/100
 	}
 	t[3] = ups
@@ -432,7 +437,7 @@ func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction
 		if on {
 			tl.Lines[1] = note("● on", cText)
 			tl.Tint = cAccent
-			tl.Fill = mix(cBG, cAccent, 0.75)
+			tl.Fill = cAccent
 			tl.Border = cWhite
 		}
 		if now.Sub(u.pending[key]) < pendingShown {
@@ -451,7 +456,7 @@ func (u *UI) actionsRow(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction
 	if s.VT1OK && s.VT1 == "" && now.Sub(u.pending[13]) >= pendingShown {
 		t[13].Lines[1] = note("● tty", cText)
 		t[13].Tint = cAccent
-		t[13].Fill = mix(cBG, cAccent, 0.75)
+		t[13].Fill = cAccent
 		t[13].Border = cWhite
 	}
 	if s.Stream {
@@ -576,7 +581,10 @@ func (u *UI) upsPage(now time.Time, t *[keyCount]Tile, k *[keyCount]keyAction) {
 	t[0] = tile(label("UPS"), big("OB", cUrgent), note("battery", cUrgent))
 	t[0].Border = cUrgent
 	t[1] = tile(label("CHARGE"), big(fmt.Sprintf("%d%%", s.Charge), cText))
-	t[2] = tile(label("RUNTIME"), big(fmt.Sprintf("%dm", s.Runtime/60), cText))
+	t[2] = tile(label("RUNTIME"), big(dash, cDisabled))
+	if s.Runtime > 0 {
+		t[2].Lines[1] = big(fmt.Sprintf("%dm", s.Runtime/60), cText)
+	}
 	t[3] = tile(label("LOAD"), big(fmt.Sprintf("%d%%", s.Load), cText))
 	left := upsGrace - now.Sub(u.obSince)
 	cd := "now"

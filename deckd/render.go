@@ -32,6 +32,11 @@ var (
 	cWhite     = rgb(0xfaf7f2) // ANSI 15
 )
 
+// luma is the perceived lightness of c, 0..255 (Rec. 601 weights).
+func luma(c color.RGBA) float64 {
+	return 0.299*float64(c.R) + 0.587*float64(c.G) + 0.114*float64(c.B)
+}
+
 // mix blends a toward b by t (0..1).
 func mix(a, b color.RGBA, t float64) color.RGBA {
 	f := func(x, y uint8) uint8 { return uint8(float64(x) + (float64(y)-float64(x))*t + 0.5) }
@@ -203,13 +208,21 @@ func Render(t Tile) *image.RGBA {
 	lines := t.Lines
 	if t.Tint.A != 0 {
 		if fill.A == 0 {
-			fill = mix(cBG, t.Tint, 0.42)
+			fill = mix(cBG, t.Tint, 0.78)
+		}
+	}
+	if t.Tint.A != 0 {
+		// White text on a mid-tone key, dark text on a light one (the gold
+		// "owns vt1" key), labels a step softer than the value either way.
+		fg, soft := cWhite, mix(t.Tint, cWhite, 0.8)
+		if luma(fill) > 150 {
+			fg, soft = cBG, mix(cBG, fill, 0.35)
 		}
 		for i := range lines {
 			if lines[i].Color == cSecondary || lines[i].Color == cDisabled {
-				lines[i].Color = mix(t.Tint, cWhite, 0.55)
+				lines[i].Color = soft
 			} else {
-				lines[i].Color = cWhite
+				lines[i].Color = fg
 			}
 		}
 	}
@@ -220,8 +233,8 @@ func Render(t Tile) *image.RGBA {
 	if t.Tint.A != 0 && t.Gauge > 0 {
 		const gh = 6
 		w := int(float64(keyPixels)*min(t.Gauge, 1) + 0.5)
-		draw.Draw(img, image.Rect(0, keyPixels-gh, keyPixels, keyPixels), image.NewUniform(mix(cBG, t.Tint, 0.2)), image.Point{}, draw.Src)
-		draw.Draw(img, image.Rect(0, keyPixels-gh, w, keyPixels), image.NewUniform(mix(t.Tint, cWhite, 0.15)), image.Point{}, draw.Src)
+		draw.Draw(img, image.Rect(0, keyPixels-gh, keyPixels, keyPixels), image.NewUniform(mix(cBG, t.Tint, 0.35)), image.Point{}, draw.Src)
+		draw.Draw(img, image.Rect(0, keyPixels-gh, w, keyPixels), image.NewUniform(cWhite), image.Point{}, draw.Src)
 	}
 	if t.Border.A != 0 {
 		const bw = 3
