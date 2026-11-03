@@ -13,6 +13,9 @@ set -euo pipefail
 {{- if dig "gaming" false . }}
 # arch-aur-gaming.txt:   {{ include "packages/arch-aur-gaming.txt" | sha256sum }}
 {{- end }}
+{{- if and (eq .profile "main") (dig "tuxedo" false .) }}
+# arch-aur-tuxedo.txt:   {{ include "packages/arch-aur-tuxedo.txt" | sha256sum }}
+{{- end }}
 
 src="{{ .chezmoi.sourceDir }}/packages"
 failed=""
@@ -25,7 +28,7 @@ failed=""
 #
 # Batch first because it's much faster, then fall back to one-at-a-time so the
 # healthy packages still land and the report names exactly what needs a human.
-# Never fatal: cosmetic packages must not strand an unattended apply.
+# Try the whole list, then fail if anything is missing so the next apply retries.
 install_list() {
   file="$1"
   [ -f "$file" ] && [ -s "$file" ] || return 0
@@ -46,6 +49,9 @@ install_list "$src/arch-aur-terminal.txt"
 
 {{ if eq .profile "main" -}}
 install_list "$src/arch-aur-desktop.txt"
+{{ if dig "tuxedo" false . -}}
+install_list "$src/arch-aur-tuxedo.txt"
+{{ end -}}
 {{ end -}}
 
 {{ if dig "gaming" false . -}}
@@ -63,7 +69,9 @@ if [ -n "$failed" ]; then
   echo "" >&2
   echo "aur: these packages need manual attention:$failed" >&2
   echo "aur: --noconfirm turns prompts into failures, so run 'yay -S <pkg>' by" >&2
-  echo "aur: hand to see the real question. Stale checksum after an upstream" >&2
-  echo "aur: re-release: --mflags --skipchecksums. Unknown key: gpg --recv-keys." >&2
+  echo "aur: hand to see the real question. Verify source changes and signing" >&2
+  echo "aur: keys with the maintainer; do not bypass checksum verification." >&2
+  # Do not record an incomplete run as successful: the next apply must retry.
+  exit 1
 fi
 {{ end -}}

@@ -9,7 +9,8 @@ skipped).
 ## What these lists include — and what they don't
 
 The lists are explicitly-installed packages (`pacman -Qqen` / `pacman -Qqem`) with
-OS-provided entries stripped so the same list works on stock Arch and CachyOS:
+OS-provided entries stripped for a CachyOS no-desktop installation. The `arch-`
+filename prefix denotes the pacman/AUR package ecosystem, not a stock Arch target:
 
 - **Stripped**: `base`, `linux`, `linux-firmware`, `linux-headers`, `intel-ucode`,
   `nvidia-open-dkms`. These come from the installer (or the NVIDIA checkbox on
@@ -17,12 +18,11 @@ OS-provided entries stripped so the same list works on stock Arch and CachyOS:
   `linux-cachyos` and DKMS modules could build against the wrong one.
 - **Kept**: everything else — DE, apps, fonts, dev tools, CLI utilities.
 
-### Stock Arch note
+### Installer-owned packages
 
-On stock Arch, kernel/firmware/ucode/nvidia come from whatever the installer
-(archinstall or manual) set up. Nothing in this list will pull them back if you
-ever uninstall them — they live outside this snapshot. That is deliberate; add
-them to your bootstrap step if you want them tracked.
+Kernel, firmware, microcode and NVIDIA drivers come from the CachyOS installer.
+They live outside this snapshot. TUXEDO additionally installs headers for all
+installed kernels before its DKMS modules are built.
 
 ## Regenerate on the current machine
 
@@ -67,7 +67,7 @@ Both failure modes have already bitten — three times so far:
   is not uninstalling — the package is still here, still untracked.
 
 The cheapest fix is upstream of all three: **install with no desktop environment**
-(see the main [README](../README.md#installer-choices-cachyos--arch)). The lists
+(see the main [README](../README.md#installer-choices-cachyos)). The lists
 already cover the full graphical stack.
 
 List everything explicitly installed but untracked:
@@ -148,8 +148,18 @@ it keeps this list profile-agnostic.
 
 ## Mac / WSL
 
-macOS installs from `Brewfile` (`run_once_before_05-homebrew.sh.tmpl`). The
+macOS installs from `Brewfile` (`run_onchange_before_05-homebrew.sh.tmpl`). The
 `wsl` profile installs `arch-terminal.txt` plus a small extra set (docker,
-wl-clipboard, wslu) directly in the pacman/AUR scripts. The Arch scripts won't
+wl-clipboard, tailscale) directly in the pacman/AUR scripts. The Arch scripts won't
 fire on non-Arch hosts thanks to the
 `{{ "{{" }} if eq .chezmoi.osRelease.id "cachyos" "arch" {{ "}}" }}` guard.
+
+## TUXEDO
+
+`arch-aur-tuxedo.txt` is enabled only for Linux `main` with `tuxedo = true`.
+The pacman step derives headers from `/usr/lib/modules/*/pkgbase`, so switching
+to a CachyOS LTS kernel does not leave the hardware module without its headers.
+AUR failures are reported and return failure after attempting the remaining
+packages; the next `chezmoi apply` retries instead of recording a partial install
+as successful. Package lists install missing packages; removing a line does not
+uninstall that package.

@@ -2,7 +2,7 @@
 {{ if or (eq .profile "main") (eq .profile "wsl") -}}
 set -euo pipefail
 
-if systemctl list-unit-files tailscaled.service >/dev/null 2>&1; then
+if systemctl cat tailscaled.service >/dev/null 2>&1; then
   sudo systemctl enable --now tailscaled.service
 fi
 {{- if eq .profile "wsl" }}

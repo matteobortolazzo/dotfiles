@@ -10,7 +10,7 @@ set -euo pipefail
 # for plain `ssh <devHost>` + tmux on the local network. Opening the port in the
 # firewall is 28-firewall's job — sshd listening is not the same as reachable.
 
-if ! systemctl list-unit-files sshd.service >/dev/null 2>&1; then
+if ! systemctl cat sshd.service >/dev/null 2>&1; then
   echo "sshd.service not installed — skipping (openssh is in arch-terminal.txt)"
   exit 0
 fi

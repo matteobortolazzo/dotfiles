@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+[ "$(uname -s)" = Linux ] || exit 0
 
 config_home="${XDG_CONFIG_HOME:-"$HOME/.config"}"
 jetbrains_config="$config_home/JetBrains"

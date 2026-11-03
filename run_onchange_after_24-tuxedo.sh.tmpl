@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") (dig "tuxedo" false .) -}}
+set -euo pipefail
+
+# Only switch power managers after the hardware packages installed successfully.
+systemctl cat tccd.service tccd-sleep.service >/dev/null
+sudo systemctl mask --now power-profiles-daemon.service
+sudo systemctl enable --now tccd.service
+sudo systemctl enable tccd-sleep.service
+echo "TUXEDO: reboot to load the DKMS modules; manage power/fans in Control Center."
+{{ end -}}

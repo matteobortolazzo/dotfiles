@@ -33,7 +33,7 @@ sudo udevadm trigger
 
 # sched-ext: scx_lavd is the latency-oriented scheduler, which is what a sim rig
 # wants. scx_loader picks it up from CachyOS's default config.
-if systemctl list-unit-files scx_loader.service >/dev/null 2>&1; then
+if systemctl cat scx_loader.service >/dev/null 2>&1; then
   sudo systemctl enable --now scx_loader.service
 else
   echo "scx_loader.service not installed — skipping sched-ext setup"

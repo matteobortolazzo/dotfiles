@@ -96,7 +96,7 @@ grep -qs 0665 /sys/bus/usb/devices/*/idVendor && attached=1 || true
 # instance per UPS, so no driver is ever enabled by name here — enable the path
 # unit and the [exa] section brings up nut-driver@exa on its own.
 enable_unit() {
-  if ! systemctl list-unit-files "$1" >/dev/null 2>&1; then
+  if ! systemctl cat "$1" >/dev/null 2>&1; then
     echo "$1 not installed — skipping"
     return
   fi

@@ -61,7 +61,7 @@ fi
 # Resolve the wallpaper to mirror as the greeter background.
 # Precedence: DMS session state → first match in ~/Pictures/Wallpapers.
 wallpaper=""
-dms_session="$HOME/.local/state/DankMaterialShell/session.json"
+dms_session="${XDG_STATE_HOME:-$HOME/.local/state}/dms/session.json"
 if [ -f "$dms_session" ] && command -v jq >/dev/null 2>&1; then
   wallpaper=$(jq -r '
       if (.perMonitorWallpaper // false) and ((.monitorWallpapers // {}) | length > 0)
@@ -114,4 +114,7 @@ if [ -L "$dm_alias" ]; then
 fi
 
 sudo systemctl enable greetd.service
+# The no-desktop installer can leave multi-user.target as the boot default.
+# The optional headless Limine entry overrides this via its kernel command line.
+sudo systemctl set-default graphical.target
 {{ end -}}

@@ -42,7 +42,7 @@ fi
 # it yet.
 systemctl --user daemon-reload || true
 
-if systemctl --user list-unit-files captive-portal.service >/dev/null 2>&1; then
+if systemctl --user cat captive-portal.service >/dev/null 2>&1; then
   systemctl --user add-wants niri.service captive-portal.service \
     || echo "add-wants failed — run manually: systemctl --user add-wants niri.service captive-portal.service"
 else

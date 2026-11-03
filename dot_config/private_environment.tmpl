@@ -7,20 +7,20 @@
 # To update values, edit items in 1Password, then re-run chezmoi apply
 
 # OpenAI
-export OPENAI_API_KEY="{{ onepasswordRead "op://Private/OpenAI/ApiKey" }}"
+export OPENAI_API_KEY={{ onepasswordRead "op://Private/OpenAI/ApiKey" | shellQuote }}
 
 # Context7
-export CONTEXT7_API_KEY="{{ onepasswordRead "op://Private/Context7 API Key/credential" }}"
+export CONTEXT7_API_KEY={{ onepasswordRead "op://Private/Context7 API Key/credential" | shellQuote }}
 
 # Resend
-export RESEND_API_KEY="{{ onepasswordRead "op://Private/Resend/ApiKey" }}"
-export RESEND_FROM_ADDRESS="{{ onepasswordRead "op://Private/Resend/FromAddress" }}"
+export RESEND_API_KEY={{ onepasswordRead "op://Private/Resend/ApiKey" | shellQuote }}
+export RESEND_FROM_ADDRESS={{ onepasswordRead "op://Private/Resend/FromAddress" | shellQuote }}
 
 # Velka (prod)
-export CAPGO_TOKEN="{{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo App Developer Key" }}"
-export VELKA_APPINSIGHTS_CONNECTION_STRING="{{ onepasswordRead "op://Private/velka-prod/Azure/Application Insight Connection String" }}"
+export CAPGO_TOKEN={{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo App Developer Key" | shellQuote }}
+export VELKA_APPINSIGHTS_CONNECTION_STRING={{ onepasswordRead "op://Private/velka-prod/Azure/Application Insight Connection String" | shellQuote }}
 {{- if $org }}
 
 # Azure DevOps ({{ $org }})
-export AZURE_DEVOPS_EXT_PAT="{{ onepasswordRead (printf "op://Private/%s/AdoPat" $org) }}"
+export AZURE_DEVOPS_EXT_PAT={{ onepasswordRead (printf "op://Private/%s/AdoPat" $org) | shellQuote }}
 {{- end }}

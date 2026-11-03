@@ -6,11 +6,14 @@
 -- so WSL degrades to plain (treesitter-highlighted) source instead of erroring.
 local has_magick = vim.fn.executable("magick") == 1
 local has_mmdc = vim.fn.executable("mmdc") == 1
+-- Kitty graphics are unavailable on the Linux virtual console. TTY bootstrap
+-- must still be able to edit markdown without sending image escape sequences.
+local supports_images = vim.env.TERM ~= "linux" and vim.env.TERM ~= "dumb"
 
 return {
   {
     "3rd/image.nvim",
-    enabled = has_magick,
+    enabled = has_magick and supports_images,
     -- Stops lazy.nvim trying to build the (unneeded) magick luarock.
     build = false,
     event = "VeryLazy",
@@ -25,7 +28,7 @@ return {
   },
   {
     "3rd/diagram.nvim",
-    enabled = has_magick and has_mmdc,
+    enabled = has_magick and has_mmdc and supports_images,
     ft = { "markdown", "mermaid" },
     dependencies = { "3rd/image.nvim" },
     -- Function form: the integration module isn't on the rtp until load time.

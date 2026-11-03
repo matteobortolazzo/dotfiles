@@ -16,22 +16,8 @@ return {
   {
     "mason-org/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" },
-    opts = {
-      ensure_installed = {
-        "angularls",
-        "bashls",
-        "cssls",
-        "docker_language_server",
-        "jsonls",
-        "lua_ls",
-        "csharp_ls",
-        "pylsp",
-        "tailwindcss",
-        "ts_ls",
-        "yamlls",
-      },
-      automatic_enable = true,
-    },
+    -- Setup below, after capabilities and server overrides are registered.
+    config = false,
   },
   {
     "neovim/nvim-lspconfig",
@@ -106,8 +92,13 @@ return {
       vim.lsp.config("ts_ls", {})
       vim.lsp.config("yamlls", {})
 
-      -- Servers are enabled by mason-lspconfig's automatic_enable, driven by the
-      -- single ensure_installed list above — no second list to keep in sync.
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "angularls", "bashls", "cssls", "docker_language_server", "gopls",
+          "jsonls", "lua_ls", "csharp_ls", "pylsp", "tailwindcss", "ts_ls", "yamlls",
+        },
+        automatic_enable = true,
+      })
     end,
   },
 }

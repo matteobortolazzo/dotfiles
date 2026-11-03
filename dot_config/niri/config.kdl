@@ -91,8 +91,6 @@ output "DP-2" {
 
 // Hyprland env = lines (HYPRCURSOR_SIZE dropped — Hyprland-only)
 environment {
-    LIBVA_DRIVER_NAME "nvidia"
-    __GLX_VENDOR_LIBRARY_NAME "nvidia"
     // Force Mozilla apps (Zen, Firefox, Thunderbird) onto native Wayland.
     // Without this they fall back to XWayland and ignore niri's
     // rounded-corner clipping, showing square opaque borders.
@@ -107,7 +105,6 @@ cursor {
 // Spawned at session start.
 // dms is NOT spawned here: it's pulled in via niri.service Wants=dms.
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-spawn-at-startup "xwayland-satellite"
 spawn-at-startup "udiskie"
 spawn-at-startup "zen-browser"
 spawn-at-startup "ghostty"

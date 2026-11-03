@@ -1,0 +1,2 @@
+tuxedo-control-center-bin
+tuxedo-drivers-dkms

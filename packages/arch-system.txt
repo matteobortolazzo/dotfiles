@@ -13,9 +13,12 @@ ipp-usb
 networkmanager
 nss-mdns
 pipewire-pulse
+pipewire-alsa
 power-profiles-daemon
 sane
 sane-airscan
 sof-firmware
 tailscale
 ufw
+wireplumber
+xdg-user-dirs

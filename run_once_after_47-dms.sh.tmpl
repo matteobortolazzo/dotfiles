@@ -6,12 +6,9 @@ set -euo pipefail
 # This is the wiring step previously only documented as a comment in
 # config.kdl — a fresh machine got niri with no bar/launcher/lock without it.
 
-if systemctl --user list-unit-files dms.service >/dev/null 2>&1; then
-  systemctl --user add-wants niri.service dms.service \
-    || echo "add-wants failed — run manually: systemctl --user add-wants niri.service dms.service"
-else
-  echo "dms.service not found — install dms-shell, then run: systemctl --user add-wants niri.service dms.service"
-fi
+systemctl --user daemon-reload
+systemctl --user cat dms.service >/dev/null
+systemctl --user add-wants niri.service dms.service
 
 # Directories the config expects: niri screenshot-path and the wallpaper dir
 # used by DMS + the greetd background sync (run_once_after_45).

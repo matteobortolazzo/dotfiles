@@ -35,6 +35,22 @@ pkg_system="$src/arch-system.txt"
 [ -f "$pkg_system" ] && sudo pacman -S --needed --noconfirm - < "$pkg_system"
 {{ end -}}
 
+{{ if and (eq .profile "main") (dig "tuxedo" false .) -}}
+# Match every installed kernel, including CachyOS LTS/custom variants. DKMS
+# cannot build TUXEDO's hardware modules without the corresponding headers.
+headers=()
+for pkgbase_file in /usr/lib/modules/*/pkgbase; do
+  [ -f "$pkgbase_file" ] || continue
+  IFS= read -r kernel < "$pkgbase_file"
+  headers+=("${kernel}-headers")
+done
+if [ "${#headers[@]}" -eq 0 ]; then
+  echo "tuxedo: no installed kernel found; install its headers before retrying" >&2
+  exit 1
+fi
+sudo pacman -S --needed --noconfirm "${headers[@]}"
+{{ end -}}
+
 {{ if and (dig "gaming" false .) (eq .chezmoi.osRelease.id "cachyos") -}}
 # CachyOS-only, unlike the other lists: cachyos-gaming-meta,
 # gamescope-session-cachyos and linux-cachyos-headers live in the CachyOS repos

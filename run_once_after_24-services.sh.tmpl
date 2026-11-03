@@ -7,7 +7,7 @@ set -euo pipefail
 # DMS's power-profile widget needs power-profiles-daemon running.
 
 enable_unit() {
-  if systemctl list-unit-files "$1" >/dev/null 2>&1; then
+  if systemctl cat "$1" >/dev/null 2>&1; then
     sudo systemctl enable --now "$1"
   else
     echo "$1 not installed — skipping"
@@ -16,7 +16,9 @@ enable_unit() {
 
 enable_unit NetworkManager.service
 enable_unit bluetooth.service
+{{ if not (dig "tuxedo" false .) -}}
 enable_unit power-profiles-daemon.service
+{{ end -}}
 
 # Docker ships its units disabled on Arch, so a fresh machine has no
 # /var/run/docker.sock at all. Enable the socket rather than the service:

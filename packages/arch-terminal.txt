@@ -32,9 +32,13 @@ opencode
 openssh
 pacman-contrib
 poppler
+prettier
+python
+python-pip
 ripgrep
 rtorrent
 sudo
+stylua
 tmux
 tree
 tree-sitter-cli

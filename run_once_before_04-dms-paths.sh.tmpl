@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") -}}
+set -euo pipefail
+
+# Dux Shell 2 uses dms/ in all XDG directories. Copy before chezmoi seeds
+# create_ files, so the user's live settings win. Keep the old directory as
+# a backup and never overwrite a destination already migrated by the shell.
+for base in "${XDG_CONFIG_HOME:-$HOME/.config}" \
+            "${XDG_STATE_HOME:-$HOME/.local/state}" \
+            "${XDG_DATA_HOME:-$HOME/.local/share}"; do
+  if [ -d "$base/DankMaterialShell" ] && [ ! -e "$base/dms" ]; then
+    cp -a "$base/DankMaterialShell" "$base/dms"
+  fi
+done
+
+# The legacy config path is now a compatibility symlink managed by chezmoi.
+# Archive a real directory before that symlink replaces it. mktemp keeps older
+# backups intact, including when a user has recreated the legacy directory.
+config_base="${XDG_CONFIG_HOME:-$HOME/.config}"
+legacy="$config_base/DankMaterialShell"
+if [ -d "$legacy" ] && [ ! -L "$legacy" ]; then
+  backup=$(mktemp -d "$config_base/DankMaterialShell.backup.XXXXXX")
+  mv "$legacy" "$backup/DankMaterialShell"
+  echo "Preserved legacy DMS configuration in $backup/DankMaterialShell"
+fi
+{{ end -}}

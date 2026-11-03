@@ -1,10 +1,10 @@
 # Dotfiles
 
-Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary target is Arch Linux running [niri](https://github.com/YaLTeR/niri) (scrollable-tiling Wayland compositor) with [DankMaterialShell](https://danklinux.com/) as the desktop shell, behind a greetd/regreet login. Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS and WSL.
+Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux starts from a **CachyOS bare TTY installation**, then these dotfiles install [niri](https://github.com/YaLTeR/niri), [Dux Shell](https://duxlabs.dev/) (formerly DankMaterialShell; still `dms`), and greetd/regreet. Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS. The existing Arch-based WSL profile remains available for compatibility.
 
 ## Machine axes
 
-`chezmoi init` prompts once for six values — four independent axes, a boot policy, and the dev box's hostname — stored in `~/.config/chezmoi/chezmoi.toml`:
+`chezmoi init` stores platform, role, hardware and remote-access answers in `~/.config/chezmoi/chezmoi.toml`:
 
 | Prompt | Axis | Values |
 |---|---|---|
@@ -15,13 +15,15 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Primary
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
 | `ups` | Hardware — a UPS is on this box's USB: NUT monitoring and clean shutdown on a power cut | `true` / `false`, defaults to `false` |
 | `deck` | Hardware — a Stream Deck is plugged into this box: builds `deckd`, the status panel, and its udev rule + system unit | `true` / `false`, defaults to `false` |
+| `tuxedo` | Hardware — TUXEDO laptop drivers, matching kernel headers and Control Center | `true` / `false`, defaults to `false`; Linux `main` only |
 | `devHost` | The dev box's MagicDNS hostname, reached as `ssh <devHost>` | hostname, blank for none |
+| `devUser` | Username on the remote dev box | blank to use this machine's username |
 
 | Profile | What you get |
 |---|---|
-| `main` | Full Arch desktop: niri + DMS, greetd, GUI apps, system services |
+| `main` | Full CachyOS desktop: niri + DMS, greetd, GUI apps, system services |
 | `wsl` | Terminal stack + docker, WSL host tuning, no Windows interop |
-| `mac` | Terminal stack via Homebrew/Brewfile |
+| `mac` | Shared terminal stack, OmniWM, Ghostty and GUI apps via Homebrew/Brewfile |
 
 They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
 
@@ -35,6 +37,14 @@ Templates read the newer vars with `dig "gaming" false .` rather than `.gaming`.
 
 ## Quick start (empty machine)
 
+Install CachyOS with **no desktop environment**, boot into the installed system,
+connect to the network (`nmtui` for Wi-Fi), and log in as your normal sudo-capable
+user. Install bootstrap prerequisites before cloning:
+
+```bash
+sudo pacman -Syu --needed git curl
+```
+
 ```bash
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply matteobortolazzo
 ```
@@ -43,13 +53,75 @@ That single command installs chezmoi, clones this repo, prompts for the profile,
 
 Secrets are skipped on the first pass if the 1Password CLI isn't signed in yet (see below) — everything else completes.
 
-### Installer choices (CachyOS / Arch)
+### Installer choices (CachyOS)
 
 **Pick no desktop environment.** Everything graphical comes from these dotfiles — niri, DMS, portals and fonts via `packages/arch-desktop.txt`, the greetd/regreet login via `arch-system.txt` and `system/greetd/`. A desktop profile from the installer (niri included) can only *add* packages no list tracks, and the lists are additive: `pacman -S --needed` never removes anything, so installer leftovers persist invisibly and can still win a dependency resolution. That has bitten three times now — `joyutils`, `noctalia-qs`, and SDDM.
 
 SDDM is the one that breaks the boot: CachyOS enables it for every desktop profile, so it holds `display-manager.service` before greetd is ever installed. `run_once_after_45-greetd.sh.tmpl` detects and disables an incumbent display manager, but it deliberately doesn't uninstall anything — run the audit in [`packages/README.md`](packages/README.md) after a profile install to find the rest of the residue.
 
 **Keep the NVIDIA driver checkbox** on machines that have one. It's independent of the desktop choice, and `nvidia-open-dkms` is deliberately stripped from the package lists precisely because it comes from there.
+
+Choose `profile = "main"`. On the TUXEDO laptop also choose `tuxedo = true`.
+Use `headless = false` for a normal laptop: starting the installation at a TTY is
+different from choosing the optional headless boot policy. The setup enables
+`graphical.target` and greetd for the next boot without interrupting the TTY.
+
+### TUXEDO laptop
+
+`tuxedo = true` installs `tuxedo-drivers-dkms` and `tuxedo-control-center-bin`,
+installs headers matching every installed kernel, and enables `tccd` and
+`tccd-sleep`. It masks `power-profiles-daemon` so two services do not compete to
+manage the CPU. Use TUXEDO Control Center for power/fan profiles; DMS's PPD widget
+is not the power controller on this machine. Reboot after the first apply and
+check `dkms status` and `systemctl status tccd`.
+
+Existing laptop: run `chezmoi init` to answer the new hardware prompt, or add
+`tuxedo = true` under `[data]`, then apply. If you later turn this hardware flag
+off on the same machine, disable `tccd`/`tccd-sleep`, unmask and enable
+`power-profiles-daemon` explicitly; role changes do not uninstall hardware support.
+
+### macOS
+
+Install Apple's Command Line Tools (`xcode-select --install`) first. Run the
+chezmoi bootstrap above with profile `mac`; Homebrew supports both Apple Silicon
+and Intel prefixes. `chezmoi init` also sets the PATH inherited by every install
+script, so run it once on an existing Mac to pick up that change.
+
+The Brewfile includes 1Password **and** its CLI, Zen (used by the browser hotkey),
+JetBrains Toolbox, ImageMagick, Python, tree-sitter-cli and Neovim formatters.
+Open OmniWM and grant its requested Accessibility permissions, then enable
+launch at login in the app. For the Zen hotkey, grant skhd Accessibility access
+and run `skhd --start-service`. Open Docker Desktop and Tailscale to finish their
+interactive setup. Enable the 1Password SSH agent as described below.
+
+Ghostty loads the shared `~/.config/ghostty/config`, followed by the Mac-specific
+keybindings in `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty`.
+
+### Neovim and updates
+
+Use Neovim **0.12+** and tree-sitter-cli **0.26.1+** with the tracked Treesitter
+`main` branch. Packages supply Prettier and StyLua; Mason supplies language
+servers, including Go. Open a source file to load LSP, then check `:Mason`,
+`:ConformInfo` and `:checkhealth`. Native parser/fzf builds need the C compiler
+from `base-devel` on CachyOS or Command Line Tools on macOS.
+
+The lockfile pins reviewed plugin revisions. `:Lazy restore` restores those
+revisions; `:Lazy update` updates plugins and `:TSUpdate` updates their parsers.
+Copy a deliberately updated lockfile back with `chezmoi add ~/.config/nvim/lazy-lock.json`.
+OS packages stay rolling: use `yay -Syu` on CachyOS, or `brew update` then
+`brew upgrade` on macOS. Bootstrap scripts do not continually upgrade user
+toolchains: use `rustup update`, `fnm install --lts`, and the relevant .NET/Aspire
+updaters separately.
+
+Dux Shell 2 uses `~/.config/dms` and `~/.local/state/dms`. A before-script copies
+legacy `DankMaterialShell` directories only when the new destination is absent,
+preserving originals and any settings already migrated by Dux itself.
+The old config directory is archived under `DankMaterialShell.backup.*` before
+chezmoi installs the compatibility symlink `DankMaterialShell -> dms`.
+
+Run the profile/render and migration checks with `python3 tests/check_config.py`.
+See [configuration review](docs/configuration-review.md) for verification limits
+and the upstream references used for this update.
 
 ### 1Password (secrets + SSH agent)
 
@@ -88,7 +160,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 
 | Script | Installs | Where |
 |---|---|---|
-| `30-oh-my-zsh`, `31-zsh-plugins`, `32-tmux-plugins` | Oh My Zsh, zsh plugins, tpm | `~/.oh-my-zsh`, `~/.tmux/plugins` |
+| `30-oh-my-zsh`, `31-zsh-plugins`, `32-tmux-plugins` | Oh My Zsh, zsh plugins, tpm | `~/.oh-my-zsh`, `~/.config/tmux/plugins` |
 | `33-rustup` | rustup via rustup.rs (`--no-modify-path`) | `~/.cargo` |
 | `34-dotnet` | .NET LTS via dotnet-install.sh | `~/.dotnet` (`$DOTNET_ROOT`) |
 | `35-npm-globals` | fnm Node LTS + global npm packages | fnm prefix |
@@ -148,7 +220,7 @@ ssh amd-desktop    # the devHost entry from private_dot_ssh/config.tmpl
 
 The target comes from the `devHost` data var rather than a hostname baked into the ssh config, and the block is skipped when `devHost` equals `.chezmoi.hostname` — no machine carries an alias pointing at itself, and Tailscale derives the MagicDNS name from the system hostname, so that comparison is exact. Renaming the desktop is a one-line config change on each client.
 
-`HostName` is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule is separate and rate-limited.
+`HostName` is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule separately allows the local subnet.
 
 MagicDNS is the fragile part, and it fails quietly. NetworkManager writes `/etc/resolv.conf` as a regular file by default, which is what makes `tailscale status` report *"systemd-resolved and NetworkManager are wired together incorrectly"*. Lookups usually still work — NM writes `nameserver 127.0.0.53`, which is resolved's stub — but NM owns that file and rewrites it on interface changes, so one reconnect can swap in the router's DNS and `*.ts.net` stops resolving with nothing in any log. `23-tailscale` installs `system/NetworkManager/10-dns-systemd-resolved.conf` (`dns=systemd-resolved` + `rc-manager=unmanaged`) and symlinks `/etc/resolv.conf` to resolved's stub. Check it with:
 

@@ -2,10 +2,12 @@ deckd
 docs
 packages
 system
+.worktrees
+tests
+*.iso
 
 {{ if ne .profile "main" -}}
 .config/niri
-.config/ghostty
 .config/swayimg
 .config/xdg-desktop-portal
 .config/DankMaterialShell
@@ -13,6 +15,14 @@ system
 .config/environment.d
 .config/systemd/user/captive-portal.service
 .local/bin/desktop
+.local/share/applications/screenshot*.desktop
+.config/mimeapps.list
+.config/zathura
+.config/scripts/install-pen.sh
+{{ end -}}
+
+{{ if eq .profile "wsl" -}}
+.config/ghostty
 {{ end -}}
 
 {{ if not (dig "gaming" false .) -}}
