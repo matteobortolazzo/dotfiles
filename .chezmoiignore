@@ -40,12 +40,13 @@ tests
 Library/Application Support/com.mitchellh.ghostty
 {{ end -}}
 
-{{/* Probe live `op` auth the same way onepasswordRead does (client init + desktop-app
-     handshake). Bounded: with no reachable app `op` sits on an authorization prompt for
-     60s before failing, which would stall every source-state read over SSH. `timeout` is
-     GNU-only, so fall back to a bare call where it is missing (macOS without coreutils).
-     `|| echo no` is load-bearing: `output` aborts the template on a non-zero exit. */ -}}
-{{ $opProbe := "if command -v timeout >/dev/null 2>&1; then timeout 5 op vault list; else op vault list; fi >/dev/null 2>&1 && echo yes || echo no" -}}
+{{/* onepasswordRead with account-mode prompting first runs `op signin --raw`.
+     Vault listing alone does not verify that handshake. Check both, discarding all
+     output (signin can return a session token). Bound the combined check where GNU
+     timeout is available, including Homebrew's gtimeout spelling. Redirect stdin so
+     a source-state read never starts a terminal password prompt.
+     `|| echo no` is required: output aborts on a non-zero exit. */ -}}
+{{ $opProbe := "if command -v timeout >/dev/null 2>&1; then timeout 5 sh -c 'op signin --raw >/dev/null && op vault list >/dev/null'; elif command -v gtimeout >/dev/null 2>&1; then gtimeout 5 sh -c 'op signin --raw >/dev/null && op vault list >/dev/null'; else op signin --raw >/dev/null && op vault list >/dev/null; fi </dev/null >/dev/null 2>&1 && echo yes || echo no" -}}
 {{ $opAuth := eq (trim (output "sh" "-c" $opProbe)) "yes" -}}
 {{ if not $opAuth -}}
 {{ if lookPath "op" -}}

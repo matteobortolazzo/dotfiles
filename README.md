@@ -126,10 +126,13 @@ and the upstream references used for this update.
 ### 1Password (secrets + SSH agent)
 
 Secrets in `~/.config/environment` (mode `0600`) and the SSH agent come from 1Password.
-`.chezmoiignore` probes whether `op` can authenticate *right now* and, when it cannot,
+`.chezmoiignore` checks both `op signin --raw` and `op vault list` and, when either fails,
 ignores `~/.config/environment` entirely — chezmoi leaves the existing file alone rather
 than rewriting it without secrets, and warns on stderr. The rest of the apply completes.
 Re-run `chezmoi apply` once `op` is signed in to fill the file in.
+Open and unlock 1Password and enable **Settings → Developer → Integrate with
+1Password CLI** for a local apply. To deliberately leave secrets alone, run
+`chezmoi apply --skip-secrets`.
 
 `[onepassword] mode = "account"` needs an unlocked 1Password **desktop app** in the calling
 session, so over SSH the secrets never resolve by design: apply completes, `~/.config/environment`

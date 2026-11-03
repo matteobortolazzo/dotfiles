@@ -94,8 +94,11 @@ which authenticates against an unlocked 1Password **desktop app** in the caller'
 session. There is no such app on the other end of an SSH connection, so `op` sits
 on an authorization prompt nobody can answer and fails after 60s.
 
-`.chezmoiignore` probes that path (`op vault list`, bounded by `timeout 5`, the
-same client-init the template uses) and ignores the target when it fails, so the
+`.chezmoiignore` checks `op signin --raw` (the handshake chezmoi uses) followed by
+`op vault list`, bounded together by `timeout 5` or Homebrew's `gtimeout 5`.
+Both outputs are discarded; the sign-in command can return a session token.
+Checking vault listing alone can pass while chezmoi's subsequent sign-in fails.
+The guard ignores the target when either check fails, so the
 existing file is left untouched and everything after it — including the
 `run_once_after_*` scripts — still runs. A warning says so on stderr. Naming the
 file explicitly (`chezmoi apply ~/.config/environment`) reports `not managed`,
@@ -105,6 +108,11 @@ Secrets refresh on the next `chezmoi apply` from a local session at the desk. A
 service account (`OP_SERVICE_ACCOUNT_TOKEN` with `[onepassword] mode = "service"`)
 would make them resolve headlessly too, at the cost of a long-lived vault token
 sitting on the box; that trade was deliberately declined.
+
+For a local apply, open and unlock 1Password and enable **Settings → Developer →
+Integrate with 1Password CLI**. Keep the app available until apply finishes: the
+preflight cannot prevent it from locking or exiting after a successful check.
+To explicitly defer secret refresh, use `chezmoi apply --skip-secrets`.
 
 ## Kernel updates
 
