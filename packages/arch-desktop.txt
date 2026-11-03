@@ -2,7 +2,7 @@ ayatana-ido
 brightnessctl
 cava
 cliphist
-dms-shell
+dux-shell
 ghostty
 gnome-disk-utility
 gnome-keyring
