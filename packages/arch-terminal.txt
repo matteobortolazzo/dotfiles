@@ -33,6 +33,7 @@ openssh
 pacman-contrib
 poppler
 ripgrep
+rtorrent
 sudo
 tmux
 tree
