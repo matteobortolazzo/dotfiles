@@ -9,6 +9,7 @@ system
 .config/swayimg
 .config/xdg-desktop-portal
 .config/DankMaterialShell
+.config/dms
 .config/environment.d
 .config/systemd/user/captive-portal.service
 .local/bin/desktop
