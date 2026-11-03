@@ -15,7 +15,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def render(path, profile="main", **roles):
+def render(path, profile="main", init=False, **roles):
     data = {
         "profile": profile, "org": "", "devHost": "", "devUser": "",
         "chezmoi": {"os": "darwin" if profile == "mac" else "linux",
@@ -25,7 +25,8 @@ def render(path, profile="main", **roles):
     return subprocess.run(
         ["chezmoi", "--source", str(ROOT), "--config", "/dev/null",
          "--config-format", "toml", "--override-data", json.dumps(data),
-         "execute-template", "--file", str(ROOT / path)],
+         "--no-tty", "execute-template", *(["--init"] if init else []),
+         "--file", str(ROOT / path)],
         check=True, capture_output=True, text=True,
     ).stdout
 
@@ -37,8 +38,10 @@ class ConfigTests(unittest.TestCase):
             op.write_text("#!/bin/sh\nexit 1\n")
             op.chmod(0o755)
             env = {**os.environ, "PATH": tmp + os.pathsep + os.environ["PATH"]}
-            for profile in ("main", "mac", "wsl"):
+            for profile, gaming in ((p, g) for p in ("main", "mac", "wsl")
+                                    for g in (False, True)):
                 data = {"profile": profile, "org": "", "devHost": "",
+                        "gaming": gaming,
                         "chezmoi": {"os": "darwin" if profile == "mac" else "linux"}}
                 result = subprocess.run(
                     ["chezmoi", "--source", str(ROOT), "--config", "/dev/null",
@@ -52,11 +55,12 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual(".config/dms/settings.json" in targets, profile == "main")
                 self.assertEqual(".config/ghostty/config" in targets, profile != "wsl")
                 self.assertEqual(".config/niri/config.kdl" in targets, profile == "main")
+                self.assertEqual(".config/sunshine" in targets, profile == "main" and gaming)
 
     def test_scripts_render_and_parse_for_all_profiles(self):
         for profile, roles in [
             ("main", {}), ("main", {"tuxedo": True}),
-            ("main", dict(gaming=True, dev=True, headless=True, ups=True, deck=True)),
+            ("main", dict(gaming=True, headless=True, ups=True, deck=True)),
             ("mac", {}), ("wsl", {}),
         ]:
             for path in sorted(ROOT.glob("run_*.tmpl")):
@@ -68,6 +72,42 @@ class ConfigTests(unittest.TestCase):
                         self.assertNotIn("sudo systemctl", script)
             subprocess.run(["zsh", "-n"], input=render("dot_zshrc.tmpl", profile),
                            text=True, check=True)
+
+    def test_init_retires_dev_and_limits_hardware_prompts(self):
+        native_roles = dict(gaming=True, headless=True, ups=True, deck=True, tuxedo=True)
+        for profile in ("main", "mac", "wsl"):
+            # Missing answers on Mac/WSL must not prompt for Linux hardware.
+            roles = native_roles if profile == "main" else {}
+            for legacy in ({}, {"dev": False}, {"dev": True}):
+                with self.subTest(profile=profile, legacy=legacy):
+                    config = tomllib.loads(render(".chezmoi.toml.tmpl", profile,
+                                                  init=True, **roles, **legacy))
+                    self.assertNotIn("dev", config["data"])
+                    for role in native_roles:
+                        self.assertEqual(config["data"][role], profile == "main")
+                    self.assertIn("devHost", config["data"])
+                    self.assertIn("devUser", config["data"])
+
+    def test_ssh_and_firewall_are_native_baseline(self):
+        for path, required in (("run_once_after_27-sshd.sh.tmpl", "enable --now sshd.service"),
+                               ("run_once_after_28-firewall.sh.tmpl", "sudo ufw allow")):
+            for profile in ("main", "mac", "wsl"):
+                baseline = render(path, profile)
+                self.assertEqual(baseline, render(path, profile, dev=False))
+                self.assertEqual(baseline, render(path, profile, dev=True))
+                self.assertEqual(required in baseline, profile == "main")
+        self.assertIn("-setremotelogin on", render("run_once_after_27-sshd.sh.tmpl", "mac"))
+        self.assertNotIn("sunshine control", render("run_once_after_28-firewall.sh.tmpl"))
+        self.assertIn("sunshine control", render("run_once_after_28-firewall.sh.tmpl", gaming=True))
+
+    def test_stale_wsl_roles_do_not_install_native_hardware(self):
+        for path, shared in (("run_onchange_before_10-pacman.sh.tmpl", "arch-terminal.txt"),
+                             ("run_onchange_before_21-aur.sh.tmpl", "arch-aur-terminal.txt")):
+            script = render(path, "wsl", gaming=True, ups=True, tuxedo=True, deck=True)
+            self.assertIn(shared, script)
+            for manifest in ("arch-gaming.txt", "arch-aur-gaming.txt", "arch-ups.txt",
+                             "arch-aur-tuxedo.txt", "arch-dev.txt"):
+                self.assertNotIn(manifest, script)
 
     def test_tuxedo_is_opt_in_and_headers_precede_aur(self):
         self.assertNotIn("sudo", render("run_onchange_after_24-tuxedo.sh.tmpl"))

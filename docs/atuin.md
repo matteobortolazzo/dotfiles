@@ -169,7 +169,7 @@ atuin history list          # raw dump
 ## Turning sync on later
 
 Not configured; this is the recipe if history-across-machines becomes worth it. Self-host
-rather than using `api.atuin.sh` — the desktop (`dev = true`) is already an always-on box
+rather than using `api.atuin.sh` — the desktop is already an always-on box
 on the tailnet.
 
 1. **Server** — on the dev box, install `atuin-server` and `postgresql` (Arch `extra`;

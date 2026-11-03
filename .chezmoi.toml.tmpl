@@ -1,31 +1,29 @@
 {{- /* profile = platform (packages, compositor, interop). org = ownership.
-       gaming and dev = roles. Keep them orthogonal: the gaming desktop is the
+       gaming = role. The gaming desktop is the
        same platform as the laptop (CachyOS + niri + DMS + greetd), so it stays
-       profile "main" and only layers roles on top. `dev` defaults to the gaming
-       answer because that box was the first remote dev box, but they are now
-       independent — a headless dev box needs no Steam, and a couch-gaming host
-       needs no inbound sshd. `devHost` is the other side of the same coin: the
+       profile "main" and only layers gaming/hardware options on top. Developer
+       tools and SSH access are shared by all native machines; there is no dev
+       flag. Old dev values in machine configs are ignored. `devHost` names the
        box you reach, named once here instead of hardcoded in the ssh config, so
        renaming the desktop is a one-line change and the alias is skipped on the
        machine that matches it. `devUser` is the login on that box, for clients
        whose local username differs (the Mac); blank means ssh's default, the
        local username, which is already right between the Linux machines.
        Templates read the role vars with
-       `dig "dev" false .`, not `.dev`, because .chezmoi.toml.tmpl runs on
+       `dig "gaming" false .`, not `.gaming`, because .chezmoi.toml.tmpl runs on
        `chezmoi init` only — machines whose config predates a prompt must keep
        applying.
 
        `headless` is a boot policy rather than a role: it adds a second limine
        entry that boots to multi-user.target, so the box comes up as an SSH
        target with no greetd, no compositor and no GPU session, and the desktop
-       is started on demand. It defaults to false and is deliberately NOT tied
-       to `dev` — a laptop can be a dev box and still want its greeter on every
-       boot.
+       is started on demand. It defaults to false: SSH access does not imply
+       booting without a desktop.
 
        `ups` is likewise a property of the machine rather than a role: it says a
        UPS is on this box's USB, which is what decides whether NUT is installed
        and whether this is the host that gets to tell the UPS to cut power. It
-       is not implied by `dev` or `headless` — an unattended box with no UPS
+       is not implied by SSH access or `headless` — an unattended box with no UPS
        must not ship a monitor that shuts it down.
 
        `deck` is the same shape as `ups`: a hardware fact, not a role. It says a
@@ -36,15 +34,18 @@
        that boots graphical still works. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
-{{- $gaming := promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
-{{- $dev := promptBoolOnce . "dev" "Remote dev box (inbound sshd + the ufw rule that lets it through)" $gaming -}}
-{{- $ups := promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
-{{- $deck := promptBoolOnce . "deck" "Stream Deck plugged into this box (deckd status panel)" false -}}
+{{- $gaming := false -}}
+{{- $ups := false -}}
+{{- $deck := false -}}
 {{- $tuxedo := false -}}
+{{- $headless := false -}}
 {{- if and (eq .chezmoi.os "linux") (eq $profile "main") -}}
+{{- $gaming = promptBoolOnce . "gaming" "Gaming host (Steam, gamescope session, Fanatec sim rig, Sunshine)" false -}}
+{{- $ups = promptBoolOnce . "ups" "UPS attached by USB (NUT monitoring + clean shutdown on a power cut)" false -}}
+{{- $deck = promptBoolOnce . "deck" "Stream Deck plugged into this box (deckd status panel)" false -}}
 {{- $tuxedo = promptBoolOnce . "tuxedo" "TUXEDO laptop (hardware drivers and Control Center)" false -}}
+{{- $headless = promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
 {{- end -}}
-{{- $headless := promptBoolOnce . "headless" "Headless boot (second limine entry booting to multi-user.target; start the desktop on demand)" false -}}
 {{- $devHost := promptStringOnce . "devHost" "MagicDNS hostname of the remote dev box, reached as `ssh <devHost>` (blank for none)" "" -}}
 {{- $devUser := promptStringOnce . "devUser" "Username on the remote dev box (blank if it matches this machine's)" "" -}}
 
@@ -52,7 +53,6 @@
   profile = {{ $profile | quote }}
   org = {{ $org | quote }}
   gaming = {{ $gaming }}
-  dev = {{ $dev }}
   headless = {{ $headless }}
   ups = {{ $ups }}
   deck = {{ $deck }}

@@ -3,6 +3,7 @@ atuin
 azure-cli
 base-devel
 bat
+bind
 btop
 chezmoi
 cmake
@@ -32,6 +33,7 @@ opencode
 openssh
 pacman-contrib
 poppler
+postgresql-libs
 prettier
 python
 python-pip

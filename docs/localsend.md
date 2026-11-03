@@ -50,8 +50,8 @@ multicast — the fallback found it the hard way.
 
 ## The ufw trap
 
-Only the desktop runs a firewall (`dev = true` gates `28-firewall`); the laptop
-has no ufw and needs nothing. On the desktop, ufw's default-deny inbound drops
+Every Linux `main` machine runs `28-firewall`, including laptops. Without the
+LocalSend rules, ufw's default-deny inbound drops
 both legs in netfilter before LocalSend ever sees them, and the app has no way
 to report that — it just doesn't list the device. The two rules are:
 
@@ -61,7 +61,8 @@ sudo ufw allow from 192.168.1.0/24 to any port 53317 proto tcp   # transfer
 ```
 
 Both are LAN-scoped, matching how sshd and Sunshine are scoped in the same
-script. `to any` rather than a destination address is deliberate — the multicast
+script. Only the home subnet above is allowed; on another network use Tailscale
+or add a rule for that trusted subnet. `to any` rather than a destination address is deliberate — the multicast
 group `224.0.0.167` is not a LAN unicast address, so a destination-scoped rule
 would miss the announcements entirely.
 

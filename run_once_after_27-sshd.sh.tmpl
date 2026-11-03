@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "dev" false .) -}}
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
 set -euo pipefail
 
-# Gated on the `dev` role, not `gaming`: the desktop happens to be both, but
-# inbound sshd is what makes a box a remote dev target, and a couch-gaming host
-# has no business accepting logins.
+# Every native Linux machine is an SSH target, including laptops. The old dev
+# flag is ignored; development tools and remote access are shared defaults.
 #
 # Tailscale (run_once_after_23-tailscale.sh.tmpl) covers off-LAN access; this is
 # for plain `ssh <devHost>` + tmux on the local network. Opening the port in the
@@ -18,8 +17,7 @@ fi
 sudo systemctl enable --now sshd.service
 
 # Only harden once a key is actually installed. Writing PasswordAuthentication
-# no with an empty authorized_keys locks out every remote login, and the whole
-# point of this box is that it is often headless.
+# no with an empty authorized_keys would lock out every remote login.
 keys="$HOME/.ssh/authorized_keys"
 conf=/etc/ssh/sshd_config.d/10-hardening.conf
 
@@ -36,11 +34,27 @@ else
   cat <<EOF
 
   sshd is running with password auth still enabled: $keys is missing or empty.
-  From the laptop:
+  From another machine:
       ssh-copy-id <this-host>
   then re-run just this script to harden (same idiom as the greetd script):
       chezmoi execute-template < "\$(chezmoi source-path)/run_once_after_27-sshd.sh.tmpl" | bash
 
 EOF
+fi
+{{ else if and (eq .chezmoi.os "darwin") (eq .profile "mac") -}}
+set -euo pipefail
+
+# macOS owns its SSH daemon through Remote Login, not a Homebrew service.
+# systemsetup requires Full Disk Access for the calling terminal on macOS.
+remote_login_enabled() {
+  sudo /usr/sbin/systemsetup -getremotelogin | grep -q 'Remote Login: On'
+}
+if ! remote_login_enabled; then
+  # Verify too: systemsetup can report a permission error with exit status zero.
+  if ! sudo /usr/sbin/systemsetup -setremotelogin on || ! remote_login_enabled; then
+    echo "Enable Remote Login in System Settings > General > Sharing, then rerun chezmoi apply." >&2
+    echo "Alternatively grant this terminal Full Disk Access before rerunning." >&2
+    exit 1
+  fi
 fi
 {{ end -}}

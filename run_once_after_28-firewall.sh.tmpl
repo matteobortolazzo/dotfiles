@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") (dig "dev" false .) -}}
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
 set -euo pipefail
 
 # ufw ships (and CachyOS's installer leaves) a default-deny inbound policy with
@@ -7,7 +7,7 @@ set -euo pipefail
 # logs "Server listening", the port shows up in `ss -tlnp`, and every inbound
 # SYN is still dropped in netfilter before sshd ever sees it — the journal has
 # no connection line to hint at it. So the port has to be opened explicitly
-# alongside 27-sshd, or a dev box looks up and answers nothing.
+# alongside 27-sshd on every native Linux machine, including laptops.
 #
 # Rules are added *before* the enable, so this is safe to run over SSH. On
 # re-runs, new scoped rules are added *before* the old unscoped ones are
@@ -55,9 +55,9 @@ lan="192.168.1.0/24"
 # window. The block then sustains itself for as long as the client keeps
 # trying, and since `ufw-user-limit` ends in `-j REJECT` the symptom is an
 # instant "Connection refused" on new logins too, not a timeout. There is also
-# nothing here to rate-limit: 27-sshd sets PasswordAuthentication no and
-# KbdInteractiveAuthentication no, so the brute force this was blunting cannot
-# happen.
+# no password login to rate-limit once 27-sshd has installed its key-based
+# hardening. Before authorized_keys is populated, password auth remains enabled;
+# these scoped rules still restrict access to the home LAN and tailnet.
 sudo ufw allow from "$lan" to any port 22 proto tcp comment 'ssh (lan)'
 
 # Tailscale traffic is already authenticated by the tailnet, and the peer IPs

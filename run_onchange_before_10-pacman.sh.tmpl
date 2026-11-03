@@ -12,13 +12,10 @@ set -euo pipefail
 # arch-desktop.txt:  {{ include "packages/arch-desktop.txt" | sha256sum }}
 # arch-system.txt:   {{ include "packages/arch-system.txt" | sha256sum }}
 {{- end }}
-{{- if dig "gaming" false . }}
+{{- if and (eq .profile "main") (dig "gaming" false .) }}
 # arch-gaming.txt:   {{ include "packages/arch-gaming.txt" | sha256sum }}
 {{- end }}
-{{- if dig "dev" false . }}
-# arch-dev.txt:      {{ include "packages/arch-dev.txt" | sha256sum }}
-{{- end }}
-{{- if dig "ups" false . }}
+{{- if and (eq .profile "main") (dig "ups" false .) }}
 # arch-ups.txt:      {{ include "packages/arch-ups.txt" | sha256sum }}
 {{- end }}
 
@@ -51,7 +48,7 @@ fi
 sudo pacman -S --needed --noconfirm "${headers[@]}"
 {{ end -}}
 
-{{ if and (dig "gaming" false .) (eq .chezmoi.osRelease.id "cachyos") -}}
+{{ if and (eq .profile "main") (dig "gaming" false .) (eq .chezmoi.osRelease.id "cachyos") -}}
 # CachyOS-only, unlike the other lists: cachyos-gaming-meta,
 # gamescope-session-cachyos and linux-cachyos-headers live in the CachyOS repos
 # and would abort the whole transaction on stock Arch.
@@ -63,15 +60,8 @@ pkg_gaming="$src/arch-gaming.txt"
 [ -f "$pkg_gaming" ] && sudo pacman -S --needed --noconfirm - < "$pkg_gaming"
 {{ end -}}
 
-{{ if dig "dev" false . -}}
-# Plain Arch repos, unlike arch-gaming.txt: safe on any profile, so this is
-# gated on the `dev` role alone rather than also on `profile == "main"`.
-pkg_dev="$src/arch-dev.txt"
-[ -f "$pkg_dev" ] && sudo pacman -S --needed --noconfirm - < "$pkg_dev"
-{{ end -}}
-
-{{ if dig "ups" false . -}}
-# Plain Arch repos and role-gated like arch-dev.txt. Installing nut is what
+{{ if and (eq .profile "main") (dig "ups" false .) -}}
+# Hardware-specific: installing nut is what
 # lets run_onchange_after_51-ups.sh.tmpl configure it; see docs/ups.md.
 pkg_ups="$src/arch-ups.txt"
 [ -f "$pkg_ups" ] && sudo pacman -S --needed --noconfirm - < "$pkg_ups"

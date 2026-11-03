@@ -25,7 +25,7 @@ tests
 .config/ghostty
 {{ end -}}
 
-{{ if not (dig "gaming" false .) -}}
+{{ if not (and (eq .profile "main") (dig "gaming" false .)) -}}
 .config/sunshine
 .config/systemd/user/gamescope-session.service.d
 {{ end -}}

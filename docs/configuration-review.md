@@ -32,13 +32,25 @@ Arch WSL profile remains compatible.
   `systemctl list-unit-files` result as an installed service.
 - AUR: attempt all packages, report failures, and return failure so chezmoi
   retries on the next apply. Do not suggest bypassing source checksums.
+- Shared tools: remove the `dev` flag and its manifest; move PostgreSQL and DNS
+  clients to the Linux terminal baseline, and add Homebrew `libpq` to Mac PATH.
+  OpenCode was already shared. No PostgreSQL server is enabled.
+- SSH: enable sshd and the scoped ufw rules on all native Linux PCs; enable and
+  verify macOS Remote Login. Gaming/hardware flags remain Linux `main` only.
+- 1Password: probe the same sign-in handshake used by chezmoi before rendering
+  secrets, preserving the existing environment when the desktop app is unavailable.
 
 ## Verification and limits
 
 `python3 tests/check_config.py` renders every installer for the normal desktop,
-TUXEDO laptop, gaming/dev/headless/UPS/Stream Deck host, macOS and legacy WSL.
+TUXEDO laptop, gaming/headless/UPS/Stream Deck host, macOS and legacy WSL.
 It checks shell syntax, JSON/TOML parsing, Niri syntax when installed, and runs the
 Dux migration twice against temporary directories to check preservation.
+It also verifies migration away from `dev` and isolates native Linux roles from WSL.
+`python3 tests/test_ssh.py` checks the Mac Remote Login flow with a fake system
+command, including permission failures that return success without enabling SSH.
+`python3 tests/test_onepassword.py` exercises real chezmoi applies in temporary
+homes with a fake CLI, checking secret preservation and successful rendering.
 
 Neovim is exercised separately with isolated XDG config/data/cache/state paths
 under `/tmp`; `tests/nvim-smoke.lua` checks LSP capabilities, formatter wiring,
@@ -75,7 +87,12 @@ AUR package was not reverified. No AUR build was attempted during this review.
   and [Mason LSP setup ordering](https://github.com/mason-org/mason-lspconfig.nvim).
 - [Homebrew tree-sitter-cli](https://formulae.brew.sh/formula/tree-sitter-cli),
   [ImageMagick](https://formulae.brew.sh/formula/imagemagick),
+  [libpq](https://formulae.brew.sh/formula/libpq),
   [OmniWM setup](https://omniwm.app/guides/install/),
   [skhd service](https://github.com/asmvik/skhd).
+- [macOS Remote Login](https://support.apple.com/guide/mac-help/mchlp1066/mac)
+  and [systemsetup](https://support.apple.com/guide/remote-desktop/apd95406b8d/mac).
+- [Arch bind package](https://archlinux.org/packages/extra/x86_64/bind/), which
+  provides the former `bind-tools` package name.
 - [Ghostty configuration precedence](https://ghostty.org/docs/config) and
   [chezmoi script lifecycle](https://www.chezmoi.io/user-guide/use-scripts-to-perform-actions/).

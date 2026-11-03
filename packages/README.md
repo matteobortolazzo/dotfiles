@@ -75,7 +75,7 @@ List everything explicitly installed but untracked:
 ```bash
 cd "$(chezmoi source-path)/packages"
 comm -13 \
-  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt arch-dev.txt arch-ups.txt | sort -u) \
+  <(cat arch-terminal.txt arch-desktop.txt arch-system.txt arch-gaming.txt arch-ups.txt | sort -u) \
   <(pacman -Qqen | grep -Ev '^(base|linux|linux-firmware|linux-headers|intel-ucode|nvidia-open-dkms)$' | sort)
 ```
 
@@ -96,8 +96,8 @@ by `pacman -S -` / `paru -S -`, so keep the files clean.
 
 `arch-gaming.txt` and `arch-aur-gaming.txt` are gated on the `gaming` data var
 (`dig "gaming" false .`, since `.chezmoi.toml.tmpl` only runs on `chezmoi init`),
-not on `profile` — the gaming desktop is the same platform as the laptop and stays
-`profile = "main"`.
+and `profile = "main"`. The gaming desktop is the same platform as the laptop;
+old gaming answers on WSL do not pull in desktop packages.
 
 Two deliberate exceptions to the rules above:
 
@@ -128,23 +128,18 @@ ship `jstest` and `jscal`) and aborts the gaming transaction. `linuxconsole` is
 the one to keep: it is the superset, and its `fftest` is what the Fanatec
 force-feedback check in `docs/gaming.md` uses.
 
-## Remote dev box
+## Shared development clients
 
-`arch-dev.txt` is gated on the `dev` data var (`dig "dev" false .`), the same var
-that drives `27-sshd` and `28-firewall`. Unlike those two it is *not* also gated
-on `profile == "main"`: everything in it comes from the plain Arch repos and
-works on any profile, so a `wsl` box marked `dev = true` gets it too.
+All machines receive development tools; the old `dev` flag and `arch-dev.txt`
+manifest are retired. `arch-terminal.txt` includes `bind` (`dig`, `host`,
+`nslookup`) and `postgresql-libs` (`libpq`, `psql`, `pg_dump`, `pg_restore`) for
+both native Linux and WSL. The PostgreSQL server is not included.
+`bind` is the current package providing the old `bind-tools` name; its DNS
+server service is not enabled by these dotfiles.
 
-It holds `bind-tools` — `dig`, `host`, `nslookup`. A remote dev box is where DNS
-questions actually get asked (is MagicDNS resolving, is systemd-resolved
-answering, does the alias point at this host), and none of those tools ship in
-`base`.
-
-It also holds `postgresql-libs` — `libpq` plus the client binaries (`psql`,
-`pg_dump`, `pg_restore`), *not* the server. Language drivers that link `libpq`
-(`psycopg`, `pg` gem, Rust's `pq-sys`) need it to build, and `psql` is how you
-poke at a database running in a container on the box. It's in plain `extra`, so
-it keeps this list profile-agnostic.
+macOS already provides the DNS tools. The Brewfile installs `libpq`, and zsh
+adds its keg-only binaries to PATH for both Apple Silicon and Intel Homebrew.
+This also supplies headers and `pg_config` for language drivers that link libpq.
 
 ## Mac / WSL
 

@@ -11,7 +11,6 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux s
 | `profile` | Platform — packages, compositor, interop | `main` / `wsl` / `mac` |
 | `org` | Work ownership; must match the 1Password item name in the Private vault | org name, blank for personal |
 | `gaming` | Role — gaming / sim-rig host | `true` / `false` |
-| `dev` | Role — remote dev box: inbound sshd + the firewall rule for it | `true` / `false`, defaults to the `gaming` answer |
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
 | `ups` | Hardware — a UPS is on this box's USB: NUT monitoring and clean shutdown on a power cut | `true` / `false`, defaults to `false` |
 | `deck` | Hardware — a Stream Deck is plugged into this box: builds `deckd`, the status panel, and its udev rule + system unit | `true` / `false`, defaults to `false` |
@@ -25,11 +24,13 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux s
 | `wsl` | Terminal stack + docker, WSL host tuning, no Windows interop |
 | `mac` | Shared terminal stack, OmniWM, Ghostty and GUI apps via Homebrew/Brewfile |
 
-They stay orthogonal on purpose: the gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), so it is `profile = "main"` with the roles layered on, not a profile of its own. `gaming` and `dev` happen to coincide there — that one box is both the sim rig and the remote dev target — but they are separate vars because a headless dev box needs no Steam and a couch-gaming host has no business accepting logins.
+Every machine gets the shared development tools, including OpenCode and PostgreSQL clients. Native CachyOS and macOS machines also enable SSH access. There is no `dev` flag: existing values are ignored, and the next `chezmoi init` removes it from the generated config. `devHost` and `devUser` still select an SSH client destination.
 
-`headless` is not a role but a boot policy, and it is deliberately not tied to `dev`: a laptop can be a dev box and still want its greeter on every boot. It only makes sense where the desktop is occasional rather than assumed.
+The gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), with gaming and hardware options layered on. These options and `headless` are only prompted on Linux `main`; they do not install desktop hardware support on macOS or WSL.
 
-`ups` is a fact about the hardware rather than a role, and it is not implied by `dev` or `headless` either: it says a UPS data cable is plugged into *this* box, which is what decides whether NUT is installed and which machine gets to tell the UPS to cut its output. An unattended box with no UPS must not ship a monitor that can shut it down.
+`headless` is a boot policy: SSH access does not imply booting without a desktop. Keep it false on a laptop that should show its greeter on every boot.
+
+`ups` is a fact about the hardware, independent of SSH access and `headless`: it says a UPS data cable is plugged into *this* box, which decides whether NUT is installed and which machine gets to tell the UPS to cut its output. An unattended box with no UPS must not ship a monitor that can shut it down.
 
 `deck` is the same kind of fact: a Stream Deck is plugged into this box, so `52-streamdeck` builds `deckd` and wires it to the device. See [`docs/streamdeck.md`](docs/streamdeck.md).
 
@@ -49,7 +50,7 @@ sudo pacman -Syu --needed git curl
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply matteobortolazzo
 ```
 
-That single command installs chezmoi, clones this repo, prompts for the profile, and applies. On Arch it installs all packages (pacman + AUR via yay), enables system services (NetworkManager, bluetooth, docker, greetd, …), wires DMS to autostart with niri, and bootstraps the toolchain (oh-my-zsh, rustup, dotnet, fnm/node, tpm). **Reboot when it finishes** — greetd is enabled but deliberately not started mid-apply.
+That single command installs chezmoi, clones this repo, prompts for the profile, and applies. On CachyOS it installs all packages (pacman + AUR via yay), enables system services (NetworkManager, bluetooth, docker, greetd, …), wires DMS to autostart with niri, and bootstraps the toolchain (oh-my-zsh, rustup, dotnet, fnm/node, tpm). **Reboot when it finishes** — greetd is enabled but deliberately not started mid-apply.
 
 Secrets are skipped on the first pass if the 1Password CLI isn't signed in yet (see below) — everything else completes.
 
@@ -93,6 +94,11 @@ Open OmniWM and grant its requested Accessibility permissions, then enable
 launch at login in the app. For the Zen hotkey, grant skhd Accessibility access
 and run `skhd --start-service`. Open Docker Desktop and Tailscale to finish their
 interactive setup. Enable the 1Password SSH agent as described below.
+
+The SSH setup enables macOS Remote Login. If macOS blocks the command, enable
+**System Settings → General → Sharing → Remote Login** and rerun the apply.
+Check that your account is allowed in that panel. Alternatively, grant the
+calling terminal Full Disk Access so `systemsetup` can enable it.
 
 Ghostty loads the shared `~/.config/ghostty/config`, followed by the Mac-specific
 keybindings in `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty`.
@@ -191,16 +197,18 @@ Docker and sysbox (Docker-in-Docker) have their own sections below.
 - `26-gaming` — the glue the packages don't do and that fails *silently* when missing: `games` group (hid-fanatecff's udev rules grant wheelbase access to it, and nothing adds you — without it the wheel enumerates as a plain joystick with no force feedback and no error anywhere), `gamemode` group, udev reload, and `scx_loader` for the latency-oriented `scx_lavd` scheduler.
 Two sessions run from the same greetd: niri for the desktop *and* for sim racing native-fullscreen, `gamescope-session-cachyos` for couch gaming on the TV. Sims deliberately do not run under gamescope.
 
-Sunshine's ports are opened by `28-firewall` (below) — that script is gated on `dev`, so a gaming host that is *not* also a dev box never enables ufw and needs no rules.
+`28-firewall` runs on every Linux `main` machine and opens Sunshine's ports only when `gaming = true`.
 
-## Remote dev box
+## SSH access
 
-`dev = true` (the desktop) turns the machine into an SSH target. Two scripts, and both are needed — either one alone leaves the box looking up and answering nothing:
+SSH access is part of the baseline on all native machines. On CachyOS, two scripts configure the daemon and its firewall:
 
 - `27-sshd` — enables `sshd.service`. Hardening (`PasswordAuthentication no`, `PermitRootLogin no`) is written to `/etc/ssh/sshd_config.d/10-hardening.conf` **only once `~/.ssh/authorized_keys` is non-empty**. Writing it against an empty key file would lock out every remote login on a box whose whole point is being headless. Until then the script prints the `ssh-copy-id` + re-run instructions.
-- `28-firewall` — opens port 22 in ufw (a plain `allow`, LAN-scoped — the `limit` it used to carry rejected live sessions on their own retransmits, and `27-sshd` disables password auth so there is no brute force to throttle), plus an interface rule for `tailscale0` and, on a `gaming` host, Sunshine's ports.
+- `28-firewall` — enables ufw and opens port 22 on the home LAN (`192.168.1.0/24`) and `tailscale0`, plus LocalSend and, on a `gaming` host, Sunshine's ports. Other networks use Tailscale; a different trusted LAN needs an explicit subnet rule. The SSH rule uses plain `allow`: the previous `limit` rule rejected idle sessions on their own retransmits.
 
-It also pulls `packages/arch-dev.txt` — currently `bind-tools`, for `dig`/`host`/`nslookup`. Debugging a remote box is mostly DNS questions (is MagicDNS resolving, is systemd-resolved answering), and none of those tools are in `base`.
+On macOS, `27-sshd` enables the system's Remote Login service and verifies that it is on. macOS manages allowed users in **General → Sharing → Remote Login**. The legacy WSL profile keeps its terminal setup without enabling a separate inbound SSH server.
+
+PostgreSQL clients (`psql`, `pg_dump`, `pg_restore`, `libpq`) and DNS tools are shared development tools. Linux installs `postgresql-libs` and `bind` from `arch-terminal.txt`; macOS installs Homebrew `libpq`, adds its binaries to the shell PATH, and uses its built-in DNS tools. No PostgreSQL server is installed or started by this change.
 
 The firewall half is the one that bites, because its failure mode is indistinguishable from a dead service. ufw's default inbound policy is `DROP`, and CachyOS's installer can leave ufw *enabled with an empty rule set* — at which point `systemctl status sshd` is green, `Server listening on 0.0.0.0 port 22` is in the journal, `ss -tlnp` shows the socket, and every inbound SYN is still dropped in netfilter before sshd sees it. There is no log line for a packet that never arrives, so the journal shows nothing at all. Diagnose it with:
 
@@ -315,7 +323,7 @@ journalctl --user -u captive-portal -f    # what the watcher saw
 
 [LocalSend](https://localsend.org/) — native on Linux, macOS, Android and iOS, LAN-only, no account and no cloud hop. Installed by the package lists (`localsend-bin` on Arch, `cask "localsend"` on macOS); the phones are a manual store install.
 
-Discovery is UDP multicast to `224.0.0.167:53317`, transfer is a direct HTTPS connection on `53317/tcp`. Only the desktop runs a firewall, and `28-firewall` opens both — the split matters when something breaks: **device never appears** is the UDP rule missing, **device appears but sends stall at 0%** is the TCP one. Off the LAN there is no multicast, so add the peer by its MagicDNS IP; `53317/tcp` is open on `tailscale0` for that. On a headless-booted desktop nothing listens at all until a session is up — `tailscale file cp` works there instead, since it is served by `tailscaled`.
+Discovery is UDP multicast to `224.0.0.167:53317`, transfer is a direct HTTPS connection on `53317/tcp`. `28-firewall` opens both on the home LAN for every Linux `main` machine — the split matters when something breaks: **device never appears** is the UDP rule missing, **device appears but sends stall at 0%** is the TCP one. Off the home LAN there is no permitted multicast discovery, so add the peer by its MagicDNS IP; `53317/tcp` is open on `tailscale0` for that. On a headless-booted desktop nothing listens at all until a session is up — `tailscale file cp` works there instead, since it is served by `tailscaled`.
 
 See [`docs/localsend.md`](docs/localsend.md) for the protocol detail, why `-bin` over the source PKGBUILD, and the browser-based fallbacks for a machine you can't install on.
 
