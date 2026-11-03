@@ -140,6 +140,12 @@ questions actually get asked (is MagicDNS resolving, is systemd-resolved
 answering, does the alias point at this host), and none of those tools ship in
 `base`.
 
+It also holds `postgresql-libs` — `libpq` plus the client binaries (`psql`,
+`pg_dump`, `pg_restore`), *not* the server. Language drivers that link `libpq`
+(`psycopg`, `pg` gem, Rust's `pq-sys`) need it to build, and `psql` is how you
+poke at a database running in a container on the box. It's in plain `extra`, so
+it keeps this list profile-agnostic.
+
 ## Mac / WSL
 
 macOS installs from `Brewfile` (`run_once_before_05-homebrew.sh.tmpl`). The
