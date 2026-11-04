@@ -9,6 +9,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux s
 | Prompt | Axis | Values |
 |---|---|---|
 | `profile` | Platform — packages, compositor, interop | `main` / `wsl` / `mac` |
+| `macMode` | Mac tool selection | `minimal` (browser + real-iPhone builds) / `full-dev`; missing values retain full development tools |
 | `org` | Work ownership; must match the 1Password item name in the Private vault | org name, blank for personal |
 | `gaming` | Role — gaming / sim-rig host | `true` / `false` |
 | `headless` | Boot policy — second limine entry booting to `multi-user.target`, desktop started on demand | `true` / `false`, defaults to `false` |
@@ -24,7 +25,7 @@ Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux s
 | `wsl` | Terminal stack + docker, WSL host tuning, no Windows interop |
 | `mac` | Shared terminal stack, OmniWM, Ghostty and GUI apps via Homebrew/Brewfile |
 
-Every machine gets the shared development tools, including OpenCode and PostgreSQL clients. Native CachyOS and macOS machines also enable SSH access. There is no `dev` flag: existing values are ignored, and the next `chezmoi init` removes it from the generated config. `devHost` and `devUser` still select an SSH client destination.
+Linux and full-dev Macs get the shared development tools, including OpenCode and PostgreSQL clients. Minimal Macs keep the browser, desktop utilities, shell, Node and physical-iPhone debugging tools. Native CachyOS and macOS machines also enable SSH access. The old `dev` flag is ignored; `macMode` selects Mac tools. `devHost` and `devUser` still select an SSH client destination. See [Mac profiles and cleanup](docs/mac-profiles.md).
 
 The gaming desktop runs the same platform as the laptop (CachyOS + niri + DMS + greetd), with gaming and hardware options layered on. These options and `headless` are only prompted on Linux `main`; they do not install desktop hardware support on macOS or WSL.
 

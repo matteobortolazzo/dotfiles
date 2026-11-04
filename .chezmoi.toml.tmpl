@@ -2,8 +2,8 @@
        gaming = role. The gaming desktop is the
        same platform as the laptop (CachyOS + niri + DMS + greetd), so it stays
        profile "main" and only layers gaming/hardware options on top. Developer
-       tools and SSH access are shared by all native machines; there is no dev
-       flag. Old dev values in machine configs are ignored. `devHost` names the
+       tools are shared except on a Mac with macMode = "minimal". SSH access
+       remains shared. Old dev values are ignored. `devHost` names the
        box you reach, named once here instead of hardcoded in the ssh config, so
        renaming the desktop is a one-line change and the alias is skipped on the
        machine that matches it. `devUser` is the login on that box, for clients
@@ -33,6 +33,10 @@
        `headless` without a deck is a perfectly good box, and a deck on a box
        that boots graphical still works. */ -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "main" "wsl" "mac") -}}
+{{- $macMode := "full-dev" -}}
+{{- if eq $profile "mac" -}}
+{{- $macMode = promptChoiceOnce . "macMode" "Mac tools: minimal (browser + iPhone builds) or full-dev" (list "minimal" "full-dev") -}}
+{{- end -}}
 {{- $org := promptStringOnce . "org" "Work org, must match the 1Password item name in the Private vault (blank for personal)" "" -}}
 {{- $gaming := false -}}
 {{- $ups := false -}}
@@ -51,6 +55,8 @@
 
 [data]
   profile = {{ $profile | quote }}
+{{ if eq $profile "mac" }}  macMode = {{ $macMode | quote }}
+{{ end }}
   org = {{ $org | quote }}
   gaming = {{ $gaming }}
   headless = {{ $headless }}

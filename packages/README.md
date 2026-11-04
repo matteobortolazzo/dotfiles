@@ -130,20 +130,27 @@ force-feedback check in `docs/gaming.md` uses.
 
 ## Shared development clients
 
-All machines receive development tools; the old `dev` flag and `arch-dev.txt`
+Linux and full-dev Macs receive development tools; the old `dev` flag and `arch-dev.txt`
 manifest are retired. `arch-terminal.txt` includes `bind` (`dig`, `host`,
 `nslookup`) and `postgresql-libs` (`libpq`, `psql`, `pg_dump`, `pg_restore`) for
 both native Linux and WSL. The PostgreSQL server is not included.
 `bind` is the current package providing the old `bind-tools` name; its DNS
 server service is not enabled by these dotfiles.
 
-macOS already provides the DNS tools. The Brewfile installs `libpq`, and zsh
+macOS already provides the DNS tools. The full-dev Brewfile installs `libpq`, and zsh
 adds its keg-only binaries to PATH for both Apple Silicon and Intel Homebrew.
 This also supplies headers and `pg_config` for language drivers that link libpq.
 
 ## Mac / WSL
 
 macOS installs from `Brewfile` (`run_onchange_before_05-homebrew.sh.tmpl`). The
+installer exports `HOMEBREW_CHEZMOI_MAC_MODE` from the `macMode` data variable (`minimal`
+or `full-dev`, defaulting to `full-dev` for existing configs). Changing the mode
+re-runs installation. Direct `brew bundle` calls default to `full-dev`; set
+`HOMEBREW_CHEZMOI_MAC_MODE=minimal` explicitly for a minimal Mac. Removal is a separate,
+explicit operation: see [Mac cleanup](../docs/mac-profiles.md).
+
+The
 `wsl` profile installs `arch-terminal.txt` plus a small extra set (docker,
 wl-clipboard, tailscale) directly in the pacman/AUR scripts. The Arch scripts won't
 fire on non-Arch hosts thanks to the

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Mac mode: {{ if eq .profile "mac" }}{{ dig "macMode" "full-dev" . }}{{ else }}full-dev{{ end }}
 {{ if eq .chezmoi.os "linux" "darwin" -}}
 set -euo pipefail
 
@@ -23,6 +24,7 @@ if ! command -v npm >/dev/null; then
   exit 0
 fi
 
+{{ if not (and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal")) -}}
 packages=(
   playwright
   # mermaid CLI — renders mermaid blocks to PNG for nvim's diagram.nvim.
@@ -37,6 +39,7 @@ for pkg in "${packages[@]}"; do
     npm install -g "$pkg"
   fi
 done
+{{ end -}}
 
 # Claude Code moved to the native installer (run_once_after_43) — drop the
 # old npm global so `claude` doesn't warn about multiple installations.

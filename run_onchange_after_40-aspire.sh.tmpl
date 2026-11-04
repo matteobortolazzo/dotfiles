@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-{{ if eq .chezmoi.os "linux" "darwin" -}}
+# Mac mode: {{ if eq .profile "mac" }}{{ dig "macMode" "full-dev" . }}{{ else }}full-dev{{ end }}
+{{ if and (eq .chezmoi.os "linux" "darwin") (not (and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal"))) -}}
 set -euo pipefail
 
 # Aspire CLI standalone (installs into ~/.aspire/bin, matches .zshrc PATH entry).

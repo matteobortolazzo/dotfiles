@@ -4,7 +4,15 @@ packages
 system
 .worktrees
 tests
+scripts
 *.iso
+
+{{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
+.config/nvim
+.config/yazi
+.config/lazygit
+.config/bat
+{{ end -}}
 
 {{ if ne .profile "main" -}}
 .config/niri

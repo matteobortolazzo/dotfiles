@@ -61,7 +61,8 @@ class ConfigTests(unittest.TestCase):
         for profile, roles in [
             ("main", {}), ("main", {"tuxedo": True}),
             ("main", dict(gaming=True, headless=True, ups=True, deck=True)),
-            ("mac", {}), ("wsl", {}),
+            ("mac", {}), ("mac", {"macMode": "minimal"}),
+            ("mac", {"macMode": "full-dev"}), ("wsl", {}),
         ]:
             for path in sorted(ROOT.glob("run_*.tmpl")):
                 with self.subTest(profile=profile, roles=roles, script=path.name):
@@ -70,14 +71,14 @@ class ConfigTests(unittest.TestCase):
                     if profile == "mac":
                         self.assertNotIn("sudo pacman", script)
                         self.assertNotIn("sudo systemctl", script)
-            subprocess.run(["zsh", "-n"], input=render("dot_zshrc.tmpl", profile),
+            subprocess.run(["zsh", "-n"], input=render("dot_zshrc.tmpl", profile, **roles),
                            text=True, check=True)
 
     def test_init_retires_dev_and_limits_hardware_prompts(self):
         native_roles = dict(gaming=True, headless=True, ups=True, deck=True, tuxedo=True)
         for profile in ("main", "mac", "wsl"):
             # Missing answers on Mac/WSL must not prompt for Linux hardware.
-            roles = native_roles if profile == "main" else {}
+            roles = native_roles if profile == "main" else ({"macMode": "minimal"} if profile == "mac" else {})
             for legacy in ({}, {"dev": False}, {"dev": True}):
                 with self.subTest(profile=profile, legacy=legacy):
                     config = tomllib.loads(render(".chezmoi.toml.tmpl", profile,
@@ -87,6 +88,46 @@ class ConfigTests(unittest.TestCase):
                         self.assertEqual(config["data"][role], profile == "main")
                     self.assertIn("devHost", config["data"])
                     self.assertIn("devUser", config["data"])
+
+    def test_minimal_mac_keeps_node_but_skips_general_toolchains(self):
+        for name in ("33-rustup", "34-dotnet", "40-aspire", "44-lazyboards"):
+            path = "run_onchange_after_" + name + ".sh.tmpl"
+            minimal = render(path, "mac", macMode="minimal")
+            executable = [line for line in minimal.splitlines()
+                          if line.strip() and not line.startswith("#")]
+            self.assertEqual(executable, [])
+            self.assertEqual(render(path, "mac"), render(path, "mac", macMode="full-dev"))
+            self.assertIn("set -euo pipefail", render(path, "main", macMode="minimal"))
+        minimal = render("run_onchange_after_35-npm-globals.sh.tmpl", "mac", macMode="minimal")
+        self.assertIn("fnm install --lts", minimal)
+        self.assertNotIn("npm install -g", minimal)
+        shell = render("dot_zshrc.tmpl", "mac", macMode="minimal")
+        self.assertIn("export EDITOR=vi", shell)
+        self.assertNotIn("ANDROID_HOME", shell)
+        self.assertNotIn("DOTNET_ROOT", shell)
+        self.assertIn("fnm env", shell)
+
+    def test_mac_mode_init_and_installer(self):
+        for mode in ("minimal", "full-dev"):
+            config = tomllib.loads(render(".chezmoi.toml.tmpl", "mac", init=True, macMode=mode))
+            self.assertEqual(config["data"]["macMode"], mode)
+            script = render("run_onchange_before_05-homebrew.sh.tmpl", "mac", macMode=mode)
+            self.assertIn('export HOMEBREW_CHEZMOI_MAC_MODE="' + mode + '"', script)
+            self.assertNotIn("uninstall", script.split("brewfile=")[-1])
+
+    @unittest.skipUnless(shutil.which("brew"), "Homebrew is not installed")
+    def test_homebrew_reads_selected_mode(self):
+        selected = {}
+        for mode in ("minimal", "full-dev"):
+            selected[mode] = set(subprocess.check_output(
+                ["brew", "bundle", "list", "--all", "--file=" + str(ROOT / "packages/Brewfile")],
+                text=True, env={**os.environ, "HOMEBREW_NO_AUTO_UPDATE": "1",
+                                "HOMEBREW_CHEZMOI_MAC_MODE": mode},
+            ).splitlines())
+        self.assertTrue({"fnm", "zen", "libimobiledevice", "chezmoi"} <= selected["minimal"])
+        self.assertTrue({"docker-desktop", "temurin@21", "go", "neovim"} <=
+                        selected["full-dev"] - selected["minimal"])
+        self.assertTrue(selected["minimal"] < selected["full-dev"])
 
     def test_ssh_and_firewall_are_native_baseline(self):
         for path, required in (("run_once_after_27-sshd.sh.tmpl", "enable --now sshd.service"),

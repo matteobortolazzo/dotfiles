@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 {{ if eq .profile "mac" -}}
 set -euo pipefail
+export HOMEBREW_CHEZMOI_MAC_MODE={{ dig "macMode" "full-dev" . | quote }}
+case "$HOMEBREW_CHEZMOI_MAC_MODE" in
+  minimal|full-dev) ;;
+  *) echo "Invalid macMode: $HOMEBREW_CHEZMOI_MAC_MODE" >&2; exit 1 ;;
+esac
 
 # run_onchange: re-runs on `chezmoi apply` whenever the Brewfile changes.
 # chezmoi hashes only this script's rendered content, not the Brewfile it reads

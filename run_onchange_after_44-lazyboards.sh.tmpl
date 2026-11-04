@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Mac mode: {{ if eq .profile "mac" }}{{ dig "macMode" "full-dev" . }}{{ else }}full-dev{{ end }}
+{{ if and (eq .chezmoi.os "linux" "darwin") (not (and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal"))) -}}
+set -euo pipefail
+
+command -v lazyboards >/dev/null && exit 0
+[ -x "$HOME/go/bin/lazyboards" ] && exit 0
+
+go install github.com/matteobortolazzo/lazyboards@latest
+{{ end -}}
