@@ -1,3 +1,13 @@
-# Niri Mod+B on macOS (Caps Lock = OmniWM Hyper = ctrl+alt+cmd):
-# activate Zen Browser or launch it if closed.
+# Caps Lock = OmniWM Hyper = ctrl+alt+cmd. These fill the niri Mod+<key>
+# binds that OmniWM has no hotkey id for; OmniWM must leave the chord
+# unassigned or it eats it before skhd sees it.
+
+# Niri Mod+B: activate Zen Browser or launch it if closed.
 ctrl + alt + cmd - b : open -b "app.zen-browser.zen"
+# Niri Mod+E: file manager.
+ctrl + alt + cmd - e : open -a Finder
+# Niri Mod+Escape: lock screen (macOS ctrl+cmd+q).
+ctrl + alt + cmd - escape : osascript -e 'tell application "System Events" to keystroke "q" using {control down, command down}'
+# Niri Mod+Comma / Mod+Period: consume-or-expel window left / right.
+ctrl + alt + cmd - 0x2B : omniwmctl command consume-or-expel-window-left
+ctrl + alt + cmd - 0x2F : omniwmctl command consume-or-expel-window-right
