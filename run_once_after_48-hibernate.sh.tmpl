@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") (dig "tuxedo" false .) -}}
+set -euo pipefail
+
+# Hibernation for the laptop. CachyOS ships zram-only swap, so there is nothing
+# on disk to hold the image. This script adds a Btrfs swapfile in its own
+# top-level subvolume, points the kernel at it on the limine command line, and
+# tells systemd how long to stay suspended before hibernating.
+#
+# Why a top-level @swap subvolume: the CachyOS layout mounts every subvolume by
+# name from the top level (@, @home, @log, ...). A nested /swap inside @ would
+# appear as an empty directory in every snapper snapshot and vanish on
+# rollback, leaving resume_offset pointing at nothing. @swap is mounted from
+# fstab like the others and never snapshotted.
+#
+# zram keeps priority 100, the swapfile gets 10: day-to-day swapping still
+# lands in zram; the kernel writes the hibernation image to the resume device
+# regardless of priority. The initramfs uses the systemd hook, which resumes
+# from the resume= / resume_offset= parameters on its own (no `resume` hook).
+#
+# Re-run after editing (run_once fires again when the content changes):
+#   chezmoi execute-template < "$(chezmoi source-path)/run_once_after_48-hibernate.sh.tmpl" | bash
+
+if [ "$(findmnt -no FSTYPE /)" != btrfs ]; then
+  echo "root is not btrfs — skipping hibernation setup"
+  exit 0
+fi
+if ! command -v limine-update >/dev/null 2>&1 || ! [ -r /etc/default/limine ]; then
+  echo "limine-update / /etc/default/limine missing — skipping hibernation setup"
+  exit 0
+fi
+
+root_src=$(findmnt -no SOURCE /)     # e.g. /dev/nvme0n1p2[/@]
+root_dev=${root_src%%\[*}
+uuid=$(findmnt -no UUID /)
+swap_dir=/swap
+swap_file=$swap_dir/swapfile
+fstab=/etc/fstab
+
+# Image size: the swapfile must hold everything in RAM, zram contents included,
+# so size it to physical memory rounded up to the next GiB.
+mem_kb=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
+size_g=$(( (mem_kb + 1048575) / 1048576 ))
+
+# 1. Top-level subvolume. Only reachable through a temporary subvolid=5 mount.
+if ! sudo btrfs subvolume show "$swap_dir" >/dev/null 2>&1; then
+  top=$(mktemp -d)
+  sudo mount -o subvolid=5 "$root_dev" "$top"
+  if ! [ -d "$top/@swap" ]; then
+    sudo btrfs subvolume create "$top/@swap"
+    echo "created top-level subvolume @swap"
+  fi
+  sudo umount "$top"
+  rmdir "$top"
+fi
+
+# 2. Mount it from fstab, next to the other @-subvolumes.
+if ! grep -qE "^[^#]*[[:space:]]$swap_dir[[:space:]]" "$fstab"; then
+  printf 'UUID=%s %s btrfs subvol=/@swap,defaults,noatime 0 0\n' "$uuid" "$swap_dir" \
+    | sudo tee -a "$fstab" >/dev/null
+  echo "added $swap_dir to $fstab"
+fi
+sudo install -d -m 0700 "$swap_dir"
+mountpoint -q "$swap_dir" || sudo mount "$swap_dir"
+
+# 3. The swapfile. mkswapfile sets NOCOW and disables compression itself.
+if ! sudo test -f "$swap_file"; then
+  sudo btrfs filesystem mkswapfile --size "${size_g}g" "$swap_file"
+  echo "created $swap_file (${size_g} GiB)"
+fi
+if ! grep -qE "^$swap_file[[:space:]]" "$fstab"; then
+  printf '%s none swap defaults,pri=10,nofail 0 0\n' "$swap_file" | sudo tee -a "$fstab" >/dev/null
+  echo "added $swap_file to $fstab"
+fi
+sudo systemctl daemon-reload
+swapon --show=NAME --noheadings | grep -qxF "$swap_file" || sudo swapon "$swap_file"
+
+# 4. Kernel command line. Edit the existing KERNEL_CMDLINE[default] line in
+# place (limine-entry-tool reads one value per key) and let limine-update
+# regenerate /boot/limine.conf. A stale offset after recreating the file
+# would make resume read garbage, so the old parameters are stripped first.
+offset=$(sudo btrfs inspect-internal map-swapfile -r "$swap_file")
+want="resume=UUID=$uuid resume_offset=$offset"
+conf=/etc/default/limine
+if ! grep -qF "$want" "$conf"; then
+  if grep -qE '^KERNEL_CMDLINE\[default\]\+=' "$conf"; then
+    sudo sed -i -E "/^KERNEL_CMDLINE\[default\]\+=/{ s/ ?resume=[^ \"]+//g; s/ ?resume_offset=[^ \"]+//g; s/\"[[:space:]]*\$/ $want\"/ }" "$conf"
+  else
+    printf 'KERNEL_CMDLINE[default]+=" %s"\n' "$want" | sudo tee -a "$conf" >/dev/null
+  fi
+  echo "set $want in $conf"
+  sudo limine-update
+fi
+
+# 5. suspend-then-hibernate: sleep normally, hibernate after the delay.
+# `systemctl hibernate` works regardless; this only matters for lid/idle.
+sleep_conf=/etc/systemd/sleep.conf.d/hibernate.conf
+logind_conf=/etc/systemd/logind.conf.d/hibernate.conf
+printf '[Sleep]\nHibernateDelaySec=2h\n' | sudo install -D -m 0644 /dev/stdin "$sleep_conf"
+printf '[Login]\nHandleLidSwitch=suspend-then-hibernate\nHandleLidSwitchExternalPower=suspend-then-hibernate\n' \
+  | sudo install -D -m 0644 /dev/stdin "$logind_conf"
+sudo systemctl kill -s HUP systemd-logind.service 2>/dev/null || true
+
+echo "hibernation ready: test with 'systemctl hibernate' after the next reboot (new cmdline)."
+{{ end -}}

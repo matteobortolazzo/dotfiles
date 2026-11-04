@@ -147,6 +147,7 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Stream Deck panel (`52-streamdeck`, `deckd/`) | `main` + `deck` only | — | — |
 | LocalSend | `main` only | ✓ (Brewfile) | — |
 | Headless boot entry + on-demand session (`49-headless-boot`) | `headless` only | — | — |
+| Hibernation: `@swap` subvolume + swapfile, `resume=` on the limine cmdline, lid → suspend-then-hibernate (`48-hibernate`) | `main` + `tuxedo` | — | — |
 
 When editing a **shared** config, always test or reason about both platforms. Use chezmoi templates or runtime `if` guards when a value must differ (paths, clipboard commands, etc.).
 

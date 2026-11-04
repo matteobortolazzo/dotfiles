@@ -348,9 +348,39 @@ after unlocking from a long idle lock, requiring a reboot.
 `run_once_after_22-nvidia-suspend.sh.tmpl` applies the Arch-wiki fix on first
 apply: writes `/etc/modprobe.d/nvidia-power-management.conf` with
 `NVreg_PreserveVideoMemoryAllocations=1`, regenerates the initramfs, and
-enables `nvidia-{suspend,resume,hibernate}.service`. The script is a no-op
-on hosts without `nvidia-suspend.service` installed. A reboot is required
-after first apply for the modprobe option to take effect.
+enables `nvidia-{suspend,resume,hibernate,suspend-then-hibernate}.service`.
+The script is a no-op on hosts without `nvidia-suspend.service` installed. A
+reboot is required after first apply for the modprobe option to take effect.
+The same file sets `NVreg_TemporaryFilePath=/var/tmp`: the driver stages
+preserved VRAM in a file, and the default `/tmp` is tmpfs, which would just
+inflate a hibernation image.
+
+### Hibernation (TUXEDO laptop)
+
+CachyOS installs zram-only swap, so a fresh machine cannot hibernate: there
+is nothing on disk to write the image to. `run_once_after_48-hibernate.sh.tmpl`
+(gated on the `tuxedo` flag) fixes that on first apply:
+
+- creates a top-level Btrfs subvolume `@swap`, mounted at `/swap` from fstab
+  like the other `@` subvolumes, so snapper never snapshots the swapfile and
+  a rollback cannot strand `resume_offset`;
+- creates `/swap/swapfile` sized to RAM with `btrfs filesystem mkswapfile`
+  (NOCOW, no compression) and adds it to fstab at `pri=10` — zram stays at
+  100, so everyday swapping still lands in RAM;
+- appends `resume=UUID=… resume_offset=…` to the existing
+  `KERNEL_CMDLINE[default]` line in `/etc/default/limine` and runs
+  `limine-update`. The initramfs uses the `systemd` hook, which resumes from
+  those parameters on its own;
+- installs `sleep.conf.d/hibernate.conf` (`HibernateDelaySec=2h`) and
+  `logind.conf.d/hibernate.conf` (lid close → `suspend-then-hibernate`, on
+  battery and on mains).
+
+The kernel only picks up the new command line on the next boot. Test with
+`systemctl hibernate` after that reboot, and confirm the kernel saw the
+parameters with `cat /proc/cmdline`. If the swapfile is ever recreated the
+offset changes: re-run the script (its content hash is unchanged, so render
+it by hand: `chezmoi execute-template < run_once_after_48-hibernate.sh.tmpl | bash`),
+which strips the old `resume*=` parameters before appending the new ones.
 
 ## Docker
 

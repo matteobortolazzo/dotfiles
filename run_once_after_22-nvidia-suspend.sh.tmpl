@@ -8,6 +8,12 @@ set -euo pipefail
 # lock leaves the compositor spinning on a half-broken GPU — the symptom is
 # a system that feels hung and needs a reboot.
 # Arch wiki: NVIDIA#Suspend/resume.
+#
+# NVreg_TemporaryFilePath: the driver stages preserved video memory in a file
+# under /tmp by default, which is tmpfs here — on hibernate that just bloats
+# the image. /var/tmp is on disk (its own btrfs subvolume) and supports the
+# fallocate the driver needs. nvidia-suspend-then-hibernate.service is what
+# systemd's suspend-then-hibernate calls (48-hibernate wires that up).
 
 # Skip if this box has no NVIDIA driver installed.
 if ! systemctl cat nvidia-suspend.service >/dev/null 2>&1; then
@@ -16,12 +22,13 @@ if ! systemctl cat nvidia-suspend.service >/dev/null 2>&1; then
 fi
 
 conf=/etc/modprobe.d/nvidia-power-management.conf
-desired='options nvidia NVreg_PreserveVideoMemoryAllocations=1'
+desired='options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp'
 
 if ! [ -f "$conf" ] || ! grep -qxF "$desired" "$conf"; then
   echo "$desired" | sudo tee "$conf" >/dev/null
   sudo mkinitcpio -P
 fi
 
-sudo systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+sudo systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service \
+  nvidia-suspend-then-hibernate.service
 {{ end -}}
