@@ -73,7 +73,7 @@ if ! grep -qE "^$swap_file[[:space:]]" "$fstab"; then
   echo "added $swap_file to $fstab"
 fi
 sudo systemctl daemon-reload
-swapon --show=NAME --noheadings | grep -qxF "$swap_file" || sudo swapon "$swap_file"
+swapon --show=NAME --noheadings | grep -qxF "$swap_file" || sudo swapon -p 10 "$swap_file"
 
 # 4. Kernel command line. Edit the existing KERNEL_CMDLINE[default] line in
 # place (limine-entry-tool reads one value per key) and let limine-update
