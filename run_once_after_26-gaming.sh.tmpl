@@ -32,12 +32,38 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 
 # sched-ext: scx_lavd is the latency-oriented scheduler, which is what a sim rig
-# wants. scx_loader picks it up from CachyOS's default config.
+# wants. scx_loader does NOT start anything on its own — with no
+# /etc/scx_loader.toml it just waits on D-Bus and the kernel stays on the stock
+# scheduler (that is how the desktop ran for months). The config names the
+# scheduler and mode; a restart makes the loader read it.
+src="{{ .chezmoi.sourceDir }}/system/gaming"
 if systemctl cat scx_loader.service >/dev/null 2>&1; then
+  if ! [ -f /etc/scx_loader.toml ] || ! sudo cmp -s "$src/scx_loader.toml" /etc/scx_loader.toml; then
+    sudo install -m 0644 -o root -g root "$src/scx_loader.toml" /etc/scx_loader.toml
+    echo "installed /etc/scx_loader.toml"
+    sudo systemctl restart scx_loader.service
+  fi
   sudo systemctl enable --now scx_loader.service
 else
   echo "scx_loader.service not installed — skipping sched-ext setup"
 fi
+
+# Dual-CCD X3D: prefer the V-Cache CCD for everything (kernel default is the
+# frequency CCD). The udev rule re-applies it on every boot; the write below
+# covers the current one. Harmless on CPUs without the driver.
+x3d_rule=/etc/udev/rules.d/70-amd-x3d-cache.rules
+if ! [ -f "$x3d_rule" ] || ! sudo cmp -s "$src/70-amd-x3d-cache.rules" "$x3d_rule"; then
+  sudo install -m 0644 -o root -g root "$src/70-amd-x3d-cache.rules" "$x3d_rule"
+  echo "installed $x3d_rule"
+  sudo udevadm control --reload-rules
+fi
+for mode in /sys/bus/platform/drivers/amd_x3d_vcache/*/amd_x3d_mode; do
+  [ -f "$mode" ] || continue
+  if [ "$(cat "$mode")" != cache ]; then
+    echo cache | sudo tee "$mode" >/dev/null
+    echo "amd_x3d_mode: frequency → cache"
+  fi
+done
 
 # Sunshine: niri is not wlroots-based, so Sunshine's wlr-export-dmabuf capture
 # path is unavailable. KMS capture is the compositor-agnostic fallback and the

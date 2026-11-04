@@ -294,6 +294,18 @@ have.
 
 ## CPU note
 
-The 9800X3D is single-CCD, so none of the core-parking / CCD-preference tuning
-written for the 9950X3D applies. `linux-cachyos` plus `scx_lavd` via
-`scx_loader` (enabled by the setup script) is the whole story.
+The desktop is a 7900X3D: dual-CCD, with V-Cache on CCD0 only, so the
+CCD-preference problem written up for the 9950X3D applies in full. Two pieces,
+both installed by the setup script from `system/gaming/`:
+
+- `scx_loader.toml` — `scx_lavd` in `Gaming` mode. `scx_loader` alone starts
+  nothing; without this file it waits on D-Bus and the kernel stays on the
+  stock scheduler. Verify with `scxctl get`.
+- `70-amd-x3d-cache.rules` — writes `cache` to the `amd_x3d_vcache` driver's
+  `amd_x3d_mode` on bind. The kernel default is `frequency`, which makes
+  amd-pstate's preferred-core ranking favour the non-V-Cache CCD; `cache`
+  flips it so game threads land on the 96 MB L3. Verify with
+  `cat /sys/bus/platform/drivers/amd_x3d_vcache/*/amd_x3d_mode`.
+
+Both are performance (latency, frame pacing) measures, not stability ones, and
+both revert live: `scxctl stop` and `echo frequency` into the same sysfs file.

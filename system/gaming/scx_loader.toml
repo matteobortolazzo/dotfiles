@@ -1,0 +1,9 @@
+# sched-ext scheduler for the gaming / sim-rig host. Installed to
+# /etc/scx_loader.toml by run_once_after_26-gaming.sh.tmpl.
+#
+# Without this file scx_loader only sits on D-Bus waiting to be asked, and the
+# kernel stays on the stock scheduler. scx_lavd is the latency-oriented one and
+# is CCD/cache aware, which is what a dual-CCD X3D part needs; "Gaming" mode
+# passes its --performance flag. Check with `scxctl get`.
+default_sched = "scx_lavd"
+default_mode = "Gaming"

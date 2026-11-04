@@ -1,0 +1,8 @@
+# Dual-CCD X3D Ryzen (7900X3D / 7950X3D / 9950X3D): the amd_x3d_vcache driver
+# exposes which CCD amd-pstate's preferred-core ranking favours. The kernel
+# default is "frequency" (the non-V-Cache CCD); games and sims want "cache".
+# Matching on bind, not add, because the attribute only exists once the driver
+# is attached. Check with:
+#   cat /sys/bus/platform/drivers/amd_x3d_vcache/*/amd_x3d_mode
+# Installed to /etc/udev/rules.d/ by run_once_after_26-gaming.sh.tmpl.
+ACTION=="add|bind", SUBSYSTEM=="platform", DRIVER=="amd_x3d_vcache", ATTR{amd_x3d_mode}="cache"
