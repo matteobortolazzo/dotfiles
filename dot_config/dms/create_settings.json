@@ -221,5 +221,7 @@
   "blurBorderSeeded": true,
   "dmsWindowsFloatingSeeded": [
     "niri"
-  ]
+  ],
+  "acSuspendBehavior": 2,
+  "batterySuspendBehavior": 2
 }
