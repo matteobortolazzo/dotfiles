@@ -1,3 +1,3 @@
 # Niri Mod+B on macOS (Caps Lock = OmniWM Hyper = ctrl+alt+cmd):
 # activate Zen Browser or launch it if closed.
-ctrl + alt + cmd - b : open -a "Zen Browser"
+ctrl + alt + cmd - b : open -b "app.zen-browser.zen"
