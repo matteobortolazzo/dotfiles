@@ -90,6 +90,10 @@ bind-key C-t display-popup  \
   -w 80% \
   -h 80% \
   -E "zsh"
+{{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
+unbind-key C-g
+unbind-key C-f
+{{ else -}}
 bind-key C-g display-popup  \
   -d "#{pane_current_path}" \
   -w 80% \
@@ -100,11 +104,12 @@ bind-key C-f display-popup  \
   -w 80% \
   -h 80% \
   -E "yazi"
+{{ end -}}
 bind-key C-z display-popup  \
   -d "#{pane_current_path}" \
   -w 80% \
   -h 80% \
-  -E "nvim ~/.zshrc"
+  -E "{{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") }}vi{{ else }}nvim{{ end }} ~/.zshrc"
 
 # Plugins
 # Yank without leaving copy mode (no scroll-to-cursor jump); clears the highlight
