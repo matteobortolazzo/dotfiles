@@ -6,6 +6,7 @@ from pathlib import Path
 import platform
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -61,6 +62,12 @@ def main():
         if args.apply:
             try:
                 if path.is_dir():
+                    # Go module downloads deliberately use read-only directories.
+                    # Make only this disposable cache writable before removing it.
+                    if relative == "go/pkg":
+                        for directory, _, _ in os.walk(path):
+                            current = Path(directory)
+                            current.chmod(current.stat().st_mode | stat.S_IWUSR)
                     shutil.rmtree(path)
                 else:
                     path.unlink()
@@ -104,7 +111,7 @@ def main():
         ".cargo/registry", ".cargo/git", ".dotnet", ".aspire/bin",
         ".nuget/packages", ".local/share/NuGet", "go/pkg", "go/bin/lazyboards",
         "Library/Android/sdk", ".android/avd", ".gradle/caches", ".gradle/wrapper",
-        ".gradle/daemon", ".local/share/nvim/mason", ".cache/nvim",
+        ".gradle/daemon", ".local/share/nvim/mason", ".local/share/nvim/lazy", ".cache/nvim",
         ".cache/puppeteer", "Library/Caches/ms-playwright", "Library/Caches/go-build",
         "Library/Caches/pip", "Library/Caches/node-gyp", ".npm/_cacache", ".npm/_npx",
         "Library/Developer/Xcode/DerivedData", "Library/Caches/org.swift.swiftpm",
