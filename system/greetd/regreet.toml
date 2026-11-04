@@ -1,6 +1,11 @@
 # regreet — graphical greeter for greetd. Themed to match Glassmorphic Dark.
 # Docs: https://github.com/rharish101/ReGreet
 
+# Preselect the last user and their last session (from /var/lib/regreet/state.toml)
+# and go straight to the password prompt. Delete the state file to get the
+# pickers back.
+skip_selection = true
+
 [appearance]
 greeting_msg = "Welcome"
 

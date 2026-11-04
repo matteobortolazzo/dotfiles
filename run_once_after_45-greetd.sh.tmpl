@@ -53,9 +53,12 @@ if [ -f "$pam_file" ] && ! sudo grep -q pam_gnome_keyring "$pam_file"; then
   echo "wired pam_gnome_keyring into $pam_file"
 fi
 
-# regreet panics if its cache dir is missing or unwritable by the greeter user.
-if ! [ -d /var/cache/regreet ]; then
-  sudo install -d -o greeter -g greeter -m 0755 /var/cache/regreet
+# regreet saves the last user/session to /var/lib/regreet/state.toml, which
+# skip_selection in regreet.toml relies on. The package tmpfiles entry creates
+# the dir greeter-owned; keep it that way — the wallpaper install below must
+# never chown it to root, or the state silently stops saving.
+if ! [ -d /var/lib/regreet ] || [ "$(stat -c %U /var/lib/regreet)" != greeter ]; then
+  sudo install -d -o greeter -g greeter -m 0755 /var/lib/regreet
 fi
 
 # Resolve the wallpaper to mirror as the greeter background.
@@ -79,7 +82,6 @@ fi
 target_bg=/var/lib/regreet/background.jpg
 if [ -n "$wallpaper" ] && [ -f "$wallpaper" ]; then
   if ! [ -f "$target_bg" ] || ! sudo cmp -s "$wallpaper" "$target_bg"; then
-    sudo install -d -o root -g root -m 0755 /var/lib/regreet
     sudo install -m 0644 -o root -g root "$wallpaper" "$target_bg"
     echo "installed $target_bg (from $wallpaper)"
   fi
