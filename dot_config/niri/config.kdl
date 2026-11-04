@@ -26,15 +26,15 @@ input {
     workspace-auto-back-and-forth
 }
 
-// DP-4 (external 2560x1440) at 0,0; eDP-1 (laptop, scaled 2x → 1440x900 logical) on the bottom-left, bottoms aligned.
+// DP-4 (external 2560x1440) at 0,0; eDP-1 (laptop 2880x1800, scaled 1.5x → 1920x1200 logical) on the bottom-left, bottoms aligned.
 output "DP-4" {
     position x=0 y=0
     scale 1.0
 }
 
 output "eDP-1" {
-    position x=-1440 y=540
-    scale 2.0
+    position x=-1920 y=240
+    scale 1.5
 }
 
 // Gaming / sim-rig desktop: single Samsung Odyssey 49" ultrawide (5120x1440,
