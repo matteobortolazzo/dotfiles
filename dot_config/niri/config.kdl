@@ -203,6 +203,12 @@ overview {
 }
 
 // DMS IPC shorthand: `dms ipc call <module> <action>`
+// Keep keyboard focus on the source when the mirror opens.
+window-rule {
+    match app-id=r#"^at\.yrlf\.wl_mirror$"# title="^Laptop screen mirror$"
+    open-focused false
+}
+
 // If the verb turns out to be different (e.g. `dms-cli`), search/replace here.
 
 binds {
@@ -222,6 +228,7 @@ binds {
     // to screenshot-path AND copies to clipboard. No grim/slurp needed.
     Mod+Print                   hotkey-overlay-title="Screenshot (interactive)" { screenshot; }
     Mod+Shift+Print             hotkey-overlay-title="Screenshot focused window" { screenshot-window; }
+    Mod+Shift+P repeat=false hotkey-overlay-title="Toggle screen mirroring" { spawn-sh "$HOME/.config/niri/scripts/toggle-mirror.sh"; }
 
     // Compositor
     Mod+Q       { close-window; }

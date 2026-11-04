@@ -92,6 +92,17 @@ Generated from `dot_config/niri/config.kdl`.
 
 ## Monitors
 
+`Mod+Shift+P` toggles laptop screen mirroring to an active HDMI / USB-C display.
+Connect and enable the display first. With several external displays, a picker
+asks which to use. Press again to return to the extended desktop. Without an
+internal screen, the focused display is used as the source.
+
+The image is fitted without cropping (black bars may appear). This uses a
+fullscreen `wl-mirror` window: keep working on the source screen, since switching
+workspaces on the target or opening overview can expose the extended desktop.
+Audio output is selected separately in DMS. Errors are logged in
+`journalctl --user -u niri-screen-mirror`.
+
 | Keys | Action |
 |---|---|
 | `Mod+Alt+,` / `Mod+Alt+.` | Focus monitor left / right |

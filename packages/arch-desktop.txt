@@ -3,6 +3,7 @@ brightnessctl
 cava
 cliphist
 dux-shell
+fuzzel
 ghostty
 gnome-disk-utility
 gnome-keyring
@@ -10,6 +11,7 @@ gvfs
 imagemagick
 inter-font
 libayatana-indicator
+libnotify
 libreoffice-fresh
 matugen
 mpv
@@ -38,6 +40,7 @@ ttf-liberation
 tumbler
 udiskie
 wl-clipboard
+wl-mirror
 wtype
 xarchiver
 xdg-desktop-portal-gnome
