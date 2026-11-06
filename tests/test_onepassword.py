@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class OnePasswordTests(unittest.TestCase):
-    def apply_fixture(self, *, signin=0, vault=0, existing=True):
+    def apply_fixture(self, *, signin=0, vault=0, existing=True, profile="main"):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             source, dest, binaries = (base / name for name in ("source", "home", "bin"))
@@ -37,6 +37,7 @@ case "$1" in
     # Print even on failure to check that probe output never leaks.
     printf 'FAKE_SIGNIN_OUTPUT\\n'
     exit "$TEST_SIGNIN_STATUS" ;;
+  whoami) exit "$TEST_WHOAMI_STATUS" ;;
   vault) printf '[]\\n'; exit "$TEST_VAULT_STATUS" ;;
   read) printf '%s' 'fake value with $dollar and "quotes"' ;;
   *) exit 90 ;;
@@ -45,12 +46,17 @@ esac
             op.chmod(0o755)
             config = base / "config.json"
             config.write_text(json.dumps({
-                "data": {"profile": "main", "org": "test-org"},
-                "onepassword": {"mode": "account", "command": str(op), "prompt": True},
+                "data": {"profile": profile, "org": "test-org"},
+                "onepassword": {"mode": "account", "command": str(op),
+                                "prompt": profile != "wsl"},
             }))
             env = {k: v for k, v in os.environ.items() if not k.startswith("OP_")}
             env.update(PATH=str(binaries) + os.pathsep + env["PATH"],
-                       TEST_SIGNIN_STATUS=str(signin), TEST_VAULT_STATUS=str(vault))
+                       TEST_SIGNIN_STATUS=str(signin), TEST_VAULT_STATUS=str(vault),
+                       # WSL probes with whoami; signin must not be reached there.
+                       TEST_WHOAMI_STATUS=str(signin) if profile == "wsl" else "91")
+            if profile == "wsl":
+                env["TEST_SIGNIN_STATUS"] = "92"
             result = subprocess.run([
                 "chezmoi", "--source", str(source), "--destination", str(dest),
                 "--config", str(config), "--persistent-state", str(base / "state.boltdb"),
@@ -85,6 +91,12 @@ esac
 
     def test_available_app_updates_private_shell_quoted_environment(self):
         self.apply_fixture()
+
+    def test_wsl_reuses_exported_session_without_signin(self):
+        self.apply_fixture(profile="wsl")
+
+    def test_wsl_without_session_leaves_environment_alone(self):
+        self.apply_fixture(profile="wsl", signin=1)
 
 
 if __name__ == "__main__":

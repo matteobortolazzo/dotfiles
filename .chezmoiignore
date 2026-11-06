@@ -54,10 +54,19 @@ Library/Application Support/com.mitchellh.ghostty
      timeout is available, including Homebrew's gtimeout spelling. Redirect stdin so
      a source-state read never starts a terminal password prompt.
      `|| echo no` is required: output aborts on a non-zero exit. */ -}}
-{{ $opProbe := "if command -v timeout >/dev/null 2>&1; then timeout 5 sh -c 'op signin --raw >/dev/null && op vault list >/dev/null'; elif command -v gtimeout >/dev/null 2>&1; then gtimeout 5 sh -c 'op signin --raw >/dev/null && op vault list >/dev/null'; else op signin --raw >/dev/null && op vault list >/dev/null; fi </dev/null >/dev/null 2>&1 && echo yes || echo no" -}}
+{{/* WSL has no desktop app: `op signin` always prompts for the account password,
+     so chezmoi runs with `prompt = false` and reuses the OP_SESSION_* exported by
+     `eval "$(op signin)"`. Probe that session with `op whoami`, which never prompts. */ -}}
+{{ $opCheck := "op signin --raw >/dev/null && op vault list >/dev/null" -}}
+{{ if eq .profile "wsl" -}}
+{{   $opCheck = "op whoami >/dev/null && op vault list >/dev/null" -}}
+{{ end -}}
+{{ $opProbe := printf "if command -v timeout >/dev/null 2>&1; then timeout 5 sh -c '%s'; elif command -v gtimeout >/dev/null 2>&1; then gtimeout 5 sh -c '%s'; else %s; fi </dev/null >/dev/null 2>&1 && echo yes || echo no" $opCheck $opCheck $opCheck -}}
 {{ $opAuth := eq (trim (output "sh" "-c" $opProbe)) "yes" -}}
 {{ if not $opAuth -}}
-{{ if lookPath "op" -}}
+{{ if and (lookPath "op") (eq .profile "wsl") -}}
+{{ warnf "1Password CLI is not signed in: leaving ~/.config/environment untouched. Run `eval \"$(op signin)\" && chezmoi apply` in the same shell to refresh secrets." -}}
+{{ else if lookPath "op" -}}
 {{ warnf "1Password cannot authenticate right now (no unlocked desktop app — normal over SSH): leaving ~/.config/environment untouched. Re-run `chezmoi apply` from a local session to refresh secrets." -}}
 {{ else -}}
 {{ warnf "1Password CLI not installed: skipping ~/.config/environment. Install `op`, sign in, then re-run `chezmoi apply`." -}}

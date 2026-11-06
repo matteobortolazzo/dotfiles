@@ -68,6 +68,11 @@
 
 [onepassword]
   mode = "account"
+{{- if eq $profile "wsl" }}
+  # No desktop app on WSL: reuse the session from `eval "$(op signin)"`
+  # instead of re-prompting for the password on every op call.
+  prompt = false
+{{- end }}
 
 {{ if eq $profile "mac" -}}
 # Each chezmoi script is a separate process: brew shellenv in script 05

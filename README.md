@@ -155,6 +155,12 @@ Enable the SSH agent in the 1Password desktop app: **Settings → Developer → 
 
 On **WSL** there is no 1Password agent to talk to: the Linux app isn't installed, and the Windows one is out of reach because the distro runs with `[automount] enabled=false` (no `/mnt/c`, so no `powershell.exe` and no bridge). That profile uses the plain OpenSSH agent instead — `ssh-agent.socket` (enabled by `run_once_after_60-wsl.sh`) with `SSH_AUTH_SOCK` set in `.zshrc`, so `AddKeysToAgent yes` loads a key from `~/.ssh` on first use. Git over HTTPS is unaffected: it authenticates through `gh auth git-credential`.
 
+Secrets on WSL come from a plain CLI session instead, since `op signin` without the app prompts for the account password on every call. The WSL profile sets `[onepassword] prompt = false` and `.chezmoiignore` probes with `op whoami` (which never prompts), so sign in and apply from the same shell:
+
+```bash
+eval "$(op signin)" && chezmoi apply
+```
+
 ## Day-to-day commands
 
 ```bash
