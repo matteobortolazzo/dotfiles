@@ -1,6 +1,6 @@
 # Dotfiles
 
-Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux starts from a **CachyOS bare TTY installation**, then these dotfiles install [niri](https://github.com/YaLTeR/niri), [Dux Shell](https://duxlabs.dev/) (formerly DankMaterialShell; still `dms`), and greetd/regreet. Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS. The existing Arch-based WSL profile remains available for compatibility.
+Cross-platform dotfiles managed with [chezmoi](https://www.chezmoi.io/). Linux starts from a **CachyOS bare TTY installation**, then these dotfiles install [niri](https://github.com/YaLTeR/niri), [Dux Shell](https://duxlabs.dev/) (formerly DankMaterialShell; still `dms`), and greetd/dux-greeter. Terminal configs (zsh, tmux, neovim, yazi, ghostty, lazygit, bat) are shared with macOS. The existing Arch-based WSL profile remains available for compatibility.
 
 ## Machine axes
 
@@ -57,7 +57,7 @@ Secrets are skipped on the first pass if the 1Password CLI isn't signed in yet (
 
 ### Installer choices (CachyOS)
 
-**Pick no desktop environment.** Everything graphical comes from these dotfiles — niri, DMS, portals and fonts via `packages/arch-desktop.txt`, the greetd/regreet login via `arch-system.txt` and `system/greetd/`. A desktop profile from the installer (niri included) can only *add* packages no list tracks, and the lists are additive: `pacman -S --needed` never removes anything, so installer leftovers persist invisibly and can still win a dependency resolution. That has bitten three times now — `joyutils`, `noctalia-qs`, and SDDM.
+**Pick no desktop environment.** Everything graphical comes from these dotfiles — niri, DMS, portals and fonts via `packages/arch-desktop.txt`, the greetd/dux-greeter login via `arch-system.txt`, `arch-aur-desktop.txt` and `system/greetd/`. A desktop profile from the installer (niri included) can only *add* packages no list tracks, and the lists are additive: `pacman -S --needed` never removes anything, so installer leftovers persist invisibly and can still win a dependency resolution. That has bitten three times now — `joyutils`, `noctalia-qs`, and SDDM.
 
 SDDM is the one that breaks the boot: CachyOS enables it for every desktop profile, so it holds `display-manager.service` before greetd is ever installed. `run_once_after_45-greetd.sh.tmpl` detects and disables an incumbent display manager, but it deliberately doesn't uninstall anything — run the audit in [`packages/README.md`](packages/README.md) after a profile install to find the rest of the residue.
 
@@ -255,11 +255,11 @@ The desktop is then started on demand:
 ```bash
 desktop up niri         # autologin into niri, works over SSH
 desktop up gamescope    # autologin into the couch-gaming session
-desktop greeter         # regreet on the monitor; type the password at the desk
+desktop greeter         # dux-greeter on the monitor; type the password at the desk
 desktop down            # back to a plain TTY
 ```
 
-`desktop greeter` is plain `systemctl start greetd`, which is useless from an SSH shell because somebody has to type a password. `desktop up` runs `greetd-autologin@<session>.service` — the same greetd, against a config whose `[initial_session]` logs straight in. That is the path couch gaming needs: Sunshine has nothing to capture until somebody is logged in, and finding that out from the sofa is the classic failure. Logging out of an autologin session drops you at regreet, so the session picker is still reachable.
+`desktop greeter` is plain `systemctl start greetd`, which is useless from an SSH shell because somebody has to type a password. `desktop up` runs `greetd-autologin@<session>.service` — the same greetd, against a config whose `[initial_session]` logs straight in. That is the path couch gaming needs: Sunshine has nothing to capture until somebody is logged in, and finding that out from the sofa is the classic failure. Logging out of an autologin session drops you at dux-greeter, so the session picker is still reachable.
 
 `49-headless-boot` writes the limine entry (above the `comment: machine-id=` line, so `limine-entry-tool` does not eat it on the next kernel update), sets `default_entry` by name and `remember_last_entry: no`, and installs the autologin configs plus `system/greetd/greetd-autologin@.service`.
 
@@ -426,7 +426,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/regreet + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/dux-greeter + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` via sudo.
 - `deckd/` — the Stream Deck panel daemon (Go module), built into `~/.local/bin/deckd` by `52-streamdeck`; not deployed as a file.
 - `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
@@ -436,7 +436,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 If greetd fails on boot: switch to TTY2 (`Ctrl+Alt+F2`) and run
 `sudo systemctl disable --now greetd` to fall back to plain TTY login.
 
-If the login screen isn't regreet, a different display manager owns the seat:
+If the login screen isn't dux-greeter, a different display manager owns the seat:
 
 ```bash
 readlink -f /etc/systemd/system/display-manager.service   # who holds the alias

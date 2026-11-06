@@ -12,7 +12,7 @@ limine gets a second entry off the same kernel:
 | Entry | cmdline | What comes up |
 | --- | --- | --- |
 | `CachyOS (headless)` | `… systemd.unit=multi-user.target` | TTY login, sshd, Tailscale, docker, ufw. No greetd, no compositor, no GPU session. |
-| `CachyOS` | unchanged | Exactly what the laptop boots: greetd → regreet → niri or gamescope. |
+| `CachyOS` | unchanged | Exactly what the laptop boots: greetd → dux-greeter → niri or gamescope. |
 
 Nothing is disabled and nothing is masked. `greetd.service` stays enabled;
 `graphical.target` is simply never reached, and the unit that pulls greetd in is
@@ -42,7 +42,7 @@ Two paths, because they solve different problems:
 ```bash
 desktop up niri         # autologin into niri            (works over SSH)
 desktop up gamescope    # autologin into couch gaming    (works over SSH)
-desktop greeter         # regreet on the monitor, type the password at the desk
+desktop greeter         # dux-greeter on the monitor, type the password at the desk
 desktop down            # stop it, hand vt1 back to getty
 desktop status          # what owns vt1, plus logind sessions
 ```
@@ -65,7 +65,7 @@ greetd runs `initial_session` once, on start, with no prompt — so a session
 appears on vt1 without anyone touching the keyboard. **This is the one couch
 gaming needs**: Sunshine has nothing to capture until somebody is logged in, and
 discovering that from the sofa is the classic way streaming fails. When the
-session exits, greetd falls back to the regreet `default_session`, so logging out
+session exits, greetd falls back to the dux-greeter `default_session`, so logging out
 at the desk still gets you the picker — that is how you reach gamescope from a
 session you started as niri.
 

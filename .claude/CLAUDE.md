@@ -29,7 +29,7 @@ Claude Code runs directly from the chezmoi source directory (`~/.local/share/che
 | Layer | Tool | Config path | Notes |
 |---|---|---|---|
 | Bootloader | limine (+ `limine-entry-tool`, `limine-snapper-sync`) | `/etc/default/limine`, `/boot/limine.conf` | Linux-only, system-level. On a `headless` host, `system/limine/85-headless-entry` (a `limine-entry-tool` post hook) adds and re-asserts a second entry booting to `multi-user.target`. See `docs/headless.md`. |
-| Display manager / greeter | greetd + regreet (via cage) | `/etc/greetd/{config,regreet}.{toml,css}` (mirrored from `system/greetd/` by `run_once_after_45-greetd.sh.tmpl`) | Linux-only, system-level. Themed via custom `regreet.css` (Glassmorphic Dark). |
+| Display manager / greeter | greetd + dux-greeter (`dux-greeter-bin`, AUR) | `/etc/greetd/config.toml` (mirrored from `system/greetd/` by `run_once_after_45-greetd.sh.tmpl`); theme/wallpaper cache in `/var/cache/dms-greeter`, filled by `dms-greeter sync` | Linux-only, system-level. Same look as the dux lock screen; hosts its own minimal niri session (config generated at `/etc/greetd/niri/config.kdl`). |
 | WM / compositor | niri | `~/.config/niri/` | Scrollable-tiling Wayland compositor, Linux-only; selected as the default greetd session. Config is `dot_config/niri/config.kdl` (KDL); hot-reloads on save. |
 | Shell (bar/launcher/notif/lock/idle/session/wallpaper/OSD) | DankMaterialShell (dms) | pulled in by `systemctl --user add-wants niri.service dms` | Quickshell+QML+Go single daemon; auto-started via niri's `Wants=dms`. IPC via `dms ipc call <module> <action>`. |
 | Auth agent | polkit-gnome | — | GUI auth dialogs; started via exec-once, Linux-only |
@@ -83,13 +83,13 @@ Glassmorphic Dark - translucent surfaces with blur effects and warm gold accents
 8=#5a5752, 9=#e08080, 10=#90d0a0, 11=#e8c070, 12=#88b8d8, 13=#d0a0c8, 14=#80d0c8, 15=#faf7f2
 ```
 
-Applied to: niri (borders + shadow in `dot_config/niri/config.kdl`), DankMaterialShell (theming via its own settings + matugen integration), Ghostty, yazi, Neovim (catppuccin macchiato), regreet (`/etc/greetd/regreet.css`).
+Applied to: niri (borders + shadow in `dot_config/niri/config.kdl`), DankMaterialShell (theming via its own settings + matugen integration), Ghostty, yazi, Neovim (catppuccin macchiato), dux-greeter (synced from the shell theme by `dms-greeter sync`).
 
 ### Wallpaper
 
 Wallpapers live in `~/Pictures/Wallpapers/`. Pick/change via DMS's wallpaper module (`dms ipc call wallpaper next`). DMS writes the selection to `~/.local/state/DankMaterialShell/session.json` (`wallpaperPath`, or `monitorWallpapers` when `perMonitorWallpaper` is true).
 
-The greetd install script (`run_once_after_45-greetd.sh.tmpl`) resolves the greeter background in this precedence — **DMS session state → first file in `~/Pictures/Wallpapers/`** — and mirrors the result to `/var/lib/regreet/background.jpg` so the login screen matches the desktop. The sync runs on `chezmoi apply`; if you change wallpaper mid-session, re-run apply before the next reboot to refresh the greeter background. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in `dot_config/niri/config.kdl` places DMS's wallpaper inside niri's overview backdrop, so the overview shows the wallpaper instead of a solid color.
+The greetd install script (`run_once_after_45-greetd.sh.tmpl`) runs `dms-greeter sync`, which copies the shell's settings, session state (wallpaper) and matugen colors into `/var/cache/dms-greeter/` so the login screen matches the desktop. The greeter reads only that cache, never `$HOME`; if you change wallpaper or Settings → Greeter options mid-session, run `dms-greeter sync` before the next reboot. The `layer-rule { match namespace="^quickshell$"; place-within-backdrop true; }` in `dot_config/niri/config.kdl` places DMS's wallpaper inside niri's overview backdrop, so the overview shows the wallpaper instead of a solid color.
 
 ### Blur configuration
 
@@ -157,7 +157,7 @@ The desktop (`gaming = true`) runs two modes from the same greetd: niri for the 
 
 ### Headless boot
 
-The desktop is also `headless = true`: limine carries a second entry, `CachyOS (headless)`, that boots the same kernel with `systemd.unit=multi-user.target`, so the box comes up as an SSH target with no greetd, no compositor and no GPU session. Nothing is disabled to achieve it — `graphical.target` is simply never reached. The desktop is started on demand with `desktop up niri` / `desktop up gamescope` (autologin via `greetd-autologin@.service`, works over SSH) or `desktop greeter` (regreet at the desk). See `docs/headless.md`.
+The desktop is also `headless = true`: limine carries a second entry, `CachyOS (headless)`, that boots the same kernel with `systemd.unit=multi-user.target`, so the box comes up as an SSH target with no greetd, no compositor and no GPU session. Nothing is disabled to achieve it — `graphical.target` is simply never reached. The desktop is started on demand with `desktop up niri` / `desktop up gamescope` (autologin via `greetd-autologin@.service`, works over SSH) or `desktop greeter` (dux-greeter at the desk). See `docs/headless.md`.
 
 ## Key commands
 
@@ -189,7 +189,7 @@ dms ipc call wallpaper next                    # Cycle wallpaper
 # On-demand desktop (headless hosts; see docs/headless.md)
 desktop up niri                                # autologin session, works over SSH
 desktop up gamescope                           # couch-gaming session
-desktop greeter                                # regreet on the monitor instead
+desktop greeter                                # dux-greeter on the monitor instead
 desktop down                                   # back to a plain TTY
 desktop status                                 # what owns vt1
 
@@ -213,7 +213,7 @@ When editing configs, you're working with **source files** using chezmoi naming 
 9. **bat** — Config file + theme. Cross-platform syntax highlighter.
 10. **git** — Standard git config format. Cross-platform.
 11. **IdeaVim** — Vim-like config at `~/.ideavimrc`. Cross-platform JetBrains Vim emulation.
-12. **greetd / regreet** — Source files in `system/greetd/` (`config.toml`, `regreet.toml`, `regreet.css`). They are NOT under `$HOME`, so chezmoi can't sync them directly — `run_once_after_45-greetd.sh.tmpl` mirrors them into `/etc/greetd/` via `sudo install`. The script reruns when its content hash changes; if you only edit a tracked sub-file (`regreet.css`, etc.) you can force a rerun with `chezmoi apply` after touching the script, or render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` to see CSS/config changes (regreet only loads them on greeter start). `skip_selection = true` in `regreet.toml` jumps straight to the password for the last user/session, read from `/var/lib/regreet/state.toml`; that directory must stay `greeter`-owned or regreet silently stops saving and the pickers come back.
+12. **greetd / dux-greeter** — Source file in `system/greetd/` (`config.toml`, plus the `greetd-autologin@.service` unit installed by `49`). It is NOT under `$HOME`, so chezmoi can't sync it directly — `run_once_after_45-greetd.sh.tmpl` mirrors it into `/etc/greetd/` via `sudo install`, then runs `dms-greeter sync`. The script reruns when its content hash changes; to force it, render+execute it directly: `chezmoi execute-template < run_once_after_45-greetd.sh.tmpl | bash`. Reboot or `sudo systemctl restart greetd` (from a TTY/SSH — it kills the running session) to see config changes. The greeter is its own niri session as the `greeter` user: its config is generated by sync at `/etc/greetd/niri/config.kdl`, manual tweaks go in `/etc/greetd/niri_overrides.kdl`. Theme, wallpaper, "remember last user/session" and fingerprint options come from the shell's Settings → Greeter tab and only reach the greeter on the next sync; the greeter never reads `$HOME`. Never install `greetd-regreet`/`cage` alongside: the old regreet files are gone from the source tree.
 
 13. **NUT / UPS** — same split as greetd: sources in `system/nut/`, mirrored to `/etc/nut/` (plus `/etc/tmpfiles.d/` and `/etc/systemd/system/`) by `run_onchange_after_51-ups.sh.tmpl`. Unlike the greetd script this one is `run_onchange` and embeds a `sha256sum` of every mirrored file, so editing one re-triggers the apply — no manual re-run needed. `/etc/nut` is pacman-owned, so upgrades leave `.pacnew` files. Never commit a rendered `upsd.users`/`upsmon.conf`: they carry the shared password.
 

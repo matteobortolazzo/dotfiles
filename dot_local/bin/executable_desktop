@@ -54,7 +54,7 @@ usage: $self <command>
   up [session]   autologin straight into a session (default: niri).
                  Works over SSH — the one couch gaming needs, since Sunshine
                  has nothing to capture until somebody is logged in.
-  greeter        start regreet on the monitor instead; type the password at
+  greeter        start dux-greeter on the monitor instead; type the password at
                  the keyboard and pick the session there.
   down           stop whatever is running and hand vt1 back to getty.
   status         what owns vt1 right now, plus the logind sessions.
@@ -77,7 +77,7 @@ case "${1-}" in
         ;;
     greeter)
         sctl start greetd.service
-        echo "$self: regreet starting on vt1"
+        echo "$self: dux-greeter starting on vt1"
         ;;
     down)
         units | while read -r unit; do

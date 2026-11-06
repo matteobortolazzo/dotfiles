@@ -40,7 +40,7 @@ The sim does **not** run under gamescope. The game is already native-res on the
 attached panel, so nesting only adds a compose+scale step. niri's direct scanout
 on a fullscreen window is the shortest path available.
 
-greetd/regreet lets you pick the session per boot, so both modes coexist without
+greetd/dux-greeter lets you pick the session per boot, so both modes coexist without
 either compromising for the other. niri stays the default session; do not make
 gamescope-session the default — Sunshine needs a logged-in session, and "nobody
 logged in" is the classic way couch streaming fails when you're already on the
@@ -59,7 +59,7 @@ re-porting Glassmorphic Dark — the exact divergence this repo exists to preven
 
 Two things would flip the default to Plasma, and neither requires rewriting
 anything here — greetd sessions are additive, so `pacman -S plasma-meta` installs
-alongside niri and regreet just gains an entry:
+alongside niri and dux-greeter just gains an entry:
 
 - **VRR or the 240Hz mode misbehaves under niri.** kwin gets far more testing on
   exotic high-bandwidth modes, and niri's own docs hedge that "some drivers have
