@@ -328,6 +328,18 @@ Discovery is UDP multicast to `224.0.0.167:53317`, transfer is a direct HTTPS co
 
 See [`docs/localsend.md`](docs/localsend.md) for the protocol detail, why `-bin` over the source PKGBUILD, and the browser-based fallbacks for a machine you can't install on.
 
+## Security-key unlock (FIDO2)
+
+Every Linux `main` machine installs `pam-u2f` + `libfido2` and
+`run_onchange_after_53-fido.sh.tmpl` mirrors `system/pam/dankshell-u2f` into
+`/etc/pam.d/`, the service DMS's **Security key** lock-screen toggle points at.
+Nothing changes until a FIDO2 key is enrolled (`pamu2fcfg > ~/.config/Yubico/u2f_keys`)
+and the toggle is on; from then on a touch plus the key's fingerprint or PIN
+unlocks, and the password still works. The repo's service deliberately drops
+DMS's `nouserok` (an unlock with no enrollment) and requires user verification
+by the key, so a key left in the dock is not an unlock for whoever sits down.
+See [`docs/fido.md`](docs/fido.md) for which key to buy and the enrollment steps.
+
 ## Printing & scanning
 
 `main` profile, `run_once_after_46-printing.sh.tmpl`. Aims at driverless first: CUPS plus Avahi/nss-mdns covers IPP Everywhere (AirPrint) over the network, `ipp-usb` gives the same driverless path over a USB cable, and `hplip` covers HP hardware predating IPP Everywhere. `sane` + `sane-airscan` + `simple-scan` pick up the scanner half of a multifunction.
@@ -426,9 +438,9 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 ## Repo layout notes
 
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
-- `system/` — files outside `$HOME` (greetd/dux-greeter + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` via sudo.
+- `system/` — files outside `$HOME` (greetd/dux-greeter + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates; the lock-screen `pam_u2f` service); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` / `run_onchange_after_53-fido.sh.tmpl` via sudo.
 - `deckd/` — the Stream Deck panel daemon (Go module), built into `~/.local/bin/deckd` by `52-streamdeck`; not deployed as a file.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `wslconfig.example`).
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `fido.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

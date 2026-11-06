@@ -1,0 +1,22 @@
+#%PAM-1.0
+# Lock-screen security-key service for Dux Shell (DMS). See docs/fido.md.
+#
+# DMS looks for this exact file when its "Security key" lock-screen toggle is
+# on. It would write its own (auth required pam_u2f.so cue nouserok), but a
+# file without its "BEGIN DMS LOCKSCREEN U2F AUTH" marker is left untouched,
+# which is how this one takes over. Two deliberate differences from the stock
+# line:
+#
+#   * no `nouserok` — with it, a user with no ~/.config/Yubico/u2f_keys
+#     *succeeds* without touching anything. Here a missing enrollment fails
+#     this service; the password service next to it is unaffected.
+#   * user verification — the key itself must verify the user, so a key left
+#     in the dock is not an unlock for whoever sits down. Line 1 takes the
+#     key's built-in verification (a fingerprint sensor); line 2 is the
+#     fallback for a key without one and asks for the key's PIN, which the
+#     key rate-limits in hardware and locks after 8 misses.
+#
+# Both lines are straight from the pam_u2f(8) EXAMPLES section.
+auth     sufficient   pam_u2f.so  cue userverification=1 pinverification=0 timeout=15
+auth     required     pam_u2f.so  cue userverification=0 pinverification=1 timeout=15
+account  required     pam_permit.so

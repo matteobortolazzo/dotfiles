@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
+set -euo pipefail
+
+# Security-key unlock for the DMS lock screen: install the pam_u2f service that
+# DMS's "Security key" toggle points at. See docs/fido.md.
+#
+# run_onchange for the same reason as 51-ups: chezmoi hashes only the rendered
+# script, so the mirrored file's hash is embedded to make an edit retrigger the
+# apply. The install is cmp-guarded, so an unchanged re-run is a no-op.
+#
+# dankshell-u2f: {{ include "system/pam/dankshell-u2f" | sha256sum }}
+
+if ! [ -f /usr/lib/security/pam_u2f.so ]; then
+  echo "pam-u2f not installed — skipping (it's in packages/arch-desktop.txt)"
+  exit 0
+fi
+
+src="{{ .chezmoi.sourceDir }}/system/pam/dankshell-u2f"
+target=/etc/pam.d/dankshell-u2f
+
+# DMS also writes this file, with a managed block. If its block is there, DMS
+# got here first (the toggle was flipped before this ran): replace it, since the
+# stock line carries `nouserok` and no user verification — see the file header.
+if ! [ -f "$target" ] || ! sudo cmp -s "$src" "$target"; then
+  if sudo grep -qs 'BEGIN DMS LOCKSCREEN U2F AUTH' "$target"; then
+    echo "replacing the DMS-managed $target with the repo's version"
+  fi
+  sudo install -m 0644 -o root -g root "$src" "$target"
+  echo "installed $target"
+fi
+
+# Enrollment is per key and per user, so it is a manual step, not a dotfile.
+if ! [ -s "$HOME/.config/Yubico/u2f_keys" ]; then
+  cat <<'MSG'
+
+  No security key enrolled yet (~/.config/Yubico/u2f_keys is missing). With
+  the key plugged in:
+      mkdir -p ~/.config/Yubico
+      pamu2fcfg > ~/.config/Yubico/u2f_keys        # touch the key; -n appends another
+  then Settings → Lock screen → enable "Security key", mode "Alternative".
+  See docs/fido.md for setting the key PIN and enrolling fingerprints.
+
+MSG
+fi
+{{ end -}}
