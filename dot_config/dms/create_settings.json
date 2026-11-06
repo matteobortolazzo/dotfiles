@@ -23,7 +23,7 @@
     }
   },
   "soundsEnabled": false,
-  "acMonitorTimeout": 1800,
+  "acMonitorTimeout": 3600,
   "acLockTimeout": 1200,
   "batteryMonitorTimeout": 1800,
   "batteryLockTimeout": 900,
@@ -157,6 +157,7 @@
       "showOnLastDisplay": true,
       "position": 1,
       "mode": "compact",
+      "middleClickAction": "close",
       "taskbarAlign": "center",
       "widgetExpansion": "popout",
       "iconSize": 40,
@@ -223,5 +224,6 @@
     "niri"
   ],
   "acSuspendBehavior": 2,
-  "batterySuspendBehavior": 2
+  "batterySuspendBehavior": 2,
+  "currentThemeName": "purple"
 }
