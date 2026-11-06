@@ -1,7 +1,7 @@
 # On-demand autologin greetd, for a box that boots headless
 # (systemd.unit=multi-user.target, see run_once_after_49-headless-boot.sh.tmpl).
 #
-# greetd.service is the interactive path: it shows regreet and you type a
+# greetd.service is the interactive path: it shows dux-greeter and you type a
 # password at the keyboard. That is useless over SSH, and starting a session
 # over SSH is exactly what couch gaming needs — Sunshine has nothing to capture
 # until somebody is logged in, and "nobody is logged in" is the classic way
@@ -9,7 +9,7 @@
 #
 # Each instance runs greetd against /etc/greetd/autologin-%i.toml, whose
 # [initial_session] logs straight into that session. greetd falls back to the
-# regreet [default_session] when the session exits, so logging out of niri at
+# dux-greeter [default_session] when the session exits, so logging out of niri at
 # the desk still gets you the picker (that is how you reach gamescope from a
 # session started as niri, and vice versa).
 #

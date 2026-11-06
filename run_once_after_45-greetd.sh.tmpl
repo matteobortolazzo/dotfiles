@@ -2,9 +2,10 @@
 {{ if and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id") (eq .chezmoi.osRelease.id "cachyos" "arch") (eq .profile "main") -}}
 set -euo pipefail
 
-# Graphical login: greetd + regreet hosted by cage. System-level configs live
-# in {{ .chezmoi.sourceDir }}/system/ (chezmoi only manages $HOME, so this
-# script mirrors them into /etc/ via sudo install).
+# Graphical login: greetd + dux-greeter (the Dux Shell lock-screen look, hosted
+# in its own minimal niri session). System-level configs live in
+# {{ .chezmoi.sourceDir }}/system/ (chezmoi only manages $HOME, so this script
+# mirrors them into /etc/ via sudo install).
 #
 # Service is enabled but NOT started — starting it here would kill the TTY
 # running chezmoi apply. Reboot to activate.
@@ -18,9 +19,10 @@ set -euo pipefail
 # to drop back to plain TTY login. getty@tty1 is intentionally not masked.
 
 # Skip if greetd isn't installed yet (clean-machine bootstrap installs via
-# arch-system.txt; on existing machines: sudo pacman -S greetd cage greetd-regreet).
-if ! command -v greetd >/dev/null 2>&1; then
-  echo "greetd not installed — skipping (run: sudo pacman -S greetd cage greetd-regreet)"
+# arch-system.txt + arch-aur-desktop.txt; on existing machines:
+# sudo pacman -S greetd && yay -S dux-greeter-bin).
+if ! command -v greetd >/dev/null 2>&1 || ! command -v dms-greeter >/dev/null 2>&1; then
+  echo "greetd/dms-greeter not installed — skipping (run: sudo pacman -S greetd; yay -S dux-greeter-bin)"
   exit 0
 fi
 
@@ -34,9 +36,7 @@ install_if_changed() {
   fi
 }
 
-install_if_changed "$src/greetd/config.toml"   /etc/greetd/config.toml
-install_if_changed "$src/greetd/regreet.toml"  /etc/greetd/regreet.toml
-install_if_changed "$src/greetd/regreet.css"   /etc/greetd/regreet.css
+install_if_changed "$src/greetd/config.toml" /etc/greetd/config.toml
 
 # gnome-keyring: unlock the "login" keyring with the greeter password, so
 # libsecret consumers (JetBrains IDEs, anything on org.freedesktop.secrets) can
@@ -53,38 +53,16 @@ if [ -f "$pam_file" ] && ! sudo grep -q pam_gnome_keyring "$pam_file"; then
   echo "wired pam_gnome_keyring into $pam_file"
 fi
 
-# regreet saves the last user/session to /var/lib/regreet/state.toml, which
-# skip_selection in regreet.toml relies on. The package tmpfiles entry creates
-# the dir greeter-owned; keep it that way — the wallpaper install below must
-# never chown it to root, or the state silently stops saving.
-if ! [ -d /var/lib/regreet ] || [ "$(stat -c %U /var/lib/regreet)" != greeter ]; then
-  sudo install -d -o greeter -g greeter -m 0755 /var/lib/regreet
-fi
-
-# Resolve the wallpaper to mirror as the greeter background.
-# Precedence: DMS session state → first match in ~/Pictures/Wallpapers.
-wallpaper=""
-dms_session="${XDG_STATE_HOME:-$HOME/.local/state}/dms/session.json"
-if [ -f "$dms_session" ] && command -v jq >/dev/null 2>&1; then
-  wallpaper=$(jq -r '
-      if (.perMonitorWallpaper // false) and ((.monitorWallpapers // {}) | length > 0)
-      then (.monitorWallpapers | to_entries | .[0].value)
-      else (.wallpaperPath // empty)
-      end
-    ' "$dms_session" 2>/dev/null || true)
-fi
-if [ -z "$wallpaper" ] || ! [ -f "$wallpaper" ]; then
-  wallpaper=$(find "$HOME/Pictures/Wallpapers" -maxdepth 1 -type f \
-    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) 2>/dev/null \
-    | head -n 1 || true)
-fi
-
-target_bg=/var/lib/regreet/background.jpg
-if [ -n "$wallpaper" ] && [ -f "$wallpaper" ]; then
-  if ! [ -f "$target_bg" ] || ! sudo cmp -s "$wallpaper" "$target_bg"; then
-    sudo install -m 0644 -o root -g root "$wallpaper" "$target_bg"
-    echo "installed $target_bg (from $wallpaper)"
-  fi
+# dux-greeter never reads $HOME: `dms-greeter sync` copies the shell's
+# settings.json, session.json (wallpaper) and matugen colors into
+# /var/cache/dms-greeter, and generates the greeter's niri config at
+# /etc/greetd/niri/config.kdl (manual tweaks go in /etc/greetd/niri_overrides.kdl).
+# Greeter options (remember last user/session, fingerprint) live in the shell
+# GUI under Settings → Greeter and only take effect on the next sync, so re-run
+# `dms-greeter sync` (or just `chezmoi apply` after touching this script) after
+# changing wallpaper or greeter settings. --yes skips its prompts and DMS_PRIVESC=sudo answers the "sudo or run0?" picker; it still sudo-s.
+if ! DMS_PRIVESC=sudo dms-greeter sync --yes; then
+  echo "dms-greeter sync failed — the greeter will use its defaults until it succeeds" >&2
 fi
 
 # Another display manager may already own the login seat: CachyOS's installer

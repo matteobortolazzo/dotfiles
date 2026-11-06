@@ -13,7 +13,7 @@ set -euo pipefail
 # headless one simply never reaches the target that pulls greetd in.
 #
 # The desktop is then brought up on demand (see docs/headless.md):
-#   sudo systemctl start greetd             # regreet on the monitor, at the desk
+#   sudo systemctl start greetd             # dux-greeter on the monitor, at the desk
 #   desktop up niri | desktop up gamescope  # autologin, works over SSH
 #
 # Why not `systemctl set-default multi-user.target`: that is one global switch
@@ -82,14 +82,14 @@ fi
 
 # --- on-demand sessions ---------------------------------------------------
 #
-# greetd.service alone covers the desk (regreet, type a password). It cannot
+# greetd.service alone covers the desk (dux-greeter, type a password). It cannot
 # start a session over SSH, which is what couch gaming needs. greetd's
 # [initial_session] is exactly that hook, so each session gets an autologin
 # config plus a greetd-autologin@<session> instance to run it.
 
 if ! command -v greetd >/dev/null 2>&1; then
   echo "greetd not installed — skipping the on-demand session units"
-  echo "(the headless entry still works; install greetd cage greetd-regreet for the desktop half)"
+  echo "(the headless entry still works; install greetd and dux-greeter-bin for the desktop half)"
   exit 0
 fi
 
@@ -107,13 +107,13 @@ write_autologin() {
 # [initial_session] runs once, on greetd start, with no prompt: that is what
 # makes 'desktop up $session' work from an SSH shell. When the session exits,
 # greetd falls back to [default_session] below, so logging out at the desk
-# still gets you regreet and the session picker.
+# still gets you dux-greeter and the session picker.
 
 [terminal]
 vt = 1
 
 [default_session]
-command = "env WLR_NO_HARDWARE_CURSORS=1 cage -s -m last -- regreet"
+command = "/usr/bin/dms-greeter --command niri"
 user = "greeter"
 
 [initial_session]
@@ -142,7 +142,7 @@ cat <<DONE
   From a headless boot:
     desktop up niri         start a niri session (works over SSH)
     desktop up gamescope    start the couch-gaming session
-    desktop greeter         show regreet on the monitor instead
+    desktop greeter         show dux-greeter on the monitor instead
     desktop down            back to a plain TTY
 
 DONE

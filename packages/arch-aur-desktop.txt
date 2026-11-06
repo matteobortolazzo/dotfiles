@@ -1,4 +1,5 @@
 1password
+dux-greeter-bin
 jetbrains-toolbox
 localsend-bin
 ttf-jost

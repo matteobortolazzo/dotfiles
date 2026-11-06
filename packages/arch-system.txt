@@ -3,11 +3,9 @@ bluez
 bluez-utils
 bolt
 brightnessctl
-cage
 cups
 cups-pdf
 greetd
-greetd-regreet
 hplip
 ipp-usb
 networkmanager
