@@ -1,0 +1,14 @@
+// Per-host niri overrides. Rendered by chezmoi; empty where nothing applies.
+{{- if dig "tuxedo" false . }}
+
+// Hybrid-GPU laptop: the external DP port hangs off the RTX 3050 while niri
+// renders on the Intel iGPU by default, so every DP-4 frame is rendered on
+// Intel and copied to NVIDIA. After a lock/DPMS cycle that path degrades into
+// a laggy cursor and animations with the dGPU pinned at max clock
+// (niri-wm/niri#3095, #4708). Rendering on the dGPU is the fix the niri FAQ
+// recommends; it costs battery when undocked. renderD129 = 0000:01:00.0 (NVIDIA).
+debug {
+    render-drm-device "/dev/dri/renderD129"
+    emulate-zero-presentation-time
+}
+{{- end }}

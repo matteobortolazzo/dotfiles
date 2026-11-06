@@ -460,3 +460,8 @@ window-rule {
 }
 
 include "dms/outputs.kdl"
+
+// Per-host overrides rendered by chezmoi (dot_config/niri/host.kdl.tmpl):
+// empty on most machines. niri requires the file to exist, so the template
+// always renders one.
+include "host.kdl"
