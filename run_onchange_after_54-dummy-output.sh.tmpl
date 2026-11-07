@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") (dig "gaming" false .) -}}
+# Wire dummy-output.service into niri.service, the way 29-captive-portal does.
+# unit hash: {{ include "dot_config/systemd/user/dummy-output.service" | sha256sum }}
+# script hash: {{ include "dot_config/niri/scripts/executable_dummy-output.sh" | sha256sum }}
+set -euo pipefail
+
+systemctl --user daemon-reload || true
+
+if ! systemctl --user cat dummy-output.service >/dev/null 2>&1; then
+  echo "dummy-output.service not found — run: systemctl --user add-wants niri.service dummy-output.service"
+  exit 0
+fi
+
+systemctl --user add-wants niri.service dummy-output.service \
+  || echo "add-wants failed — run manually: systemctl --user add-wants niri.service dummy-output.service"
+
+# Pick up a changed script in the running session; no-op without one.
+if systemctl --user is-active --quiet niri.service; then
+  systemctl --user restart dummy-output.service || true
+fi
+{{ end -}}

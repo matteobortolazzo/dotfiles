@@ -1,0 +1,19 @@
+[Unit]
+Description=Turn the 16:9 dummy plug off while the desk monitor is connected
+Documentation=file://%h/.local/share/chezmoi/docs/gaming.md
+
+# Pulled in by niri.service (Wants=), wired by run_onchange_after_54-dummy-output —
+# the same mechanism as dms and captive-portal. niri's IPC socket only exists
+# while niri runs, and under gamescope-session there is nothing to manage
+# (gamescope grabs DP-2 itself via OUTPUT_CONNECTOR).
+After=niri.service
+PartOf=niri.service
+
+[Service]
+Type=simple
+ExecStart=%h/.config/niri/scripts/dummy-output.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=niri.service

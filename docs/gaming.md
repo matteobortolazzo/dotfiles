@@ -296,7 +296,8 @@ once one is running. A healthy startup logs `Found H.264/HEVC/AV1 encoder:
 - **Turns the desk monitor (DP-1) off** for the duration of the stream, so the
   dummy plug (DP-2) is the only output: Sunshine's monitor pick (index 0 in the
   wlgrab list) and Steam's window placement then have exactly one possible
-  answer. Only done when DP-2 is actually present — with the dummy unplugged,
+  answer. It turns DP-2 on first, since `dummy-output.service` keeps it off
+  while the desk is connected. Only done when DP-2 is actually present — with the dummy unplugged,
   turning DP-1 off would leave the session with zero outputs. The
   `$XDG_RUNTIME_DIR/sunshine-stream-prep.desk-off` marker records that the hook
   (not the user) turned it off, so `off` only re-enables what `on` disabled.
@@ -319,6 +320,21 @@ mode matters), the prep hook turns DP-1 off during streams, and the BPM
 window rule opens Big Picture on DP-2. 1440p60 is deliberate: the TV is 4K60
 with no VRR on a 100 Mbit port, so 4K capture would only buy per-frame
 downscaling in the encoder.
+
+**DP-2 is only on when something needs it.** With both outputs live, a
+fullscreen sim or a Proton title can open on the dummy, i.e. on a screen
+nobody can see. `dummy-output.service` (`dot_config/niri/scripts/dummy-output.sh`,
+pulled in by `niri.service` via `Wants=`, wired by
+`run_onchange_after_54-dummy-output.sh.tmpl`) applies one rule: desk monitor
+connected → DP-2 off; desk monitor absent (powered off, headless) → DP-2 on;
+stream running (the prep hook's marker exists) → DP-2 on. It re-checks on
+every DRM hotplug and every niri config reload, because `niri msg output`
+changes are temporary and niri drops them when that output's config block
+changes. `stream-prep.sh on` turns DP-2 on before DP-1 off; `off` hands DP-2
+back to the rule. The config still lists DP-2 as enabled, so niri never
+starts with zero outputs before the watcher runs. One side effect: if the
+Odyssey also drops off the bus in DPMS standby, idle-off moves the desk
+workspaces onto DP-2 until the monitor wakes, and niri moves them back.
 
 An earlier iteration instead switched DP-1 itself to a 16:9 mode for the
 stream. **That breaks every XWayland game**: niri changes the Wayland output

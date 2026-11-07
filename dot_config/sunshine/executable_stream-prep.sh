@@ -50,15 +50,20 @@ case "${1:-}" in
       dms ipc call inhibit enable >/dev/null 2>&1
     fi
     if have_niri && output_present "$stream_output" && output_present "$desk_output"; then
-      if niri msg output "$desk_output" off >/dev/null 2>&1; then
-        touch "$state_file"
-      fi
+      # dummy-output.service keeps DP-2 off while the desk monitor is
+      # connected. The marker goes down first so that the watcher, if it
+      # reconciles mid-way, wants DP-2 on as well.
+      touch "$state_file"
+      niri msg output "$stream_output" on >/dev/null 2>&1
+      niri msg output "$desk_output" off >/dev/null 2>&1 || rm -f "$state_file"
     fi
     ;;
   off)
     if have_niri && [[ -e "$state_file" ]]; then
       niri msg output "$desk_output" on >/dev/null 2>&1
       rm -f "$state_file"
+      # Hand DP-2 back to the watcher's rule (off again with the desk present).
+      "$HOME/.config/niri/scripts/dummy-output.sh" reconcile >/dev/null 2>&1
     fi
     if command -v dms >/dev/null 2>&1; then
       dms ipc call inhibit disable >/dev/null 2>&1

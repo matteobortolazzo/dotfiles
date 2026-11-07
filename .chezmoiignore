@@ -38,6 +38,8 @@ README.md
 .config/sunshine
 .local/bin/nvrun
 .config/systemd/user/gamescope-session.service.d
+.config/systemd/user/dummy-output.service
+.config/niri/scripts/dummy-output.sh
 {{ end -}}
 
 {{ if ne .profile "wsl" -}}
