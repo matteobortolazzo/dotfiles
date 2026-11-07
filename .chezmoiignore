@@ -39,6 +39,7 @@ README.md
 .local/bin/nvrun
 .config/systemd/user/gamescope-session.service.d
 .config/systemd/user/dummy-output.service
+.config/environment.d/50-gaming.conf
 .config/niri/scripts/dummy-output.sh
 {{ end -}}
 

@@ -48,6 +48,29 @@ Flags stop at the first argument not starting with `--`, so a game's own
 flags after `%command%` pass through. `nvrun env | grep -E 'PROTON|DXVK|NV'`
 shows what a flag set exports, without launching anything.
 
+## Global defaults
+
+The DLSS override and the frame cap apply to **every** game, with no launch
+options, from `~/.config/environment.d/50-gaming.conf`
+(`dot_config/private_environment.d/50-gaming.conf`, gaming-gated). It sets the
+`nvrun` default variables plus `DXVK_FRAME_RATE=116`: a few fps under the
+120 Hz the Odyssey is running at, so VRR never meets niri's vsync (no tearing
+support). Raise it to ~230 if the panel goes to 240 Hz. It reaches games
+because environment.d feeds the systemd user manager, which niri, dms and
+Steam all inherit; it takes effect on the **next login**.
+
+Per-game exceptions stay launch options: `nvrun --no-dlss %command%` (strips
+the global DLSS variables), `DXVK_FRAME_RATE=0 %command%` (uncapped), and
+`nvrun --smooth / --reflex / --csp / --nr %command%` for the opt-in features.
+
+Two things are Steam settings, not variables, and are set once in the UI:
+
+- Settings → Compatibility → **Default compatibility tool: Proton-CachyOS**
+  (applies to every title without its own Properties → Compatibility pick).
+- Settings → Controller → **Enable Steam Input for generic controllers: off**.
+  The Fanatec is a generic HID device, so this keeps Steam from remapping the
+  wheel in every title at once; gamepads Steam knows natively are unaffected.
+
 ## Phase 1: ordinary games (ACC, AC EVO, AC Rally)
 
 Steam has **no per-game Proton mapping** on this box, so everything has been
