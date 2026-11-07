@@ -430,9 +430,14 @@ window-rule {
 // in black borders. Steam sets WM_CLASS to steam_app_<appid> on the game's
 // window, which XWayland surfaces as the app-id, so one rule covers the
 // library. Harmless for the sim rig, where titles are run fullscreen anyway.
+//
+// variable-refresh-rate: DP-1 is `on-demand=true`, which turns VRR on only
+// while a window matched by this property is on screen. Without it the
+// Odyssey reports "supported, disabled" in `niri msg outputs` mid-race.
 window-rule {
     match app-id=r#"^steam_app_\d+$"#
     open-fullscreen true
+    variable-refresh-rate true
 }
 
 // Terminal transparency is handled by Ghostty's own `background-opacity`
