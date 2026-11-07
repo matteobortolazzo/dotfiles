@@ -42,7 +42,7 @@ nvrun [--no-dlss] [--smooth] [--reflex] [--hud] [--csp] [--nr] [--log] %command%
 | `--hud` | `PROTON_DLSS_INDICATOR=1` | verifying; remove afterwards |
 | `--csp` | `WINEDLLOVERRIDES=dwrite=n,b` | Assetto Corsa with Custom Shaders Patch |
 | `--nr` | `PROTON_FORCE_NVAPI=1`, `WINEDLLOVERRIDES=dxgi=n,b` | the DLSS 5 ReShade route |
-| `--log` | `PROTON_LOG=1` → `~/steam-<appid>.log` | anything that does not work |
+| `--log` | `PROTON_LOG=1` → `~/steam-<appid>-<proton>.log` (Proton-CachyOS appends its build, e.g. `steam-805550-cachyos-11.0-20261015-slr.log`) | anything that does not work |
 
 Flags stop at the first argument not starting with `--`, so a game's own
 flags after `%command%` pass through. `nvrun env | grep -E 'PROTON|DXVK|NV'`
@@ -67,7 +67,13 @@ For each title:
 
 3. Launch. In the game's own video settings enable DLSS (Quality or DLAA) and,
    where offered, Frame Generation. Leave Steam Input **disabled** for sims.
-4. Read the indicator at the bottom of the screen. Pass:
+   **ACC:** DLSS only sticks with anti-aliasing on TAA and after Apply; check
+   `"dLSSEnable": true` in the prefix's
+   `Documents/Assetto Corsa Competizione/Config/menuSettings.json`. ACC has
+   no DLSS FG.
+4. Read the indicator at the bottom of the screen. It only draws while DLSS
+   is actually rendering — no indicator with the DLL loaded means the game
+   has DLSS off. Pass:
    - DLL version **310.x or newer** (the game's bundled one is older);
    - preset **not** a CNN letter the game shipped (the override reports the
      latest transformer preset).
@@ -75,11 +81,13 @@ For each title:
 5. Check the log:
 
    ```bash
-   grep -i -E 'nvapi|nvngx|dlss' ~/steam-<appid>.log | head -40
+   grep -a -E 'Build v|Loaded from path|DlssAvailable|DLSSEnable' ~/steam-<appid>-*.log
    ```
 
-   You want lines showing NVAPI exposed and `nvngx_dlss.dll` loaded from the
-   prefix's `windows/system32/umu/` path (that is Proton-CachyOS's download).
+   You want `Build v310.x`, `Loaded from path "c:\windows\system32\umu/nvngx_dlss.dll"`
+   (Proton-CachyOS's download, not the game's bundled copy) and
+   `DlssAvailable = 1`. Unreal titles also log `DLSSEnable set to: 0/1` —
+   `0` means the in-game toggle did not stick.
    Steam app IDs: ACC `805550`, AC EVO `3058630`, AC `244210`.
 6. Once it passes, trim the launch options to `nvrun %command%`.
 

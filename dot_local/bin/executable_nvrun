@@ -18,7 +18,7 @@
 #   --csp       Assetto Corsa Custom Shaders Patch loader (dwrite=n,b).
 #   --nr        DLSS 5 neural-rendering experiment via a ReShade add-on in the
 #               game folder: forces NVAPI on and loads the native dxgi.dll.
-#   --log       Proton log in $HOME/steam-<appid>.log (PROTON_LOG=1).
+#   --log       Proton log in $HOME/steam-<appid>-<proton>.log (PROTON_LOG=1).
 #
 # Flags stop at the first argument that does not start with "--", so a game's
 # own "--flags" after %command% pass through untouched.

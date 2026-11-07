@@ -152,7 +152,7 @@ Notes that are not obvious from the table:
   `--reflex` is for Vulkan-native games (the layer is disabled by default) and
   for the DX12 low-latency fork; both are harmless elsewhere.
 - **Verify, don't trust.** `--hud` draws NVIDIA's own indicator; `--log` dumps
-  `$HOME/steam-<appid>.log`, where `nvapi` lines show whether NVAPI was
+  `$HOME/steam-<appid>-<proton>.log`, where `nvapi` lines show whether NVAPI was
   exposed and which `nvngx_dlss` build loaded. `MANGOHUD=1` for the frametime.
 - These are launch-option variables, so they apply the same under niri and
   under `gamescope-session`; Smooth Motion in the couch session is fine.
