@@ -228,7 +228,7 @@ binds {
     // to screenshot-path AND copies to clipboard. No grim/slurp needed.
     Mod+Print                   hotkey-overlay-title="Screenshot (interactive)" { screenshot; }
     Mod+Shift+Print             hotkey-overlay-title="Screenshot focused window" { screenshot-window; }
-    Mod+Shift+P repeat=false hotkey-overlay-title="Toggle screen mirroring" { spawn-sh "$HOME/.config/niri/scripts/toggle-mirror.sh"; }
+    Mod+Shift+P repeat=false hotkey-overlay-title="Display mode (extend / duplicate / one screen)" { spawn-sh "$HOME/.config/niri/scripts/display-mode.sh"; }
 
     // Compositor
     Mod+Q       { close-window; }
