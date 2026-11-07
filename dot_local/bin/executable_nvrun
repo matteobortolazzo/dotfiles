@@ -1,0 +1,90 @@
+#!/bin/sh
+# nvrun — Steam launch-option wrapper for NVIDIA features under Proton.
+# See docs/gaming.md, "NVIDIA features". Everything here is an environment
+# variable read by Proton-CachyOS / GE-Proton, dxvk-nvapi or the NVIDIA driver;
+# the wrapper only picks the right set and exec's the game.
+#
+#   Launch options:   nvrun [flags] %command%
+#
+#   --dlss      newest DLSS DLLs (SR/RR/FG) and the latest transformer presets,
+#               overriding whatever the game bundles. Default ON for games that
+#               have DLSS; harmless on games that do not.
+#   --no-dlss   leave the game's own DLSS alone.
+#   --smooth    driver-level frame generation (NVIDIA Smooth Motion). Works on
+#               ANY game, DX11 included. Never together with native DLSS FG.
+#   --reflex    Reflex for Vulkan titles (dxvk-nvapi layer) and the vkd3d
+#               low-latency fork for DX12. DX11 Reflex needs nothing.
+#   --hud       DLSS indicator overlay (bottom = SR, top = FG) to prove it.
+#   --csp       Assetto Corsa Custom Shaders Patch loader (dwrite=n,b).
+#   --nr        DLSS 5 neural-rendering experiment via a ReShade add-on in the
+#               game folder: forces NVAPI on and loads the native dxgi.dll.
+#   --log       Proton log in $HOME/steam-<appid>.log (PROTON_LOG=1).
+#
+# Flags stop at the first argument that does not start with "--", so a game's
+# own "--flags" after %command% pass through untouched.
+
+dlss=1 smooth= reflex= hud= csp= nr= log=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --dlss)    dlss=1 ;;
+    --no-dlss) dlss= ;;
+    --smooth)  smooth=1 ;;
+    --reflex)  reflex=1 ;;
+    --hud)     hud=1 ;;
+    --csp)     csp=1 ;;
+    --nr)      nr=1 ;;
+    --log)     log=1 ;;
+    --help|-h)
+      sed -n '2,24p' "$0" >&2
+      exit 0 ;;
+    *) break ;;
+  esac
+  shift
+done
+
+[ $# -gt 0 ] || { echo "nvrun: nothing to run (use: nvrun [flags] %command%)" >&2; exit 64; }
+
+# Append a Wine DLL override without clobbering what Steam/Proton already set.
+add_override() {
+  if [ -n "${WINEDLLOVERRIDES:-}" ]; then
+    WINEDLLOVERRIDES="$WINEDLLOVERRIDES;$1"
+  else
+    WINEDLLOVERRIDES="$1"
+  fi
+  export WINEDLLOVERRIDES
+}
+
+if [ -n "$dlss" ]; then
+  # DLSS needs NVAPI. Proton-CachyOS enables it by default; GE-Proton only for
+  # allowlisted titles, so force it (GE/CachyOS spelling, then Valve's).
+  export PROTON_FORCE_NVAPI=1 PROTON_ENABLE_NVAPI=1
+  # Proton-CachyOS downloads the DLLs and only setdefault()s this variable,
+  # with preset "default". Set it ourselves to get the latest presets: that
+  # is what turns on the transformer model in titles still shipping CNN DLSS.
+  export PROTON_DLSS_UPGRADE="${PROTON_DLSS_UPGRADE:-1}"
+  # Valve's own Proton spells the DLL updater this way; harmless elsewhere.
+  export PROTON_ENABLE_NGX_UPDATER=1
+  export DXVK_NVAPI_DRS_SETTINGS="${DXVK_NVAPI_DRS_SETTINGS:-ngx_dlss_sr_override=on,ngx_dlss_rr_override=on,ngx_dlss_fg_override=on,ngx_dlss_sr_override_render_preset_selection=render_preset_latest,ngx_dlss_rr_override_render_preset_selection=render_preset_latest}"
+fi
+
+# VK_LAYER_NV_present is an implicit layer whose enable_environment is this
+# variable (see /usr/share/vulkan/implicit_layer.d/nvidia_layers.json). DXVK
+# presents through Vulkan, so DX9-12 games get it too.
+[ -n "$smooth" ] && export NVPRESENT_ENABLE_SMOOTH_MOTION=1
+
+if [ -n "$reflex" ]; then
+  export DXVK_NVAPI_VKREFLEX=1
+  export PROTON_VKD3D_LOWLATENCY=1
+fi
+
+[ -n "$hud" ] && export PROTON_DLSS_INDICATOR=1
+[ -n "$log" ] && export PROTON_LOG=1
+
+[ -n "$csp" ] && add_override "dwrite=n,b"
+
+if [ -n "$nr" ]; then
+  export PROTON_FORCE_NVAPI=1 PROTON_ENABLE_NVAPI=1
+  add_override "dxgi=n,b"
+fi
+
+exec "$@"

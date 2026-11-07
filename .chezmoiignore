@@ -35,6 +35,7 @@ scripts
 
 {{ if not (and (eq .profile "main") (dig "gaming" false .)) -}}
 .config/sunshine
+.local/bin/nvrun
 .config/systemd/user/gamescope-session.service.d
 {{ end -}}
 

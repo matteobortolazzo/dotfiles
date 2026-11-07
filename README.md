@@ -198,9 +198,10 @@ Docker and sysbox (Docker-in-Docker) have their own sections below.
 
 ## Gaming / sim-rig host
 
-`gaming = true` (the desktop; see [`docs/gaming.md`](docs/gaming.md) for hardware, the two-session split, and the Fanatec/Sunshine pitfalls) adds:
+`gaming = true` (the desktop; see [`docs/gaming.md`](docs/gaming.md) for hardware, the two-session split, and the Fanatec/Sunshine pitfalls, and [`docs/nvidia.md`](docs/nvidia.md) for the DLSS / Smooth Motion / Reflex / DLSS 5 runbook) adds:
 
 - `arch-gaming.txt` + `arch-aur-gaming.txt` — Steam, `gamescope-session-cachyos`, Sunshine, `hid-fanatecff-dkms`. **CachyOS-only**: several of these aren't in stock Arch's repos and would abort the whole transaction.
+- `nvrun` (`~/.local/bin`) — Steam launch-option wrapper that turns NVIDIA's Linux env vars (DLSS override, Smooth Motion, Reflex, the DLSS 5 ReShade route) into flags.
 - `26-gaming` — the glue the packages don't do and that fails *silently* when missing: `games` group (hid-fanatecff's udev rules grant wheelbase access to it, and nothing adds you — without it the wheel enumerates as a plain joystick with no force feedback and no error anywhere), `gamemode` group, udev reload, and `scx_loader` for the latency-oriented `scx_lavd` scheduler.
 Two sessions run from the same greetd: niri for the desktop *and* for sim racing native-fullscreen, `gamescope-session-cachyos` for couch gaming on the TV. Sims deliberately do not run under gamescope.
 
@@ -446,7 +447,7 @@ nestybox/alpine-docker:latest`, then inside: `dockerd > /var/log/dockerd.log
 - `packages/` — pacman/AUR/brew package lists; editing a list re-triggers the install scripts on the next apply (see `packages/README.md`).
 - `system/` — files outside `$HOME` (greetd/dux-greeter + the on-demand autologin unit, docker daemon.json + iptables modules, the two NetworkManager drop-ins: connectivity check and DNS; the NUT config set; the Stream Deck udev rule + unit and the `desktop` polkit rule, as `.in` templates; the lock-screen `pam_u2f` service); mirrored to `/etc` by `run_once_after_45-greetd.sh.tmpl` / `run_once_after_49-headless-boot.sh.tmpl` / `run_once_after_25-sysbox.sh.tmpl` / `run_once_after_29-captive-portal.sh.tmpl` / `run_once_after_23-tailscale.sh.tmpl` / `run_onchange_after_51-ups.sh.tmpl` / `run_onchange_after_52-streamdeck.sh.tmpl` / `run_onchange_after_53-fido.sh.tmpl` via sudo.
 - `deckd/` — the Stream Deck panel daemon (Go module), built into `~/.local/bin/deckd` by `52-streamdeck`; not deployed as a file.
-- `docs/` — reference material not deployed anywhere (`gaming.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `fido.md`, `wslconfig.example`).
+- `docs/` — reference material not deployed anywhere (`gaming.md`, `nvidia.md`, `headless.md`, `atuin.md`, `localsend.md`, `ups.md`, `streamdeck.md`, `fido.md`, `wslconfig.example`).
 - DMS runtime files (`settings.json`, `niri/dms/outputs.kdl`) are chezmoi `create_` entries: seeded once on a fresh machine, then owned by DMS — `chezmoi apply` never overwrites them.
 
 ## Recovery

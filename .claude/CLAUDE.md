@@ -155,7 +155,7 @@ When editing a **shared** config, always test or reason about both platforms. Us
 
 ### Gaming / sim-rig host
 
-The desktop (`gaming = true`) runs two modes from the same greetd: niri for the desktop *and* for sim racing native-fullscreen on its attached monitor, and `gamescope-session-cachyos` for couch gaming streamed to the TV. Sims deliberately do **not** run under gamescope. See `docs/gaming.md` for the reasoning, the Fanatec/`hid-fanatecff` pitfalls, and the Sunshine capture constraints (niri is not wlroots-based, so KMS capture is the HDR-capable path).
+The desktop (`gaming = true`) runs two modes from the same greetd: niri for the desktop *and* for sim racing native-fullscreen on its attached monitor, and `gamescope-session-cachyos` for couch gaming streamed to the TV. Sims deliberately do **not** run under gamescope. See `docs/gaming.md` for the reasoning, the Fanatec/`hid-fanatecff` pitfalls, and the Sunshine capture constraints (niri is not wlroots-based, so KMS capture is the HDR-capable path). The GPU is an **RTX 4080 (Ada)**: DLSS 4 override, single-frame DLSS FG, Smooth Motion and Reflex apply; Multi Frame Gen and (officially) DLSS 5 do not. All NVIDIA toggles are env vars, wired through the `nvrun` Steam launch-option wrapper (`dot_local/bin/executable_nvrun`, gaming-gated in `.chezmoiignore`) — never per-game `user_settings.py`, which pacman overwrites. The DLSS 5 experiment relies on a leaked, patched NVIDIA runtime and is deliberately not automated; the procedure is `docs/nvidia.md`.
 
 ### Headless boot
 

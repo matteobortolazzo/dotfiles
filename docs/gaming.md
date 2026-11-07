@@ -1,16 +1,16 @@
 # Gaming / sim-rig host
 
-Applies to the desktop (`profile = "main"`, `gaming = true`): CachyOS, Ryzen 7
-9800X3D, RTX 5080, single Samsung Odyssey 49" ultrawide (5120x1440, 32:9),
+Applies to the desktop (`profile = "main"`, `gaming = true`): CachyOS, Ryzen 9
+7900X3D, RTX 4080 (Ada, `AD103`), single Samsung Odyssey 49" ultrawide (5120x1440, 32:9),
 Fanatec ClubSport V2/V2.5 wheelbase. It is also the remote dev box, reached over
 SSH from the laptop.
 
 ## The ultrawide
 
-5120x1440 at 240Hz needs either DSC over DP 1.4 or DP 2.1 UHBR. Blackwell has
-DP 2.1, so use a DP 2.1-rated cable into the GPU and the link runs uncompressed —
-worth doing, since DSC on NVIDIA + Wayland is the layer that historically causes
-mode-setting oddities.
+5120x1440 at 240Hz needs either DSC over DP 1.4 or DP 2.1 UHBR. Ada tops out at
+DP 1.4a, so the link runs with DSC — and DSC on NVIDIA + Wayland is the layer
+that historically causes mode-setting oddities. If the 240Hz mode misbehaves,
+test 120Hz (no DSC needed) before blaming niri or VRR.
 
 niri's globals in `config.kdl` are laptop-tuned (`default-column-width proportion
 1.0`, smallest preset `0.5`), which on this panel means a 5120px-wide terminal and
@@ -102,6 +102,141 @@ Steam remaps the wheel axes into a virtual gamepad and pedal calibration breaks.
 Proton: `proton-cachyos` handles Assetto Corsa / ACC well. iRacing is
 "works with tweaks" tier — expect launch options or Proton-GE. `protontricks` is
 installed for per-prefix fixes.
+
+## NVIDIA features
+
+Step-by-step runbook (test order: ordinary games → Content Manager AC → DLSS 5)
+is in [`nvidia.md`](nvidia.md); this section is the reasoning.
+
+The GPU is an **RTX 4080 (Ada)**, which bounds what "latest NVIDIA tech" means
+here. The Linux driver (615.x, from the CachyOS installer) carries the same NGX
+stack as Windows; the Windows-only parts are the NVIDIA App toggles (RTX HDR,
+RTX Video, the DLSS override UI). On Linux every one of those is an environment
+variable, so they are collected in **`~/.local/bin/nvrun`**
+(`dot_local/bin/executable_nvrun`), a wrapper for Steam launch options:
+
+```
+nvrun [--no-dlss] [--smooth] [--reflex] [--hud] [--csp] [--nr] [--log] %command%
+```
+
+| Feature | Ada? | Flag | What it sets |
+| --- | --- | --- | --- |
+| DLSS 4 transformer SR/RR + newest DLLs | yes | default (`--no-dlss` to skip) | `PROTON_DLSS_UPGRADE=1` (`PROTON_ENABLE_NGX_UPDATER=1` for Valve's Proton), `DXVK_NVAPI_DRS_SETTINGS=…render_preset_latest`, `PROTON_FORCE_NVAPI=1` |
+| DLSS Frame Generation (single) | yes, in titles that ship it | default | `ngx_dlss_fg_override=on` (part of the line above) |
+| DLSS Multi Frame Generation | **no — Blackwell only** | — | — |
+| Smooth Motion (driver FG, any game) | yes | `--smooth` | `NVPRESENT_ENABLE_SMOOTH_MOTION=1` |
+| Reflex | yes | `--reflex` (DX11 needs nothing) | `DXVK_NVAPI_VKREFLEX=1`, `PROTON_VKD3D_LOWLATENCY=1` |
+| DLSS indicator | — | `--hud` | `PROTON_DLSS_INDICATOR=1` |
+| DLSS 5 neural rendering | **no — RTX 50 only, 40 "later this fall"** | `--nr` (community route, below) | `PROTON_FORCE_NVAPI=1`, `WINEDLLOVERRIDES=dxgi=n,b` |
+
+Notes that are not obvious from the table:
+
+- **Why the wrapper sets `DXVK_NVAPI_DRS_SETTINGS` itself.** Proton-CachyOS's
+  `PROTON_DLSS_UPGRADE` downloads the DLLs and then only `setdefault()`s the
+  override string with preset `default`. NVIDIA's Linux guide recommends
+  `render_preset_latest`; that is the one that flips titles still shipping CNN
+  DLSS onto the transformer model. The DRS overrides replace the in-game DLSS
+  preset choice entirely. (NVIDIA's doc also says preset overrides are "not
+  supported on Linux" — that sentence is about *native* Linux games; the
+  dxvk-nvapi path for Proton is documented right above it on the same page.)
+- **Smooth Motion is the only frame generation that reaches a DX11 game with
+  no upscaler at all** (Assetto Corsa). It lives in `VK_LAYER_NV_present`, an
+  implicit layer whose `enable_environment` is exactly that variable, and DXVK
+  presents through Vulkan, so the API the game uses does not matter. It is
+  interpolation on the final frame: latency stays that of the base framerate
+  and artefacts cluster around the HUD and the car. For a sim that is the
+  wrong trade unless the base is already locked — try it on ACC/EVO when they
+  are GPU-bound, not on AC, which the 4080 runs far above the panel's refresh
+  anyway. Never stack it on a title with native DLSS FG turned on.
+- **Reflex on DX11/DX12 under Proton needs nothing** — dxvk-nvapi handles it.
+  `--reflex` is for Vulkan-native games (the layer is disabled by default) and
+  for the DX12 low-latency fork; both are harmless elsewhere.
+- **Verify, don't trust.** `--hud` draws NVIDIA's own indicator; `--log` dumps
+  `$HOME/steam-<appid>.log`, where `nvapi` lines show whether NVAPI was
+  exposed and which `nvngx_dlss` build loaded. `MANGOHUD=1` for the frametime.
+- These are launch-option variables, so they apply the same under niri and
+  under `gamescope-session`; Smooth Motion in the couch session is fine.
+- **Pick the Proton per title.** Steam has no compatibility-tool mapping on this
+  box, so games run on whatever Steam defaults to (Proton Experimental is in
+  the library). Set **Proton-CachyOS** (installed by pacman, system-wide) in
+  each game's Properties → Compatibility: it is the build whose DLSS
+  downloader and indicator the wrapper targets first.
+- GE-Proton vs Proton-CachyOS: both read every variable above
+  (`PROTON_DLSS_UPGRADE` landed in GE-Proton 10-26). GE-Proton disables NVAPI
+  unless the title is allowlisted, which is why `--dlss` forces it.
+
+### Assetto Corsa: Content Manager, CSP, and the DLSS 5 experiment
+
+AC is stock on this box today (vanilla `AssettoCorsa.exe` launcher, no CSP,
+no launch options). The Linux setup repos (`crmne/assetto-corsa-setup`,
+`sihawido/assettocorsa-linux-setup`) all do the same thing: replace
+`AssettoCorsa.exe` with Content Manager (original kept as
+`AssettoCorsa_original.exe`), pin a GE-Proton, install CSP 0.2.x plus fonts
+via protontricks. Steam's `%command%` then *is* Content Manager, and CM spawns
+`acs.exe`. Environment is inherited down that chain, so `nvrun` goes in the
+same launch options and reaches the renderer:
+
+```
+nvrun --csp %command%
+```
+
+`--csp` adds `dwrite=n,b`, CSP's loader DLL. If the setup repo's protonfix
+already sets it, the duplicate is harmless.
+
+**What DLSS 5 is, and why AC is "unofficial".** DLSS 5 (launched September
+2026) is *3D-guided neural rendering*: a model that re-lights and re-materials
+the frame, one frame in, one frame out, guided by the engine's depth and motion
+vectors. It is not an upscaler or frame generator. Officially it runs on RTX 50
+only; NVIDIA says RTX 40 support is coming but has shipped no driver for it.
+The runtime is `nvngx_dlssnr.dll`, which NVIDIA has not released in any SDK or
+Linux driver — every community route uses a **leaked** build, and the one
+that runs on Ada is a **patched, unsigned** build (the "ShortFuse"
+cross-generation `310.8.SF-v2`) with the hardware check removed and FP8 ops
+remapped. That is why none of it is automated in these dotfiles: the wrapper
+sets the environment, the binary is your call to fetch. Expect ~40% of the
+frame rate gone on RTX 40 and no NVIDIA support.
+
+AC adds a second problem: it is DX11 with no DLSS integration, so the model
+has no depth or motion vectors to be guided by. The only working route today is
+the ReShade "feeder": a ReShade add-on reads ReShade's depth buffer, estimates
+motion vectors with a shader (hardware optical flow does not initialise under
+Proton), synthesises a DLAA input, and runs the neural pass on that. Verified
+by its author on an **RTX 4080, driver 610.57, GE-Proton 11-3** on other DX11
+titles without DLSS. Text softens and trackside foliage smears; it is a
+demo of the model, not a graphics upgrade for racing. The procedure:
+
+1. Needs `7zip` and `unzip` on the host (both installed today; not in the package lists on purpose).
+2. Clone `24high/DLSS5-Reshade-Linux-Steam` into a scratch directory and run
+   its installer against **`acs.exe`**, the binary that renders — not the
+   launcher, whichever one is sitting at `AssettoCorsa.exe`:
+
+   ```
+   ./dlss5-install.sh --model rtx40 --mode nr \
+     ~/.local/share/Steam/steamapps/common/assettocorsa/acs.exe
+   ```
+
+   It drops ReShade's `dxgi.dll`, the bridge/forwarder add-ons, a real
+   `d3dcompiler_47.dll` (Wine's lacks `[fastopt]`) and a fake `DriverStore`
+   with the NGX core files into the prefix. **The fake DriverStore must be
+   redone after every driver update.** `--mode dlaa` is the fallback if `nr`
+   dies on the `E5017 … fastopt` shader error.
+3. Launch options: `nvrun --csp --nr %command%` (`--nr` forces NVAPI and loads
+   the game-folder `dxgi.dll`; without `dxgi=n,b` ReShade never runs). CSP's
+   `dwrite.dll` and ReShade's `dxgi.dll` are different hooks and coexist, as
+   they do on Windows.
+4. In the session: Home → ReShade → enable `vort_MotionEffects`. Then
+   `./check-dlss5.sh …/acs.exe` reads the log and reports dispatch counts and
+   which `nvngx_dlssnr` hash loaded.
+5. `--nr` and `--smooth` can be combined (Smooth Motion is a present-time
+   layer); `--nr` and native DLSS FG cannot exist here because AC has neither.
+
+Two things make this moot in a better way: CSP **0.3.0 preview** (Patreon
+only) adds real DLSS Super Resolution inside AC, and the `ac-dlssg` mod adds
+DLSS FG on top of it — a genuine integration with real motion vectors, which
+is also what a future NR model would want. Neither is verified under Proton.
+And when NVIDIA ships Ada support, the driver itself will carry
+`nvngx_dlssnr.dll`; the same community tooling prefers the driver copy over the
+leak, so the experiment above becomes `--model auto`.
 
 ## Streaming to the TV
 
@@ -294,7 +429,7 @@ have.
 
 ## CPU note
 
-The desktop is a 7900X3D: dual-CCD, with V-Cache on CCD0 only, so the
+The 7900X3D is dual-CCD, with V-Cache on CCD0 only, so the
 CCD-preference problem written up for the 9950X3D applies in full. Two pieces,
 both installed by the setup script from `system/gaming/`:
 
