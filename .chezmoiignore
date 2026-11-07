@@ -6,6 +6,7 @@ system
 tests
 scripts
 *.iso
+README.md
 
 {{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
 .config/nvim

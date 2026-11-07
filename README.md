@@ -188,7 +188,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 Two non-obvious ones:
 
 - **`35-npm-globals`** installs an fnm-managed Node first if the current one is `system` or absent. Without it npm resolves to the system (Homebrew) prefix, which can be foreign-owned — global installs then fail with `EACCES`.
-- **`50-jetbrains-wayland`** is a `run_after_` (every apply, not once): it appends `-Dawt.toolkit.name=WLToolkit` to each IDE's `*64.vmoptions` for native Wayland rendering, and new JetBrains IDEs only create that file after their first launch.
+- **`50-jetbrains-wayland`** is a `run_after_` (every apply, not once): it appends `-Dawt.toolkit.name=WLToolkit` (native Wayland rendering, JBR 21+ / 2024.2+) and `-Dsun.java2d.uiScale.enabled=true` to each IDE's `*64.vmoptions` under `~/.config/JetBrains/<IDE><version>/`, idempotently; new JetBrains IDEs only create that file after their first launch, so the flags land on the apply after that.
 
 Docker and sysbox (Docker-in-Docker) have their own sections below.
 
