@@ -9,9 +9,8 @@
 #   --dlss      newest DLSS DLLs (SR/RR/FG) and the latest transformer presets,
 #               overriding whatever the game bundles. Default ON for games that
 #               have DLSS; harmless on games that do not.
-#   --no-dlss   leave the game's own DLSS alone. Also strips the same
-#               variables when they come from the global defaults in
-#               ~/.config/environment.d/50-gaming.conf.
+#   --no-dlss   leave the game's own DLSS alone (and strip the DLSS variables
+#               if something upstream already exported them).
 #   --smooth    driver-level frame generation (NVIDIA Smooth Motion). Works on
 #               ANY game, DX11 included. Never together with native DLSS FG.
 #   --reflex    Reflex for Vulkan titles (dxvk-nvapi layer) and the vkd3d
@@ -68,8 +67,7 @@ if [ -n "$dlss" ]; then
   export PROTON_ENABLE_NGX_UPDATER=1
   export DXVK_NVAPI_DRS_SETTINGS="${DXVK_NVAPI_DRS_SETTINGS:-ngx_dlss_sr_override=on,ngx_dlss_rr_override=on,ngx_dlss_fg_override=on,ngx_dlss_sr_override_render_preset_selection=render_preset_latest,ngx_dlss_rr_override_render_preset_selection=render_preset_latest}"
 else
-  # The global defaults (environment.d/50-gaming.conf) set the same
-  # variables for every game; opting out has to remove them too.
+  # Opting out must also undo the variables if an outer environment set them.
   unset PROTON_DLSS_UPGRADE PROTON_ENABLE_NGX_UPDATER DXVK_NVAPI_DRS_SETTINGS
 fi
 

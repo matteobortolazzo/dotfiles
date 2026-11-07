@@ -50,18 +50,17 @@ shows what a flag set exports, without launching anything.
 
 ## Global defaults
 
-The DLSS override and the frame cap apply to **every** game, with no launch
-options, from `~/.config/environment.d/50-gaming.conf`
-(`dot_config/private_environment.d/50-gaming.conf`, gaming-gated). It sets the
-`nvrun` default variables plus `DXVK_FRAME_RATE=116`: a few fps under the
-120 Hz the Odyssey is running at, so VRR never meets niri's vsync (no tearing
-support). Raise it to ~230 if the panel goes to 240 Hz. It reaches games
-because environment.d feeds the systemd user manager, which niri, dms and
-Steam all inherit; it takes effect on the **next login**.
+One thing applies to **every** game with no launch options:
+`DXVK_FRAME_RATE=116`, from `~/.config/environment.d/50-gaming.conf`
+(`dot_config/private_environment.d/50-gaming.conf`, gaming-gated). That is a
+few fps under the 120 Hz the Odyssey runs at, so VRR never meets niri's vsync
+(no tearing support). Raise it to ~230 if the panel goes to 240 Hz. It reaches
+games because environment.d feeds the systemd user manager, which niri, dms
+and Steam all inherit; it takes effect on the **next login**.
+`DXVK_FRAME_RATE=0 %command%` uncaps one title.
 
-Per-game exceptions stay launch options: `nvrun --no-dlss %command%` (strips
-the global DLSS variables), `DXVK_FRAME_RATE=0 %command%` (uncapped), and
-`nvrun --smooth / --reflex / --csp / --nr %command%` for the opt-in features.
+The DLSS override is deliberately **not** global: it is opt-in per game with
+`nvrun %command%`, plus `--smooth / --reflex / --csp / --nr` for the rest.
 
 Two things are Steam settings, not variables, and are set once in the UI:
 
