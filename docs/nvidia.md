@@ -51,13 +51,15 @@ shows what a flag set exports, without launching anything.
 ## Global defaults
 
 One thing applies to **every** game with no launch options:
-`DXVK_FRAME_RATE=116`, from `~/.config/environment.d/50-gaming.conf`
+`DXVK_FRAME_RATE=116` (DX8–11 via DXVK) and `VKD3D_FRAME_RATE=116` (DX12 via
+vkd3d-proton — EVO and Rally are DX12, so the DXVK variable alone misses
+them), from `~/.config/environment.d/50-gaming.conf`
 (`dot_config/private_environment.d/50-gaming.conf`, gaming-gated). That is a
 few fps under the 120 Hz the Odyssey runs at, so VRR never meets niri's vsync
 (no tearing support). Raise it to ~230 if the panel goes to 240 Hz. It reaches
 games because environment.d feeds the systemd user manager, which niri, dms
 and Steam all inherit; it takes effect on the **next login**.
-`DXVK_FRAME_RATE=0 %command%` uncaps one title.
+`DXVK_FRAME_RATE=0` / `VKD3D_FRAME_RATE=0 %command%` uncaps one title.
 
 The DLSS override is deliberately **not** global: it is opt-in per game with
 `nvrun %command%`, plus `--smooth / --reflex / --csp / --nr` for the rest.
