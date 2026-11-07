@@ -42,6 +42,7 @@ Generated from `dot_config/niri/config.kdl`.
 | Keys | Action |
 |---|---|
 | `Mod+Q` | Close window |
+| `Mod+Shift+Q` | Force-kill focused window (SIGKILL; for hung games) |
 | `Mod+V` | Toggle floating |
 | `Mod+M` / `Mod+F` | Maximize column |
 | `Mod+Z` | Fullscreen window |

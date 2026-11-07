@@ -232,6 +232,11 @@ binds {
 
     // Compositor
     Mod+Q       { close-window; }
+    // close-window only *asks*; a hung fullscreen game (AC EVO freezing on a
+    // display-settings change) never answers and looks like a frozen system.
+    // SIGKILL the focused window's process instead. For a Proton title that
+    // is the game's Wine process; Steam then tears the rest down.
+    Mod+Shift+Q repeat=false hotkey-overlay-title="Force-kill focused window" { spawn-sh "pid=$(niri msg --json focused-window | jq -r '.pid // empty'); [ -n \"$pid\" ] && kill -9 \"$pid\""; }
     Mod+V       { toggle-window-floating; }
     Mod+M       { maximize-column; }
     Mod+Z       { fullscreen-window; }
