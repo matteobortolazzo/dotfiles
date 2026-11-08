@@ -19,6 +19,14 @@ export RESEND_FROM_ADDRESS={{ onepasswordRead "op://Private/Resend/FromAddress" 
 # Velka (prod)
 export CAPGO_TOKEN={{ onepasswordRead "op://Private/velka-prod/Mobile/Capgo App Developer Key" | shellQuote }}
 export VELKA_APPINSIGHTS_CONNECTION_STRING={{ onepasswordRead "op://Private/velka-prod/Azure/Application Insight Connection String" | shellQuote }}
+# Capgo v2 OTA signing keys: paths, not PEM, so ui.sh never materializes a temp copy.
+export CAPGO_KEY_V2_COACH="$HOME/.config/velka/capgo/coach.key"
+export CAPGO_KEY_V2_CLIENT="$HOME/.config/velka/capgo/client.key"
+# Android upload keystore (PKCS12: the key password is the store password).
+export ANDROID_KEYSTORE_FILE="$HOME/.config/velka/android/velka-release.keystore"
+export ANDROID_KEYSTORE_PASSWORD={{ onepasswordRead "op://Private/velka-prod/Mobile/Android Keystore Password" | shellQuote }}
+export ANDROID_KEY_ALIAS=velka-release
+export ANDROID_KEY_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
 {{- if $org }}
 
 # Azure DevOps ({{ $org }})

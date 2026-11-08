@@ -77,4 +77,5 @@ Library/Application Support/com.mitchellh.ghostty
 {{ warnf "1Password CLI not installed: skipping ~/.config/environment. Install `op`, sign in, then re-run `chezmoi apply`." -}}
 {{ end -}}
 .config/environment
+.config/velka
 {{ end -}}
