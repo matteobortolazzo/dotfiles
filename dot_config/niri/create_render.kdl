@@ -1,0 +1,2 @@
+// Seed only. Rewritten at every niri start by scripts/render-device.sh
+// (niri.service.d/render-device.conf); niri needs the include to exist.

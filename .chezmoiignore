@@ -43,6 +43,12 @@ README.md
 .config/niri/scripts/dummy-output.sh
 {{ end -}}
 
+{{ if not (and (eq .profile "main") (dig "tuxedo" false .)) -}}
+.config/niri/render.kdl
+.config/niri/scripts/render-device.sh
+.config/systemd/user/niri.service.d
+{{ end -}}
+
 {{ if ne .profile "wsl" -}}
 .config/scripts/pen-wsl
 {{ end -}}
