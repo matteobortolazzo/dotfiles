@@ -1,6 +1,7 @@
 ayatana-ido
 brightnessctl
 cava
+chromium
 cliphist
 dux-shell
 fuzzel

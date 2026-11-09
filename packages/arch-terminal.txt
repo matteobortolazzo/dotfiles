@@ -1,4 +1,5 @@
 7zip
+android-tools
 atuin
 azure-cli
 base-devel

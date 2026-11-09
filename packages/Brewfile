@@ -63,6 +63,8 @@ brew "azure-cli"
 brew "fastfetch"
 brew "teamookla/speedtest/speedtest"
 cask "jetbrains-toolbox"
+cask "android-platform-tools"
+cask "google-chrome"
 cask "docker-desktop"
 cask "temurin@21"
 end

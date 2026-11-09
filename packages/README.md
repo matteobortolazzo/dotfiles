@@ -141,6 +141,19 @@ macOS already provides the DNS tools. The full-dev Brewfile installs `libpq`, an
 adds its keg-only binaries to PATH for both Apple Silicon and Intel Homebrew.
 This also supplies headers and `pg_config` for language drivers that link libpq.
 
+## Android WebView inspection
+
+Linux installs `android-tools` (`adb`) and Chromium (desktop profile); full-dev
+Macs install `android-platform-tools` and Google Chrome. Lazydocker is already
+included in the Linux terminal list and the full-dev Brewfile.
+
+Enable USB debugging on the Android device, connect it over USB, accept its
+authorization prompt, and check that `adb devices` lists it as `device`. Open
+`chrome://inspect/#devices` in Chromium/Chrome with **Discover USB devices**
+enabled, then choose **inspect** under the running app's WebView. The app must
+enable WebView debugging; see the
+[Chrome DevTools guide](https://developer.chrome.com/docs/devtools/remote-debugging/webviews/).
+
 ## Mac / WSL
 
 macOS installs from `Brewfile` (`run_onchange_before_05-homebrew.sh.tmpl`). The
