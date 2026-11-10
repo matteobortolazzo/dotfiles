@@ -2,9 +2,9 @@
 {{- $devUser := dig "devUser" "" . -}}
 {{- if and $devHost (ne $devHost .chezmoi.hostname) }}
 # Remote dev on the desktop, over Tailscale — works from any network without
-# forwarding a port, since the tailnet is the perimeter. Agent forwarding rather
-# than a key on that box: its 1Password agent socket needs an unlocked GUI,
-# which an SSH session doesn't have.
+# forwarding a port. Linux targets authenticate through Tailscale SSH; Mac
+# Remote Login and LAN recovery use keys. Forward an agent only for a specific
+# command that needs it (`ssh -A`), rather than every dev connection.
 #
 # The host comes from the `devHost` data var, and the block is skipped when it
 # matches this machine's hostname — a box should never carry an entry pointing
@@ -22,10 +22,10 @@ Host {{ $devHost }}
 {{- if $devUser }}
     User {{ $devUser }}
 {{- end }}
-    ForwardAgent yes
 
 {{ end -}}
 Host *
+    ForwardAgent no
     AddKeysToAgent yes
 {{- if eq .chezmoi.os "darwin" }}
     IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

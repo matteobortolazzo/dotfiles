@@ -140,6 +140,8 @@ Source state lives in `~/.local/share/chezmoi/`. Key conventions:
 | Package manager | pacman / yay (AUR) | brew | — |
 | Captive-portal watcher (`29-captive-portal`) | `main` only | — | — |
 | Tailscale (`23-tailscale`); NM/resolved DNS wiring `main` only | `main` + `wsl` | — | — |
+| Tailscale SSH (`24-tailscale-ssh`); keep OpenSSH keys for LAN recovery | `main` | Use key-based Remote Login | — |
+| Herdr TUI + core (`43-herdr`); desktop app only on non-headless native hosts | `main` + `wsl` | ✓ | ✓ |
 | Steam / gamescope-session / Sunshine / Fanatec FFB | `main` + `gaming` | — | — |
 | SSH server (`27-sshd`) | `main` | Remote Login | ✓ |
 | Scoped ufw rules (`28-firewall`) | `main` | — | — |

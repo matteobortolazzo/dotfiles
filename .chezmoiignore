@@ -8,6 +8,10 @@ scripts
 *.iso
 README.md
 
+{{ if or (eq .profile "wsl") (dig "headless" false .) -}}
+.config/herdr-app
+{{ end -}}
+
 {{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
 .config/nvim
 .config/yazi
