@@ -184,6 +184,11 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `43-herdr` | Herdr TUI + herdr-core (`hc`) on all profiles; desktop app on non-headless `main` and `mac` | `~/.local/bin`; app data in `~/.local/share/herdr-app` (Linux) or `~/Applications/Herdr.app` (macOS) |
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
+Herdr's graphical client uses `Ctrl+S` with the official prefix mod's default
+actions; existing app shortcuts are preserved. Headless hosts use core directly
+over SSH with `hc` / `hc attach`. See [remote access](docs/remote-access.md) for
+the laptop-to-desktop workflow, bindings and the distinction from Herdr TUI.
+
 `main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`). `23-tailscale` runs on `main` and `wsl`: it enables `tailscaled` on both, and on `main` also fixes the NetworkManager/systemd-resolved wiring MagicDNS depends on (see below). WSL has no NetworkManager and owns `/etc/resolv.conf` itself, so there tailscaled uses its direct DNS mode instead.
 
 Two non-obvious ones:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run bootstrap scripts with temporary homes and no network or host changes."""
+import json
 import os
 from pathlib import Path
 import shutil
@@ -132,6 +133,43 @@ class BootstrapTests(unittest.TestCase):
         result = self.run_script("run_onchange_after_24-tailscale-ssh.sh.tmpl")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(Path(self.env["SSH_TEST_STATE"]).exists())
+
+
+class HerdrKeysTests(unittest.TestCase):
+    def merge(self, original, profile="main"):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".sh") as script:
+            script.write(render("dot_config/herdr-app/modify_keys.json.tmpl", profile))
+            script.flush()
+            return subprocess.run(["bash", script.name], input=original,
+                                  text=True, capture_output=True)
+
+    def test_fresh_install_preserves_platform_default_shortcuts(self):
+        for profile, shortcut in (("main", "ctrl-shift-t"), ("mac", "cmd-t")):
+            with self.subTest(profile=profile):
+                result = self.merge("", profile)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                keys = json.loads(result.stdout)
+                self.assertEqual(keys["global"][shortcut], "tab.new")
+                self.assertEqual(keys["global"]["ctrl-s"], "mod.open:dotfiles-prefix")
+                self.assertEqual(keys["terminal"]["ctrl-s"], "mod.open:dotfiles-prefix")
+
+    def test_existing_shortcuts_are_preserved_and_reapply_converges(self):
+        original = json.dumps({"global": {"ctrl-b": "my.custom.command"},
+                               "mod:editor": {"ctrl-s": "editor.save"}})
+        result = self.merge(original)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        keys = json.loads(result.stdout)
+        self.assertEqual(keys["global"]["ctrl-b"], "my.custom.command")
+        self.assertEqual(keys["mod:editor"]["ctrl-s"], "editor.save")
+        self.assertEqual(keys["mod:dotfiles-prefix"]["ctrl-s"], "dotfiles-prefix.send-prefix")
+        reapplied = self.merge(result.stdout)
+        self.assertEqual(reapplied.returncode, 0, reapplied.stderr)
+        self.assertEqual(reapplied.stdout, result.stdout)
+
+    def test_invalid_existing_file_is_not_silently_replaced(self):
+        result = self.merge("{invalid")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
 
 
 if __name__ == "__main__":

@@ -38,10 +38,10 @@ class ConfigTests(unittest.TestCase):
             op.write_text("#!/bin/sh\nexit 1\n")
             op.chmod(0o755)
             env = {**os.environ, "PATH": tmp + os.pathsep + os.environ["PATH"]}
-            for profile, gaming in ((p, g) for p in ("main", "mac", "wsl")
-                                    for g in (False, True)):
+            for profile, gaming, headless in ((p, g, h) for p in ("main", "mac", "wsl")
+                                              for g in (False, True) for h in (False, True)):
                 data = {"profile": profile, "org": "", "devHost": "",
-                        "gaming": gaming,
+                        "gaming": gaming, "headless": headless,
                         "chezmoi": {"os": "darwin" if profile == "mac" else "linux"}}
                 result = subprocess.run(
                     ["chezmoi", "--source", str(ROOT), "--config", "/dev/null",
@@ -56,6 +56,8 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual(".config/ghostty/config" in targets, profile != "wsl")
                 self.assertEqual(".config/niri/config.kdl" in targets, profile == "main")
                 self.assertEqual(".config/sunshine" in targets, profile == "main" and gaming)
+                self.assertEqual(".config/herdr-app/mods/dotfiles-prefix/main.js" in targets,
+                                 profile != "wsl" and not headless)
 
     def test_scripts_render_and_parse_for_all_profiles(self):
         for profile, roles in [

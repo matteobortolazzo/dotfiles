@@ -93,6 +93,59 @@ MagicDNS name (`amd-desktop`), Linux username (`mborto`), and port `22`.
 Follow any sign-in approval shown by Tailscale. A GitHub/Tailscale account name
 is not the Linux username. No desktop session or GUI app is needed on the host.
 
+## Everyday laptop work and quick SSH access
+
+Open the Herdr desktop app on the laptop, connect `mborto@amd-desktop`, and create
+the space on that remote machine. Spaces group tabs; tabs arrange panes; terminal
+panes run in the desktop's core. The graphical client can close while those
+programs continue. Herdr TUI has a separate server and cannot attach to core.
+
+For quick access from any SSH client, no graphical app is required:
+
+```sh
+ssh mborto@amd-desktop
+hc                    # pick a core terminal
+# Or select one explicitly:
+hc ls
+hc attach t1          # replace t1 with an ID from hc ls
+```
+
+`Ctrl+\` detaches from an attached core terminal, leaving its program running.
+This accesses the same core terminals as the desktop and phone apps, but does
+not provide the TUI's full workspace interface.
+
+## Laptop keyboard: Ctrl+S and default prefix actions
+
+Native graphical hosts receive the official Herdr tmux-prefix example under the
+dotfiles-owned name `dotfiles-prefix`. Only the prefix changes to `Ctrl+S`; the
+example's default actions and 500 ms repeat window are retained. The popup shows
+the bindings; `?` expands the list and Escape cancels.
+
+| After Ctrl+S | Action |
+| --- | --- |
+| `c` | New tab |
+| `%` / `"` | Split right / down |
+| `h`, `j`, `k`, `l` or arrows | Focus another pane |
+| `n` / `p` | Next / previous tab |
+| `1`–`9`, `0` | Select tab 1–9, 10 |
+| `J` / `K` | Next / previous space |
+| `z` | Zoom pane |
+| `x` | Close pane and end its terminal |
+| `d` | Minimize the app window; programs keep running |
+| `Ctrl+S` again | Send a literal Ctrl+S to the terminal |
+
+`Ctrl+S` is captured by the app instead of reaching the foreground program;
+press it twice when that program needs it. The mod invokes `hc keys` to forward
+literal keys, including to remote terminals; it does not add a network service.
+This prefix is for the graphical app; SSH `hc attach` still uses `Ctrl+\` to detach.
+
+The `modify_keys.json.tmpl` merge preserves existing key bindings and adds the
+prefix. Fresh installs are seeded from upstream Linux/macOS default key files
+retrieved on 2026-11-10. Herdr treats customized key files as user-owned, so new
+upstream shortcuts need merging into these snapshots when updating the app.
+Headless hosts and WSL skip this graphical configuration. The upstream mod's
+Apache-2.0 license is included alongside it.
+
 ## Diagnose a failed phone connection
 
 1. Check that both devices are connected to the same tailnet. Try the desktop's
@@ -108,4 +161,5 @@ is not the Linux username. No desktop session or GUI app is needed on the host.
    `~/.local/bin/herdr-core` explicitly when diagnosing.
 
 References: [Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh),
-[Herdr mobile](https://herdr.dev/mobile/), [herdr-core](https://herdr.dev/core/).
+[Herdr mobile](https://herdr.dev/mobile/), [herdr-core](https://herdr.dev/core/),
+[official prefix mod](https://herdr.dev/mods/herdrdev/tmux-prefix/).

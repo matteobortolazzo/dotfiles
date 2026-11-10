@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Preserve existing bindings and add the Ctrl+S prefix. Fresh installs start
+# with Herdr's platform defaults (Apache-2.0; license in mods/dotfiles-prefix).
+# Defaults: herdrdev/herdr-app/defaults/keys{,.macos}.json, retrieved 2026-11-10.
+set -euo pipefail
+
+defaults=$(cat <<'JSON'
+{{ if eq .chezmoi.os "darwin" -}}
+{{ include ".chezmoitemplates/herdr-keys.macos.json" }}
+{{ else -}}
+{{ include ".chezmoitemplates/herdr-keys.json" }}
+{{ end -}}
+JSON
+)
+current=$(cat)
+if [ -z "${current//[[:space:]]/}" ]; then
+  current='{}'
+fi
+
+# Invalid existing JSON fails the apply rather than discarding personal keys.
+jq -S -n --argjson defaults "$defaults" --argjson current "$current" '
+  ($defaults * $current)
+  | .global["ctrl-s"] = "mod.open:dotfiles-prefix"
+  | .terminal["ctrl-s"] = "mod.open:dotfiles-prefix"
+  | .["mod:dotfiles-prefix"]["ctrl-s"] = "dotfiles-prefix.send-prefix"
+'
