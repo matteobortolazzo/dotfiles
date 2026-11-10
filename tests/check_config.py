@@ -194,6 +194,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config = Path(tmp) / "config.kdl"
             config.write_text((ROOT / "dot_config/niri/config.kdl").read_text())
+            (Path(tmp) / "host.kdl").write_text(render("dot_config/niri/host.kdl.tmpl"))
             (Path(tmp) / "dms").mkdir()
             (Path(tmp) / "dms/outputs.kdl").write_text(
                 (ROOT / "dot_config/niri/dms/create_outputs.kdl").read_text())

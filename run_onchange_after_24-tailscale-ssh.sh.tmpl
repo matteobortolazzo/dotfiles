@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") -}}
+set -euo pipefail
+
+# All native Linux PCs use Tailscale SSH. Mac Remote Login and LAN recovery
+# keep using OpenSSH keys. Tailnet SSH access rules control authorization.
+command -v tailscale >/dev/null 2>&1 || {
+  echo "Tailscale is missing; install it and rerun chezmoi apply." >&2
+  exit 1
+}
+
+# Fail on an unreadable daemon rather than attempting to change unknown state.
+prefs=$(tailscale debug prefs)
+if printf '%s\n' "$prefs" | jq -e '.RunSSH == true' >/dev/null; then
+  exit 0
+fi
+
+# Do not automatically accept disconnecting the SSH session running this apply.
+# From that session, enable explicitly with --accept-risk=lose-ssh, then retry.
+sudo tailscale set --ssh
+{{ end -}}

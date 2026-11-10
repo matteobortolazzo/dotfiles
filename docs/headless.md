@@ -5,6 +5,14 @@ desktop, which is a remote dev target most of the time and a sim rig / couch
 gaming host some of the time. Set up by
 `run_once_after_49-headless-boot.sh.tmpl`.
 
+## Herdr from Android
+
+Headless hosts receive Herdr TUI and `herdr-core` (`hc`), without the desktop
+app. Official Herdr mobile connects to core; agents started in the TUI are separate
+and do not appear on the phone. Tailscale SSH is the default remote login on all
+native Linux PCs, with OpenSSH keys retained for LAN recovery. Setup, platform
+decisions and troubleshooting are in [remote-access.md](remote-access.md).
+
 ## Two boot entries, not one default target
 
 limine gets a second entry off the same kernel:

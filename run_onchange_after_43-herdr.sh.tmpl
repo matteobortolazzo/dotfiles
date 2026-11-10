@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+{{ if eq .chezmoi.os "linux" "darwin" -}}
+set -euo pipefail
+
+# TUI and core have separate servers. Core is required by official mobile apps.
+if ! command -v herdr >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/herdr" ]; then
+  curl -fsSL https://herdr.dev/install.sh | sh
+fi
+
+if ! command -v herdr-core >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/herdr-core" ]; then
+  curl -fsSL https://releases.herdr.dev/core/install.sh | sh
+fi
+
+{{ if and (eq .profile "main" "mac") (not (dig "headless" false .)) -}}
+if ! command -v herdr-app >/dev/null 2>&1 \
+    && [ ! -x "$HOME/.local/bin/herdr-app" ] \
+    && [ ! -x "$HOME/Applications/Herdr.app/Contents/MacOS/Herdr" ] \
+    && [ ! -x "/Applications/Herdr.app/Contents/MacOS/Herdr" ]; then
+  # Also installs the desktop launcher; core is installed independently above.
+  curl -fsSL https://releases.herdr.dev/app/install.sh | sh
+fi
+{{ end -}}
+{{ end -}}

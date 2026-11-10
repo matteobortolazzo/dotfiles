@@ -181,6 +181,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `34-dotnet` | .NET LTS via dotnet-install.sh | `~/.dotnet` (`$DOTNET_ROOT`) |
 | `35-npm-globals` | fnm Node LTS + global npm packages | fnm prefix |
 | `40-aspire` | Aspire CLI, standalone build | `~/.aspire/bin` |
+| `43-herdr` | Herdr TUI + herdr-core (`hc`) on all profiles; desktop app on non-headless `main` and `mac` | `~/.local/bin`; app data in `~/.local/share/herdr-app` (Linux) or `~/Applications/Herdr.app` (macOS) |
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
 `main`-profile only: `38-opt-webp` (libwebp into `/opt/webp`), `39-pen` (Pen via `~/.config/scripts/install-pen.sh`). `23-tailscale` runs on `main` and `wsl`: it enables `tailscaled` on both, and on `main` also fixes the NetworkManager/systemd-resolved wiring MagicDNS depends on (see below). WSL has no NetworkManager and owns `/etc/resolv.conf` itself, so there tailscaled uses its direct DNS mode instead.
@@ -209,7 +210,17 @@ Two sessions run from the same greetd: niri for the desktop *and* for sim racing
 
 ## SSH access
 
-SSH access is part of the baseline on all native machines. On CachyOS, two scripts configure the daemon and its firewall:
+SSH access is part of the baseline on all native machines.
+
+Tailscale is the default remote network on every PC. `24-tailscale-ssh` enables
+Tailscale SSH on native Linux `main` hosts, including laptops; the tailnet policy
+authorizes the caller and Linux username. Existing SSH keys stay available for
+OpenSSH over the LAN as a recovery path. Macs keep the standard Tailscale app plus
+key-based macOS Remote Login: that app cannot host Tailscale SSH. Agent forwarding
+is off by default; opt in with `ssh -A` only when a command needs it. See
+[`docs/remote-access.md`](docs/remote-access.md) for setup and troubleshooting.
+
+On CachyOS, two additional scripts configure OpenSSH and its firewall:
 
 - `27-sshd` — enables `sshd.service`. Hardening (`PasswordAuthentication no`, `PermitRootLogin no`) is written to `/etc/ssh/sshd_config.d/10-hardening.conf` **only once `~/.ssh/authorized_keys` is non-empty**. Writing it against an empty key file would lock out every remote login on a box whose whole point is being headless. Until then the script prints the `ssh-copy-id` + re-run instructions.
 - `28-firewall` — enables ufw and opens port 22 on the home LAN (`192.168.1.0/24`) and `tailscale0`, plus LocalSend and, on a `gaming` host, Sunshine's ports. Other networks use Tailscale; a different trusted LAN needs an explicit subnet rule. The SSH rule uses plain `allow`: the previous `limit` rule rejected idle sessions on their own retransmits.
@@ -239,7 +250,7 @@ ssh amd-desktop    # the devHost entry from private_dot_ssh/config.tmpl
 
 The target comes from the `devHost` data var rather than a hostname baked into the ssh config, and the block is skipped when `devHost` equals `.chezmoi.hostname` — no machine carries an alias pointing at itself, and Tailscale derives the MagicDNS name from the system hostname, so that comparison is exact. Renaming the desktop is a one-line config change on each client.
 
-`HostName` is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule separately allows the local subnet.
+The target is the **short** MagicDNS name rather than the FQDN: the tailnet suffix is pushed to every member as a DNS search domain, so the short name resolves on its own and the tailnet ID stays out of this repo. Set `devHost` to `<host>.<tailnet>.ts.net` on a client that has MagicDNS off. `28-firewall`'s `tailscale0` rule is what lets the connection in; the LAN rule separately allows the local subnet.
 
 MagicDNS is the fragile part, and it fails quietly. NetworkManager writes `/etc/resolv.conf` as a regular file by default, which is what makes `tailscale status` report *"systemd-resolved and NetworkManager are wired together incorrectly"*. Lookups usually still work — NM writes `nameserver 127.0.0.53`, which is resolved's stub — but NM owns that file and rewrites it on interface changes, so one reconnect can swap in the router's DNS and `*.ts.net` stops resolving with nothing in any log. `23-tailscale` installs `system/NetworkManager/10-dns-systemd-resolved.conf` (`dns=systemd-resolved` + `rc-manager=unmanaged`) and symlinks `/etc/resolv.conf` to resolved's stub. Check it with:
 
