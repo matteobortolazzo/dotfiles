@@ -99,7 +99,11 @@ oversteer                        # rotation, FFB gain, centring
 In Steam, set **Controller → Steam Input → Disabled** per sim title, otherwise
 Steam remaps the wheel axes into a virtual gamepad and pedal calibration breaks.
 
-Proton: `proton-cachyos` handles Assetto Corsa / ACC well. iRacing is
+Assetto Corsa's verified configuration uses **GE-Proton9-2, CSP 0.3.2-preview2,
+and Pure 3.59 Highres**. See [the installation and repair runbook](assetto-corsa.md)
+for the Wine font fix, weather/filter settings, partial CSP update diagnosis,
+verification, and backups. Keep this per-game Proton selection when experimenting
+with global defaults. iRacing is
 "works with tweaks" tier — expect launch options or Proton-GE. `protontricks` is
 installed for per-prefix fixes.
 
@@ -156,10 +160,9 @@ Notes that are not obvious from the table:
   exposed and which `nvngx_dlss` build loaded. `MANGOHUD=1` for the frametime.
 - These are launch-option variables, so they apply the same under niri and
   under `gamescope-session`; Smooth Motion in the couch session is fine.
-- **Pick the Proton per title.** Steam has no compatibility-tool mapping on this
-  box, so games run on whatever Steam defaults to (Proton Experimental is in
-  the library). Set **Proton-CachyOS** (installed by pacman, system-wide) in
-  each game's Properties → Compatibility: it is the build whose DLSS
+- **Pick the Proton per title.** Assetto Corsa is pinned to **GE-Proton9-2**
+  after a CSP launch failure with GE-Proton11-7. For other titles,
+  **Proton-CachyOS** (installed by pacman, system-wide) is the build whose DLSS
   downloader and indicator the wrapper targets first.
 - GE-Proton vs Proton-CachyOS: both read every variable above
   (`PROTON_DLSS_UPGRADE` landed in GE-Proton 10-26). GE-Proton disables NVAPI
@@ -167,8 +170,8 @@ Notes that are not obvious from the table:
 
 ### Assetto Corsa: Content Manager, CSP, and the DLSS 5 experiment
 
-AC is stock on this box today (vanilla `AssettoCorsa.exe` launcher, no CSP,
-no launch options). The Linux setup repos (`crmne/assetto-corsa-setup`,
+AC now runs Content Manager, CSP preview, and Pure; the verified installation is
+documented in [assetto-corsa.md](assetto-corsa.md). The Linux setup repos (`crmne/assetto-corsa-setup`,
 `sihawido/assettocorsa-linux-setup`) all do the same thing: replace
 `AssettoCorsa.exe` with Content Manager (original kept as
 `AssettoCorsa_original.exe`), pin a GE-Proton, install CSP 0.2.x plus fonts
