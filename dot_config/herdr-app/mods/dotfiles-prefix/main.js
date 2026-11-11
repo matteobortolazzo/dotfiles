@@ -1,7 +1,7 @@
 // Adapted from herdrdev/herdr-layout-examples, tmux-prefix (Apache-2.0).
 // Upstream main.js blob: 618867216154ca48ac619dbb319be999186ae021.
 // Changes: Ctrl+S prefix, a dotfiles-owned mod name, and keys matching tmux.conf
-// (h/| split right, v/- split down, f zoom, arrows focus). The app has no resize
+// (h | % split right, v - " split down, f zoom, arrows focus). The app has no resize
 // action, so tmux's j/k/l resize has no equivalent here.
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
@@ -16,6 +16,8 @@ const BINDINGS = [
   ["|", "Split right", "pane.split", { direction: "right" }],
   ["v", "Split down", "pane.split", { direction: "down" }],
   ["-", "Split down", "pane.split", { direction: "down" }],
+  ["%", "Split right", "pane.split", { direction: "right" }],
+  ['"', "Split down", "pane.split", { direction: "down" }],
   ["x", "Close pane", "pane.close"],
   ["n", "Next tab", "tab.next"],
   ["p", "Previous tab", "tab.prev"],

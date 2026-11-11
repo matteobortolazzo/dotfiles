@@ -124,7 +124,7 @@ list and Escape cancels.
 | After Ctrl+S | Action |
 | --- | --- |
 | `c` | New tab |
-| `h` or `\|` / `v` or `-` | Split right / down |
+| `h`, `\|` or `%` / `v`, `-` or `"` | Split right / down |
 | Arrows | Focus another pane |
 | `n` / `p` | Next / previous tab |
 | `1`–`9`, `0` | Select tab 1–9, 10 |

@@ -185,7 +185,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
 Herdr's TUI and graphical client both use `Ctrl+S` with tmux's keys after it
-(`h`/`|` and `v`/`-` split, `f` zoom); existing app shortcuts are preserved. Headless hosts use core directly
+(`h`/`|`/`%` and `v`/`-`/`"` split, `f` zoom); existing app shortcuts are preserved. Headless hosts use core directly
 over SSH with `hc` / `hc attach`. See [remote access](docs/remote-access.md) for
 the laptop-to-desktop workflow, bindings and the distinction from Herdr TUI.
 
