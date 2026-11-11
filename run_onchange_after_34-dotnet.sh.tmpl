@@ -4,11 +4,16 @@
 set -euo pipefail
 
 # install path matches $DOTNET_ROOT in .zshrc
-[ -x "$HOME/.dotnet/dotnet" ] && exit 0
+# Side-by-side with older SDKs: bump `channel` to move to the next major.
+channel=11.0
+if [ -x "$HOME/.dotnet/dotnet" ] \
+  && "$HOME/.dotnet/dotnet" --list-sdks | grep -q "^${channel%%.*}\."; then
+  exit 0
+fi
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 curl -fsSL -o "$tmp" https://dot.net/v1/dotnet-install.sh
 chmod +x "$tmp"
-"$tmp" --channel LTS --install-dir "$HOME/.dotnet"
+"$tmp" --channel "$channel" --install-dir "$HOME/.dotnet"
 {{ end -}}

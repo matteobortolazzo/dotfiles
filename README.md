@@ -178,7 +178,7 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 |---|---|---|
 | `30-oh-my-zsh`, `31-zsh-plugins`, `32-tmux-plugins` | Oh My Zsh, zsh plugins, tpm | `~/.oh-my-zsh`, `~/.config/tmux/plugins` |
 | `33-rustup` | rustup via rustup.rs (`--no-modify-path`) | `~/.cargo` |
-| `34-dotnet` | .NET LTS via dotnet-install.sh | `~/.dotnet` (`$DOTNET_ROOT`) |
+| `34-dotnet` | .NET 11 via dotnet-install.sh | `~/.dotnet` (`$DOTNET_ROOT`) |
 | `35-npm-globals` | fnm Node LTS + global npm packages | fnm prefix |
 | `40-aspire` | Aspire CLI, standalone build | `~/.aspire/bin` |
 | `43-herdr` | Herdr TUI + herdr-core (`hc`) on all profiles; desktop app on non-headless `main` and `mac` | `~/.local/bin`; app data in `~/.local/share/herdr-app` (Linux) or `~/Applications/Herdr.app` (macOS) |
