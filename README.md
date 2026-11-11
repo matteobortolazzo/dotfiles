@@ -184,8 +184,8 @@ Bootstrapped by the `run_once_after_3x/4x` scripts. Everything installs **into `
 | `43-herdr` | Herdr TUI + herdr-core (`hc`) on all profiles; desktop app on non-headless `main` and `mac` | `~/.local/bin`; app data in `~/.local/share/herdr-app` (Linux) or `~/Applications/Herdr.app` (macOS) |
 | `44-lazyboards` | `go install` lazyboards | `~/go/bin` |
 
-Herdr's graphical client uses `Ctrl+S` with the official prefix mod's default
-actions; existing app shortcuts are preserved. Headless hosts use core directly
+Herdr's TUI and graphical client both use `Ctrl+S` with tmux's keys after it
+(`h`/`|` and `v`/`-` split, `f` zoom); existing app shortcuts are preserved. Headless hosts use core directly
 over SSH with `hc` / `hc attach`. See [remote access](docs/remote-access.md) for
 the laptop-to-desktop workflow, bindings and the distinction from Herdr TUI.
 

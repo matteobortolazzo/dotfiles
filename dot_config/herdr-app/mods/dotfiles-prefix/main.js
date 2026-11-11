@@ -1,6 +1,8 @@
 // Adapted from herdrdev/herdr-layout-examples, tmux-prefix (Apache-2.0).
 // Upstream main.js blob: 618867216154ca48ac619dbb319be999186ae021.
-// Changes: Ctrl+S prefix and a dotfiles-owned mod name; default actions retained.
+// Changes: Ctrl+S prefix, a dotfiles-owned mod name, and keys matching tmux.conf
+// (h/| split right, v/- split down, f zoom, arrows focus). The app has no resize
+// action, so tmux's j/k/l resize has no equivalent here.
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { closeOverlay, focused, hc, nextCommand, props, run, theme } from "herdr";
@@ -10,21 +12,20 @@ import { closeOverlay, focused, hc, nextCommand, props, run, theme } from "herdr
 const REPEAT_MS = 500;
 const BINDINGS = [
   ["c", "New tab", "tab.new"],
-  ["%", "Split right", "pane.split", { direction: "right" }],
-  ['"', "Split down", "pane.split", { direction: "down" }],
+  ["h", "Split right", "pane.split", { direction: "right" }],
+  ["|", "Split right", "pane.split", { direction: "right" }],
+  ["v", "Split down", "pane.split", { direction: "down" }],
+  ["-", "Split down", "pane.split", { direction: "down" }],
   ["x", "Close pane", "pane.close"],
   ["n", "Next tab", "tab.next"],
   ["p", "Previous tab", "tab.prev"],
-  ["h", "Focus left", "pane.go", { direction: "left" }, true],
-  ["j", "Focus down", "pane.go", { direction: "down" }, true],
-  ["k", "Focus up", "pane.go", { direction: "up" }, true],
-  ["l", "Focus right", "pane.go", { direction: "right" }, true],
   ["left", "Focus left", "pane.go", { direction: "left" }, true],
   ["down", "Focus down", "pane.go", { direction: "down" }, true],
   ["up", "Focus up", "pane.go", { direction: "up" }, true],
   ["right", "Focus right", "pane.go", { direction: "right" }, true],
   ["J", "Next space", "space.next", {}, true],
   ["K", "Previous space", "space.prev", {}, true],
+  ["f", "Zoom pane", "pane.zoom"],
   ["z", "Zoom pane", "pane.zoom"],
   ["d", "Minimize window", "window.minimize"],
   ...Array.from({ length: 10 }, (_, i) => [String(i), `Tab ${i === 0 ? 10 : i}`, "tab.select", { index: i === 0 ? 10 : i }]),

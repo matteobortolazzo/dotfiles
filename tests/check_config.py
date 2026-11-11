@@ -189,7 +189,13 @@ class ConfigTests(unittest.TestCase):
                 json.loads(path.read_text())
         for path in ROOT.glob("dot_config/**/*.toml"):
             with self.subTest(path=path):
-                tomllib.loads(path.read_text())
+                if path.name.startswith("modify_"):
+                    # A script: check what it writes over an empty target.
+                    text = subprocess.run(["sh", path], input="", capture_output=True,
+                                          text=True, check=True).stdout
+                else:
+                    text = path.read_text()
+                tomllib.loads(text)
 
     @unittest.skipUnless(shutil.which("niri"), "niri is not installed")
     def test_niri_config(self):

@@ -114,25 +114,34 @@ hc attach t1          # replace t1 with an ID from hc ls
 This accesses the same core terminals as the desktop and phone apps, but does
 not provide the TUI's full workspace interface.
 
-## Laptop keyboard: Ctrl+S and default prefix actions
+## Laptop keyboard: Ctrl+S and tmux-style keys
 
 Native graphical hosts receive the official Herdr tmux-prefix example under the
-dotfiles-owned name `dotfiles-prefix`. Only the prefix changes to `Ctrl+S`; the
-example's default actions and 500 ms repeat window are retained. The popup shows
-the bindings; `?` expands the list and Escape cancels.
+dotfiles-owned name `dotfiles-prefix`, rebound to match `tmux.conf`: `Ctrl+S`
+prefix, 500 ms repeat window. The popup shows the bindings; `?` expands the
+list and Escape cancels.
 
 | After Ctrl+S | Action |
 | --- | --- |
 | `c` | New tab |
-| `%` / `"` | Split right / down |
-| `h`, `j`, `k`, `l` or arrows | Focus another pane |
+| `h` or `\|` / `v` or `-` | Split right / down |
+| Arrows | Focus another pane |
 | `n` / `p` | Next / previous tab |
 | `1`–`9`, `0` | Select tab 1–9, 10 |
 | `J` / `K` | Next / previous space |
-| `z` | Zoom pane |
+| `f` or `z` | Zoom pane |
 | `x` | Close pane and end its terminal |
 | `d` | Minimize the app window; programs keep running |
 | `Ctrl+S` again | Send a literal Ctrl+S to the terminal |
+
+The app has no resize action, so tmux's `j`/`k`/`l` resize exists only in the
+TUI. The Herdr **TUI** gets the same layout from
+`dot_config/herdr/modify_config.toml`, which owns the `[keys]` tables of
+`~/.config/herdr/config.toml` and leaves the rest to Herdr: `j`/`k`/`l` resize,
+`q` detaches, and `Ctrl+T`/`Ctrl+G`/`Ctrl+F`/`Ctrl+Z` open the same zsh,
+lazygit, yazi and `~/.zshrc` popups as tmux. Check it with `herdr config check`
+and load it with `herdr server reload-config`. Nesting tmux inside Herdr means
+both want `Ctrl+S`; Herdr gets it first.
 
 `Ctrl+S` is captured by the app instead of reaching the foreground program;
 press it twice when that program needs it. The mod invokes `hc keys` to forward

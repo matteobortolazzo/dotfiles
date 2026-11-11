@@ -1,0 +1,59 @@
+#!/bin/sh
+# Herdr TUI keys, laid out like tmux (dot_config/tmux/tmux.conf.tmpl): Ctrl+S
+# prefix, h or | splits right, v or - splits down, j/k/l resize, f zooms.
+# Focus is on prefix+arrows (tmux's own default; tmux's Ctrl+hjkl comes from
+# vim-tmux-navigator, which Herdr can't replicate without breaking nvim).
+#
+# Herdr writes the rest of config.toml itself (onboarding, settings menu), so
+# this keeps every table except [keys]/[keys.*]/[[keys.command]], which the
+# dotfiles own, and appends ours. Validate with `herdr config check`; a clash
+# with a Herdr default shows up there as "disabled keys.<action>".
+set -eu
+
+awk '
+  /^[[:space:]]*\[/ {
+    header = $0
+    sub(/^[[:space:]]*\[+[[:space:]]*/, "", header)
+    skip = (header ~ /^keys([[:space:]]*[].]|$)/)
+  }
+  !skip
+' | awk 'NF { blank = 0 } !NF { if (blank++) next } { print }' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+
+cat <<'EOF'
+
+[keys]
+prefix = "ctrl+s"
+split_vertical = ["prefix+h", "prefix+|"]
+split_horizontal = ["prefix+v", "prefix+minus"]
+focus_pane_left = "prefix+left"
+focus_pane_down = "prefix+down"
+focus_pane_up = "prefix+up"
+focus_pane_right = "prefix+right"
+resize_pane_down = "prefix+j"
+resize_pane_up = "prefix+k"
+resize_pane_right = "prefix+l"
+zoom = ["prefix+f", "prefix+z"]
+detach = "prefix+q"
+next_tab = ["prefix+n", "ctrl+tab"]
+previous_tab = ["prefix+p", "ctrl+shift+tab"]
+
+[[keys.command]]
+key = "prefix+ctrl+t"
+type = "popup"
+command = "zsh"
+
+[[keys.command]]
+key = "prefix+ctrl+g"
+type = "popup"
+command = "lazygit"
+
+[[keys.command]]
+key = "prefix+ctrl+f"
+type = "popup"
+command = "yazi"
+
+[[keys.command]]
+key = "prefix+ctrl+z"
+type = "popup"
+command = "nvim ~/.zshrc"
+EOF
