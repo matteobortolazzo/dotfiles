@@ -153,7 +153,7 @@ op signin
 
 Enable the SSH agent in the 1Password desktop app: **Settings → Developer → SSH Agent**.
 
-On **WSL** there is no 1Password agent to talk to: the Linux app isn't installed, and the Windows one is out of reach because the distro runs with `[automount] enabled=false` (no `/mnt/c`, so no `powershell.exe` and no bridge). That profile uses the plain OpenSSH agent instead — `ssh-agent.socket` (enabled by `run_once_after_60-wsl.sh`) with `SSH_AUTH_SOCK` set in `.zshrc`, so `AddKeysToAgent yes` loads a key from `~/.ssh` on first use. Git over HTTPS is unaffected: it authenticates through `gh auth git-credential`.
+On **WSL** there is no 1Password agent to talk to: the Linux app isn't installed, and no bridge to the Windows one is set up. That profile uses the plain OpenSSH agent instead — `ssh-agent.socket` (enabled by `run_once_after_60-wsl.sh`) with `SSH_AUTH_SOCK` set in `.zshrc`, so `AddKeysToAgent yes` loads a key from `~/.ssh` on first use. Git over HTTPS is unaffected: it authenticates through `gh auth git-credential`.
 
 Secrets on WSL come from a plain CLI session instead, since `op signin` without the app prompts for the account password on every call. The WSL profile sets `[onepassword] prompt = false` and `.chezmoiignore` probes with `op whoami` (which never prompts), so sign in and apply from the same shell:
 
@@ -303,8 +303,8 @@ Two things the config cannot do for you: **plug the USB data cable in** (without
 
 ## WSL notes
 
-- `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, `[automount] enabled=false`, Windows PATH trimmed for fast shells), enables docker, and enables `ssh-agent.socket`. Run `wsl --shutdown` from Windows once after the first apply.
-- **No Windows interop by design.** With automount off, `/mnt/c` is empty and no `*.exe` can be executed, so `wslview`/`$BROWSER`, `clip.exe`, and any 1Password-on-Windows SSH bridge are all unavailable — the configs don't reference them. Two things still work and are worth knowing: the clipboard, via WSLg's Wayland display plus `wl-clipboard` (installed by `10-pacman`), and Windows-side files, over the network path (`\\wsl$`) or `scp`. If you ever want `/mnt/c` back, drop the `[automount]` block from `/etc/wsl.conf`, `wsl --shutdown`, and revisit the WSL branches in `.zshrc` and `~/.ssh/config`.
+- `run_once_after_60-wsl.sh` writes `/etc/wsl.conf` (systemd on, Windows PATH trimmed for fast shells), enables docker, and enables `ssh-agent.socket`. Run `wsl --shutdown` from Windows once after the first apply.
+- **`/mnt/c` is mounted, but nothing depends on interop.** Automount stays on because the VS Code WSL extension (VS Code installed on Windows, *Connect to WSL*) runs its server installer from the Windows extension folder through `wslpath`; with `[automount] enabled=false` it fails with `wsl: Failed to translate 'c:\Users\...'`. The Windows PATH is still not appended, so no `*.exe` is on `PATH`: no `wslview`/`$BROWSER`, `clip.exe` or 1Password-on-Windows SSH bridge. Clipboard goes through WSLg's Wayland display plus `wl-clipboard` (installed by `10-pacman`).
 - Copy `docs/wslconfig.example` to `%USERPROFILE%\.wslconfig` on the Windows host for memory caps, mirrored networking, and `autoMemoryReclaim`.
 
 ## Captive-portal wifi (hotel / airport / train)

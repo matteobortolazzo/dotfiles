@@ -40,11 +40,10 @@ export DOTNET_ROOT="$HOME/.dotnet"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 {{ end -}}
 {{ if eq .profile "wsl" -}}
-# This box is deliberately isolated from the Windows filesystem: /etc/wsl.conf
-# sets [automount] enabled=false, so /mnt/c is empty and no *.exe is reachable
-# (no wslview, no clip.exe, no powershell.exe — so no wsl2-ssh-agent bridge to
-# the Windows 1Password agent either). Everything below stays Linux-side.
-# Clipboard still works: WSLg gives nvim/tmux a Wayland display + wl-clipboard.
+# /mnt/c is mounted (the VS Code WSL extension needs it), but the Windows PATH
+# is not appended (/etc/wsl.conf appendWindowsPath=false), so no *.exe is on
+# PATH and nothing below depends on Windows interop. Clipboard goes through
+# WSLg's Wayland display + wl-clipboard.
 #
 # SSH keys live in the plain OpenSSH agent, socket-activated by systemd
 # (ssh-agent.socket, enabled by run_once_after_60-wsl.sh). ~/.ssh/config has

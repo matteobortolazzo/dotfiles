@@ -32,9 +32,8 @@ Host *
 {{- else if eq .profile "wsl" }}
     # No IdentityAgent: keys come from the plain OpenSSH agent that systemd
     # socket-activates (SSH_AUTH_SOCK set in .zshrc). There's no 1Password
-    # socket to point at — the Linux app isn't installed, and the Windows
-    # agent is unreachable because /etc/wsl.conf disables automount, so
-    # /mnt/c is empty and no *.exe (including powershell.exe) can be run.
+    # socket to point at — the Linux app isn't installed, and no bridge to
+    # the Windows agent is set up.
 {{- else }}
     IdentityAgent ~/.1password/agent.sock
 {{- end }}

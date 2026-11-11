@@ -5,11 +5,10 @@ set -euo pipefail
 # WSL host configuration. Pair with the Windows-side settings documented in
 # docs/wslconfig.example (memory cap, mirrored networking, autoMemoryReclaim).
 
-# /etc/wsl.conf — systemd so services (docker) work, and no Windows filesystem:
-# automount off keeps the distro isolated from C:, appendWindowsPath off keeps
-# zsh command lookup/completion fast. The trade-off is that no *.exe is
-# reachable, so wslview/clip.exe/powershell.exe (and any agent bridge built on
-# them) are out — .zshrc and ~/.ssh/config are written for that.
+# /etc/wsl.conf — systemd so services (docker) work, and appendWindowsPath off
+# so zsh command lookup/completion doesn't crawl the Windows PATH. Automount
+# stays on: the VS Code WSL extension runs its server installer from the
+# Windows extension folder via wslpath, which fails without /mnt/c.
 # Takes effect after `wsl --shutdown` from Windows.
 if ! [ -f /etc/wsl.conf ]; then
   sudo tee /etc/wsl.conf >/dev/null <<'EOF'
@@ -18,11 +17,13 @@ systemd=true
 
 [interop]
 appendWindowsPath=false
-
-[automount]
-enabled=false
 EOF
   echo "wrote /etc/wsl.conf — run 'wsl --shutdown' from Windows to apply"
+elif grep -qx 'enabled=false' /etc/wsl.conf && grep -qx '\[automount\]' /etc/wsl.conf; then
+  # Older versions of this script disabled automount; drop that block.
+  sudo sed -i '/^\[automount\]$/,/^\[/{/^\[automount\]$/d;/^enabled=false$/d}' /etc/wsl.conf
+  sudo sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' /etc/wsl.conf
+  echo "re-enabled automount in /etc/wsl.conf — run 'wsl --shutdown' from Windows to apply"
 elif ! grep -q 'appendWindowsPath' /etc/wsl.conf; then
   echo "NOTE: /etc/wsl.conf exists but doesn't set appendWindowsPath=false —"
   echo "      consider adding [interop] appendWindowsPath=false for faster shells"
@@ -36,9 +37,8 @@ if command -v dockerd >/dev/null 2>&1; then
   sudo usermod -aG docker "$USER"
 fi
 
-# SSH agent, Linux-side. With automount off there is no path to the Windows
-# 1Password agent (that bridge needs powershell.exe under /mnt/c), so this
-# profile uses plain ssh-agent. The socket unit starts it on first connect;
+# SSH agent, Linux-side: plain ssh-agent rather than a bridge to the Windows
+# 1Password agent. The socket unit starts it on first connect;
 # .zshrc points SSH_AUTH_SOCK at $XDG_RUNTIME_DIR/ssh-agent.socket, which is
 # exactly what the packaged unit expects.
 systemctl --user enable ssh-agent.socket 2>/dev/null \
