@@ -42,13 +42,18 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 {{ if eq .profile "wsl" -}}
 # /mnt/c is mounted (the VS Code WSL extension needs it), but the Windows PATH
 # is not appended (/etc/wsl.conf appendWindowsPath=false), so no *.exe is on
-# PATH and nothing below depends on Windows interop. Clipboard goes through
+# PATH and only SSIL_BOX_AZ below touches the Windows side. Clipboard goes through
 # WSLg's Wayland display + wl-clipboard.
 #
 # SSH keys live in the plain OpenSSH agent, socket-activated by systemd
 # (ssh-agent.socket, enabled by run_once_after_60-wsl.sh). ~/.ssh/config has
 # AddKeysToAgent yes, so first use of a key loads it.
 export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent.socket"
+
+# The work ssil box proxy signs in through an Azure CLI on the host: use the
+# Windows one (reached via /mnt/c) and skip probing for a Linux az login on
+# every launch. Unset (auto) also works, just slower.
+export SSIL_BOX_AZ=windows
 {{ end -}}
 {{ if not $minimalMac }}export KUBECONFIG=~/.kube/config
 {{ end -}}
