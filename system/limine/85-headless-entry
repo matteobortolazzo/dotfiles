@@ -95,12 +95,15 @@ os_name=$(grep -m1 '^[[:space:]]*TARGET_OS_NAME=' /etc/default/limine 2>/dev/nul
 [ -n "$os_name" ] || os_name=$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-Linux}}")
 os_line="/+$os_name"
 
-# quiet and splash go: on a box you reach over SSH the console exists to tell you
-# why the boot failed, and plymouth is a graphical stack this entry exists to avoid.
+# quiet and splash stay: the plymouth splash covers the boot the same way it does
+# on the graphical entry, and plymouth-quit.service (wanted by multi-user.target)
+# hands the console to getty once boot finishes. Nothing is lost for debugging —
+# Esc on the splash shows the log, a failed boot drops plymouth for the emergency
+# shell, and 'journalctl -b' over SSH has everything quiet hid.
 headless_cmdline=""
 for token in $base_cmdline; do
 	case "$token" in
-	quiet | splash | systemd.unit=*) continue ;;
+	systemd.unit=*) continue ;;
 	esac
 	headless_cmdline="${headless_cmdline:+$headless_cmdline }$token"
 done

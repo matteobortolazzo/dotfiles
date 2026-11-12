@@ -32,9 +32,13 @@ switch, and was rejected for two reasons: the choice belongs where you make it
 (at the menu, per boot), and a box whose desktop half is broken is much easier to
 recover when the working configuration is still one menu entry away.
 
-`quiet` and `splash` are dropped from the headless cmdline. On a box you reach
-over SSH the console exists to tell you why a boot failed, and plymouth is part
-of the graphical stack this entry exists to skip.
+`quiet` and `splash` are kept on the headless cmdline, so it boots behind the
+same plymouth splash as the graphical entry instead of a wall of kernel text.
+Plymouth runs from the initramfs, not as part of the desktop session, and
+`plymouth-quit.service` (wanted by `multi-user.target`) hands the console to a
+getty once boot finishes. Debugging loses nothing: Esc on the splash toggles the
+log, a failed boot drops plymouth for the emergency shell, and `journalctl -b`
+over SSH has everything `quiet` hid. (Earlier versions stripped both flags.)
 
 **Defaults**: the script sets `default_entry: CachyOS (headless)` — by name, not
 index, because `limine-snapper-sync` shifts indices every time it adds a snapshot
