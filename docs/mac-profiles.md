@@ -33,6 +33,29 @@ The toolchain scripts use `run_onchange`, so a full-dev → minimal → full-dev
 apply cycle reinstalls removed toolchains instead of remembering an old
 `run_once` success.
 
+## 1Password CLI needs Full Disk Access for the terminal
+
+Secrets (`~/.config/environment`, the Capgo OTA keys under
+`~/.config/velka/capgo/`, the Android upload keystore) render only when
+`.chezmoiignore`'s probe — `op signin --raw && op vault list` — succeeds
+through the 1Password desktop app integration. On macOS that integration
+talks to the app over files in its group container
+(`~/Library/Group Containers/2BUA8C4S2C.com.1password/`), and macOS blocks
+that folder unless the terminal (Ghostty) has permission to access other
+apps' data. If the terminal is blocked, `op` cannot reach the app and reports
+**"No accounts configured for use with 1Password CLI"** even with Settings →
+Developer → *Integrate with 1Password CLI* on and the app unlocked.
+`chezmoi apply` then warns that 1Password cannot authenticate and skips every
+secret.
+
+Fix: System Settings → Privacy & Security → **Full Disk Access**, add Ghostty,
+restart it, then check with `op vault list` and run `chezmoi apply`. (Clicking
+Allow on the "access data from other apps" prompt is enough if it shows up;
+`tccutil reset SystemPolicyAppData com.mitchellh.ghostty` brings back an
+answer that was previously denied.) Don't use `op account add` as a
+workaround: the probe runs with stdin closed, so a password-only account can
+never pass it.
+
 ## Reclaim space after switching to minimal
 
 Close Xcode, Docker and any running builds. From the dotfiles source directory:
