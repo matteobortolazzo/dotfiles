@@ -59,11 +59,12 @@ export SSIL_BOX_AZ=windows
 {{ end -}}
 export ZSH="$HOME/.oh-my-zsh"
 
-{{ if not $minimalMac -}}
 # Android SDK — Android Studio is installed through JetBrains Toolbox, which
 # only drops a launcher script in Toolbox/scripts: it exports no ANDROID_HOME
 # and puts no adb/fastboot on PATH the way a distro android-sdk package would.
-for _android_sdk in "$HOME/Android/Sdk" "$HOME/Library/Android/sdk"; do
+# Without Studio (minimal Mac), the android-commandlinetools cask's SDK root.
+for _android_sdk in "$HOME/Android/Sdk" "$HOME/Library/Android/sdk" \
+                    "${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/share/android-commandlinetools}"; do
     [ -d "$_android_sdk" ] || continue
     export ANDROID_HOME="$_android_sdk"
     export ANDROID_SDK_ROOT="$_android_sdk"   # deprecated, still read by Gradle/AGP
@@ -74,6 +75,7 @@ for _android_sdk in "$HOME/Android/Sdk" "$HOME/Library/Android/sdk"; do
 done
 unset _android_sdk _android_bin
 
+{{ if not $minimalMac -}}
 # `npx cap open android` only probes distro install paths (/opt/android-studio,
 # /usr/local/android-studio, ~/.local/share/applications); point it at Toolbox.
 for _studio in "$HOME/.local/share/JetBrains/Toolbox/scripts/studio" \
@@ -125,10 +127,10 @@ HISTORY_IGNORE='(#i)(*(password|passwd|passphrase|secret|token|api[-_ ]#key|acce
 alias v="vi"
 {{ else -}}
 alias v="nvim"
-alias lg="lazygit"
 alias lb="lazyboards"
 alias yz="yazi"
 {{ end -}}
+alias lg="lazygit"
 alias tn="tmux new-session -s"
 alias tl="tmux list-sessions"
 alias ta="tmux attach-session"

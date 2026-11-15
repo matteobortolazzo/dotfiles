@@ -15,7 +15,6 @@ README.md
 {{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
 .config/nvim
 .config/yazi
-.config/lazygit
 .config/bat
 {{ end -}}
 

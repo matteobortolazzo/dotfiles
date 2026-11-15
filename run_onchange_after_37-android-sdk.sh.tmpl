@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+{{ if and (eq .profile "mac") (eq (dig "macMode" "full-dev" .) "minimal") -}}
+# Minimal Macs have no Android Studio: install the SDK packages Capacitor's
+# Gradle build needs into the android-commandlinetools cask's SDK root (from
+# packages/Brewfile, installed by 05-homebrew). sdkmanager skips what is
+# already installed. Edit the package list to re-trigger.
+set -euo pipefail
+
+if [ -x /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x /usr/local/bin/brew ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+export ANDROID_HOME="$HOMEBREW_PREFIX/share/android-commandlinetools"
+sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+if [ ! -x "$sdkmanager" ]; then
+  echo "android-sdk: $sdkmanager missing (brew cask android-commandlinetools) — skipping" >&2
+  exit 0
+fi
+# sdkmanager needs a JDK; macOS's /usr/bin/java is only a stub.
+if ! /usr/libexec/java_home >/dev/null 2>&1; then
+  echo "android-sdk: no JDK found — install one (e.g. brew install --cask temurin@21), then: chezmoi execute-template < {{ .chezmoi.sourceFile }} | bash" >&2
+  exit 0
+fi
+
+# `yes` dies of SIGPIPE once sdkmanager exits; keep that out of pipefail.
+{ yes || true; } | "$sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null
+"$sdkmanager" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+{{ end -}}

@@ -12,6 +12,7 @@ brew "fzf"
 brew "gh"
 brew "ios-webkit-debug-proxy"
 brew "jq"
+brew "lazygit"
 brew "libimobiledevice"
 brew "python"
 brew "ripgrep"
@@ -29,6 +30,9 @@ cask "localsend"
 cask "soundsource"
 cask "tailscale-app"
 cask "font-jetbrains-mono-nerd-font"
+# Android SDK for Capacitor builds without Android Studio; packages come from
+# run_onchange_after_37-android-sdk on minimal Macs.
+cask "android-commandlinetools"
 
 # General development, Android, containers and document/media tooling.
 if mac_mode == "full-dev"
@@ -42,7 +46,6 @@ brew "golangci-lint"
 brew "htop"
 brew "imagemagick"
 brew "lazydocker"
-brew "lazygit"
 brew "libpq"
 
 brew "neovim"

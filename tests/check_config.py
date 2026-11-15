@@ -105,7 +105,9 @@ class ConfigTests(unittest.TestCase):
         self.assertNotIn("npm install -g", minimal)
         shell = render("dot_zshrc.tmpl", "mac", macMode="minimal")
         self.assertIn("export EDITOR=vi", shell)
-        self.assertNotIn("ANDROID_HOME", shell)
+        self.assertIn("android-commandlinetools", shell)
+        self.assertNotIn("CAPACITOR_ANDROID_STUDIO_PATH", shell)
+        self.assertIn('alias lg="lazygit"', shell)
         self.assertNotIn("DOTNET_ROOT", shell)
         self.assertIn("fnm env", shell)
 

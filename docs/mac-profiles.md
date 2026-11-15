@@ -12,7 +12,14 @@ macMode = "minimal" # or "full-dev"
 `minimal` keeps Zen, 1Password, Ghostty, OmniWM/skhd, SoundSource, LocalSend,
 Tailscale, tmux and a small shell/tooling set. fnm supplies Node/npm for
 Capacitor and web builds; libimobiledevice and ios-webkit-debug-proxy support
-real-iPhone inspection. Xcode is installed separately from Apple, with the
+real-iPhone inspection. Android builds use the `android-commandlinetools` cask
+instead of Android Studio: `run_onchange_after_37-android-sdk` installs
+`platforms;android-36`, `build-tools;36.0.0` and `platform-tools` into
+`$(brew --prefix)/share/android-commandlinetools`, which `.zshrc` exports as
+`ANDROID_HOME`. sdkmanager needs a JDK, which minimal does not install (any
+`/usr/libexec/java_home` hit works, e.g. a JetBrains Runtime). The upload
+keystore and its password come from 1Password like on every profile. lazygit
+(`lg`) is kept too. Xcode is installed separately from Apple, with the
 iOS platform needed to build for a physical device. Use the system `vi` for
 terminal editing; the full Neovim/LSP stack is omitted.
 
