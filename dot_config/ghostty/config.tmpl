@@ -31,7 +31,11 @@ palette = 12=#88b8d8
 palette = 13=#d0a0c8
 palette = 14=#80d0c8
 palette = 15=#faf7f2
+{{ if eq .chezmoi.os "darwin" -}}
+window-decoration = auto
+{{ else -}}
 window-decoration = none
+{{ end -}}
 confirm-close-surface = false
 mouse-hide-while-typing = true
 scrollback-limit = 1000000
