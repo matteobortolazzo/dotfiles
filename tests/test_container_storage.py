@@ -30,7 +30,7 @@ class StorageTests(unittest.TestCase):
     def dedicated(self, path):
         subvol = "/@" + path.name + "-20261121"
         self.mounts[path].update(target=str(path), fsroot=subvol)
-        self.entries.append(dict(source="UUID=disk", target=str(path), options="rw,subvol=" + subvol))
+        self.entries.append(dict(source="UUID=disk", target=str(path), fstype="btrfs", options="rw,subvol=" + subvol))
 
     def test_fresh_dirs(self):
         self.paths[0].mkdir()
@@ -57,31 +57,89 @@ class StorageTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 self.plan()
 
-    def test_fresh_provisioning_installs_verified_table_and_mounts_both_stores(self):
+    def test_migrated_mount_with_wrong_persistent_type_aborts(self):
+        self.dedicated(self.paths[0])
+        self.entries[0]["fstype"] = "ext4"
+        with self.assertRaisesRegex(RuntimeError, "fstab"):
+            self.plan()
+
+    def test_relative_subvolume_path_reuses_migrated_mount(self):
+        self.dedicated(self.paths[0])
+        self.entries[0]["options"] = "rw,subvol=@docker-20261121"
+        self.assertEqual(self.plan(), self.paths[1:])
+
+    def simulate_provision(self, failure=None):
         base = self.paths[0].parent
         fstab = base / "fstab"
         fstab.write_text("# existing entries\n")
         stage = base / "top"
         stage.mkdir()
         mounted = []
+        units = base / "systemd"
+        units.mkdir()
+        (units / "docker.socket").symlink_to("/dev/null")
+        def state(*args):
+            if "LoadState" in args:
+                if failure == "ineffective mask" and args[-1] == "docker.service":
+                    return "loaded"
+                return "masked" if (units / args[-1]).is_symlink() else "loaded"
+            if failure == "active unit" and args[-1] == "containerd.service":
+                return "active"
+            return "inactive"
+
         def command(argv, check):
             if argv[:3] == ["btrfs", "subvolume", "create"]:
                 argv[3].mkdir()
-            elif argv[:1] == ["umount"]:
+            elif argv == ["umount", stage]:
                 # Model unmounting: the backing directories are no longer visible.
                 stage.rename(base / "disk")
                 stage.mkdir()
             elif argv[:2] == ["findmnt", "--verify"]:
                 self.assertIn("# existing entries", Path(argv[-1]).read_text())
-            elif argv[0] == "mount" and len(argv) == 2:
-                path = argv[1]
-                self.assertIn(f"UUID=disk {path} btrfs subvol=/@{path.name},", fstab.read_text())
+            elif argv[0] == "mount" and argv[-1] in self.paths:
+                path = argv[-1]
+                self.assertTrue(all((units / name).is_symlink() for name in
+                                    ("docker.socket", "docker.service", "containerd.service")))
+                self.assertEqual(fstab.read_text(), "# existing entries\n")
                 self.assertTrue((base / "disk" / ("@" + path.name)).is_dir())
                 mounted.append(path)
-        with patch.object(storage, "FSTAB", fstab), patch.object(storage, "output", return_value="inactive"), \
+                self.mounts[path].update(target=str(path), fsroot="/@" + path.name)
+                if path == self.paths[0] and failure == "new data":
+                    (self.paths[1] / "inventory").touch()
+                if failure == "wrong mount":
+                    self.mounts[path]["fsroot"] = "/@unexpected"
+            elif argv[0] == "umount":
+                mounted.remove(argv[1])
+        with patch.object(storage, "UNIT_DIR", units), patch.object(storage, "FSTAB", fstab), patch.object(storage, "output", side_effect=state), \
              patch.object(storage.tempfile, "mkdtemp", return_value=stage), patch.object(storage.subprocess, "run", side_effect=command):
-            storage.provision(self.plan(), self.root)
+            if failure:
+                with self.assertRaises(RuntimeError):
+                    storage.provision(self.plan(), self.root)
+            else:
+                storage.provision(self.plan(), self.root)
+        self.assertEqual(list(units.iterdir()), [units / "docker.socket"])
+        return mounted, fstab.read_text()
+
+    def test_fresh_provisioning_installs_verified_table_and_mounts_both_stores(self):
+        mounted, table = self.simulate_provision()
         self.assertEqual(mounted, self.paths)
+        for path in self.paths:
+            self.assertIn(f"UUID=disk {path} btrfs subvol=/@{path.name},", table)
+
+    def test_new_data_in_second_store_aborts_without_boot_entries(self):
+        self.assertEqual(self.simulate_provision("new data"), ([], "# existing entries\n"))
+        self.assertTrue((self.paths[1] / "inventory").is_file())
+
+    def test_unexpected_live_mount_aborts_without_boot_entries(self):
+        self.assertEqual(self.simulate_provision("wrong mount"), ([], "# existing entries\n"))
+
+    def test_active_unit_aborts_before_creating_stores(self):
+        self.assertEqual(self.simulate_provision("active unit"), ([], "# existing entries\n"))
+        self.assertFalse(any(path.exists() for path in self.paths))
+
+    def test_ineffective_mask_aborts_before_creating_stores(self):
+        self.assertEqual(self.simulate_provision("ineffective mask"), ([], "# existing entries\n"))
+        self.assertFalse(any(path.exists() for path in self.paths))
 
     def test_profile_and_daemon_defaults(self):
         template = "run_once_after_23-container-storage.sh.tmpl"

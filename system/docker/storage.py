@@ -1,5 +1,6 @@
 """Provision empty Docker stores on Btrfs before enabling socket activation."""
 import fcntl
+from contextlib import ExitStack, contextmanager
 import json
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ import tempfile
 
 STORES = [Path("/var/lib/docker"), Path("/var/lib/containerd")]
 FSTAB = Path("/etc/fstab")
+UNIT_DIR = Path("/run/systemd/system")
 
 
 def output(*args):
@@ -36,11 +38,14 @@ def plan(paths, root, entries):
         if mount["target"] == str(path):
             identity = mount["uuid"], mount["fsroot"]
             options = rows[0]["options"].split(",") if len(rows) == 1 else []
+            subvolumes = ["/" + opt.removeprefix("subvol=").lstrip("/")
+                          for opt in options if opt.startswith("subvol=")]
             if (mount["fstype"] == "btrfs" and mount["uuid"] and
                     identity != (root["uuid"], root["fsroot"]) and identity not in seen and
                     len(rows) == 1 and rows[0]["source"] == "UUID=" + mount["uuid"] and
+                    rows[0]["fstype"] == "btrfs" and
                     not {"noauto", "nofail", "bind", "ro"}.intersection(options) and
-                    "subvol=" + mount["fsroot"] in options):
+                    subvolumes == [mount["fsroot"]]):
                 seen.add(identity)
                 continue
             raise RuntimeError(f"Verify dedicated mount and fstab entry for {path}")
@@ -69,12 +74,29 @@ def write_fstab(entries):
         candidate.unlink(missing_ok=True)
 
 
-def provision(paths, root):
-    source = "UUID=" + root["uuid"]
-    for unit in ("docker.socket", "docker.service", "containerd.service"):
-        if output("systemctl", "show", "-p", "ActiveState", "--value", unit) != "inactive":
-            raise RuntimeError(f"{unit} must be inactive for fresh storage provisioning")
-    entries = []
+@contextmanager
+def inactive_container_units():
+    units = ("docker.socket", "docker.service", "containerd.service")
+    with ExitStack() as cleanup:
+        cleanup.callback(subprocess.run, ["systemctl", "daemon-reload"], check=True)
+        for unit in units:
+            mask = UNIT_DIR / unit
+            try:
+                mask.symlink_to("/dev/null")
+            except FileExistsError:
+                if not mask.is_symlink() or mask.readlink() != Path("/dev/null"):
+                    raise RuntimeError(f"Cannot temporarily mask {unit}")
+            else:
+                cleanup.callback(mask.unlink)
+        subprocess.run(["systemctl", "daemon-reload"], check=True)
+        for unit in units:
+            if (output("systemctl", "show", "-p", "LoadState", "--value", unit) != "masked" or
+                    output("systemctl", "show", "-p", "ActiveState", "--value", unit) != "inactive"):
+                raise RuntimeError(f"{unit} must be masked and inactive for fresh storage provisioning")
+        yield
+
+
+def create_subvolumes(paths, source):
     stage = Path(tempfile.mkdtemp(dir="/run"))
     try:
         subprocess.run(["mount", "-t", "btrfs", "-o", "subvolid=5", source, stage], check=True)
@@ -88,18 +110,30 @@ def provision(paths, root):
                 dest = stage / name
                 subprocess.run(["btrfs", "subvolume", "create", dest], check=True)
                 dest.chmod(0o700)
-                entries.append(f"{source} {path} btrfs subvol=/{name},noatime 0 0\n")
         finally:
             subprocess.run(["umount", stage], check=True)
     finally:
         if not stage.is_mount():
             stage.rmdir()
-    write_fstab(entries)
-    subprocess.run(["systemctl", "daemon-reload"], check=True)
-    for path in paths:
-        if live(path) != root or any(path.iterdir()):
-            raise RuntimeError(f"Storage changed during setup at {path}")
-        subprocess.run(["mount", path], check=True)
+
+
+def provision(paths, root):
+    source = "UUID=" + root["uuid"]
+    with inactive_container_units(), ExitStack() as rollback:
+        create_subvolumes(paths, source)
+        entries = []
+        for path in paths:
+            if live(path) != root or any(path.iterdir()):
+                raise RuntimeError(f"Storage changed during setup at {path}")
+            subvol = "/@" + path.name
+            options = f"subvol={subvol},noatime"
+            subprocess.run(["mount", "-t", "btrfs", "-o", options, source, path], check=True)
+            rollback.callback(subprocess.run, ["umount", path], check=True)
+            if live(path) != dict(root, target=str(path), fsroot=subvol):
+                raise RuntimeError(f"Unexpected mount at {path}")
+            entries.append(f"{source} {path} btrfs {options} 0 0\n")
+        write_fstab(entries)
+        rollback.pop_all()
 
 
 def setup():
@@ -109,7 +143,7 @@ def setup():
     if not root["uuid"]:
         raise RuntimeError("Missing root Btrfs UUID")
     def pending():
-        entries = table("--fstab", "-o", "SOURCE,TARGET,OPTIONS")
+        entries = table("--fstab", "-o", "SOURCE,TARGET,FSTYPE,OPTIONS")
         return plan(STORES, root, entries)
     paths = pending()
     if paths:
