@@ -4,5 +4,11 @@
     "sysbox-runc": {
       "path": "/usr/bin/sysbox-runc"
     }
+  },
+  "builder": {
+    "gc": {
+      "enabled": true,
+      "defaultKeepStorage": "20GB"
+    }
   }
 }

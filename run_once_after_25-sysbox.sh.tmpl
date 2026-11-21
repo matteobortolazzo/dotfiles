@@ -3,6 +3,8 @@
 set -euo pipefail
 
 src_dir="{{ .chezmoi.sourceDir }}/system/docker"
+# Recheck the installed file when the tracked daemon configuration changes.
+# {{ include "system/docker/daemon.json" | sha256sum }}
 
 # system/ files live outside $HOME, so chezmoi can't manage them directly —
 # mirror them by hand. Returns 0 only when the target actually changed, so

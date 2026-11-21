@@ -420,6 +420,28 @@ which strips the old `resume*=` parameters before appending the new ones.
 
 ## Docker
 
+On an Arch or CachyOS `main` install with a Btrfs root, step 23 provisions
+`/var/lib/docker` and `/var/lib/containerd` before step 24 enables the Docker
+socket. During fresh provisioning, step 23 temporarily masks the Docker socket
+and both services and checks that they are inactive. It mounts and verifies both
+stores before recording new boot mounts in fstab. An existing dedicated Btrfs
+mount with a matching Btrfs fstab entry, UUID and subvolume path is reused,
+including timestamped names. Sysbox manages its own runtime
+directory. The default Docker builder has a 20 GB GC target. Custom buildx
+builders have independent policies. When a root Snapper config exists,
+step 23 sets numbered retention to 10 regular and 3 important snapshots.
+
+**Existing installs and interrupted setup.** If either directory contains data
+on root, schedule offline maintenance. Pause jobs and containers, record inventory,
+stop Docker socket activation and both daemons, and verify offline copies before
+switching mounts. Retain originals by renaming them beside their respective
+directories. Confirm both live mounts match fstab, then verify inventory and a
+representative workload before retiring copies. Snapshots can retain old blocks.
+If fresh provisioning was interrupted, inspect both mountpoints, fstab and any
+top-level destinations before retrying. A hard interruption can leave temporary
+unit masks under `/run/systemd/system` until reboot. Setup refuses an unmounted fstab entry
+or a collision with an existing destination.
+
 Arch ships `docker` with its units disabled and the `docker` group empty, so a
 fresh machine has no `/var/run/docker.sock` and no unprivileged access to it —
 `docker ps` fails with `dial unix /var/run/docker.sock: no such file or

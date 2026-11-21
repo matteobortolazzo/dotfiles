@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+{{ if and (eq .chezmoi.os "linux") (eq .profile "main") (eq .chezmoi.osRelease.id "arch" "cachyos") -}}
+set -euo pipefail
+# Re-evaluate the layout when the provisioning helper changes.
+# {{ include "system/docker/storage.py" | sha256sum }}
+sudo python3 -I "{{ .chezmoi.sourceDir }}/system/docker/storage.py"
+
+if sudo test -f /etc/snapper/configs/root; then
+  sudo snapper -c root set-config NUMBER_CLEANUP=yes NUMBER_LIMIT=10 NUMBER_LIMIT_IMPORTANT=3
+fi
+{{ end -}}
