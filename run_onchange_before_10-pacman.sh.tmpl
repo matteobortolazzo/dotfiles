@@ -22,7 +22,13 @@ set -euo pipefail
 src="{{ .chezmoi.sourceDir }}/packages"
 
 pkg_terminal="$src/arch-terminal.txt"
+{{ if eq .profile "wsl" -}}
+# WSL uses the Windows Azure CLI (~/.local/bin/az wrapper), so sign-in goes
+# through the managed host and company policy; skip the Linux package.
+[ -f "$pkg_terminal" ] && grep -vx 'azure-cli' "$pkg_terminal" | sudo pacman -Syu --needed --noconfirm -
+{{ else -}}
 [ -f "$pkg_terminal" ] && sudo pacman -Syu --needed --noconfirm - < "$pkg_terminal"
+{{ end -}}
 
 {{ if eq .profile "main" -}}
 pkg_desktop="$src/arch-desktop.txt"

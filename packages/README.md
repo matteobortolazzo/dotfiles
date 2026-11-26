@@ -151,8 +151,10 @@ re-runs installation. Direct `brew bundle` calls default to `full-dev`; set
 explicit operation: see [Mac cleanup](../docs/mac-profiles.md).
 
 The
-`wsl` profile installs `arch-terminal.txt` plus a small extra set (docker,
-wl-clipboard, tailscale) directly in the pacman/AUR scripts. The Arch scripts won't
+`wsl` profile installs `arch-terminal.txt` (minus `azure-cli`: WSL runs the
+Windows Azure CLI through the `~/.local/bin/az` wrapper, so sign-in follows the
+host's company policy) plus a small extra set (docker, wl-clipboard, tailscale)
+directly in the pacman/AUR scripts. The Arch scripts won't
 fire on non-Arch hosts thanks to the
 `{{ "{{" }} if eq .chezmoi.osRelease.id "cachyos" "arch" {{ "}}" }}` guard.
 

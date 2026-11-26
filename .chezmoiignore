@@ -54,6 +54,7 @@ README.md
 
 {{ if ne .profile "wsl" -}}
 .config/scripts/pen-wsl
+.local/bin/az
 {{ end -}}
 
 {{ if ne .profile "mac" -}}

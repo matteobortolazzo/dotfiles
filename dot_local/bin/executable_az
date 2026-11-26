@@ -1,0 +1,22 @@
+#!/bin/sh
+# az — WSL only (.chezmoiignore): run the Windows Azure CLI instead of a Linux
+# one. Sign-in then goes through the Windows host (WAM broker, device
+# compliance, Conditional Access), so company policy sees a managed device
+# rather than an unknown Linux client, and there is one token cache to keep.
+#
+# ~/.local/bin is first on PATH, so this shadows any /usr/bin/az. The MSI ships
+# wbin/az as a bash shim for exactly this case (it runs the bundled python.exe
+# directly, skipping cmd.exe and its UNC-cwd complaint).
+#
+# The Windows process does not translate paths: relative paths work (the cwd
+# is passed as \\wsl.localhost\...), Linux absolute ones do not — convert them
+# with `wslpath -w` first. Extensions (e.g. azure-devops) install on the
+# Windows side: `az extension add --name azure-devops`.
+
+win_az="/mnt/c/Program Files/Microsoft SDKs/Azure/CLI2/wbin/az"
+if [ ! -x "$win_az" ]; then
+  echo "az: Windows Azure CLI not found at $win_az" >&2
+  echo "az: install it on Windows: winget install -e --id Microsoft.AzureCLI" >&2
+  exit 127
+fi
+exec "$win_az" "$@"
